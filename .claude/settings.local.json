@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install)",
+      "Bash(cmd /c npm install)",
+      "Bash(dir \"c:\\Users\\Opiwe\\OneDrive\\Desktop\\asset-app\")",
+      "Bash(powershell -Command:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
