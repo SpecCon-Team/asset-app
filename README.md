@@ -35,4 +35,4 @@ VITE_API_BASE_URL=http://localhost:3000/api
 - CSV import uses Papa Parse; backend should implement `POST /assets:bulk`.
 # asset-app
 
-# speccon-team
+# speccon-team# asset-app
