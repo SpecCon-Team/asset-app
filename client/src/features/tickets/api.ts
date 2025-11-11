@@ -19,14 +19,17 @@ export async function getTicket(id: string): Promise<Ticket> {
   return TicketSchema.parse(res.data);
 }
 
-export async function createTicket(dto: CreateTicketDto): Promise<Ticket> {
-  const res = await getApiClient().post('/tickets', CreateTicketSchema.parse(dto));
+export async function createTicket(dto: any): Promise<Ticket> {
+  // Send data directly without schema validation since backend has different field names
+  const res = await getApiClient().post('/tickets', dto);
   return TicketSchema.parse(res.data);
 }
 
 export async function updateTicket(id: string, dto: UpdateTicketDto): Promise<Ticket> {
-  const res = await getApiClient().put(`/tickets/${id}`, UpdateTicketSchema.parse(dto));
+  const res = await getApiClient().patch(`/tickets/${id}`, dto);
   return TicketSchema.parse(res.data);
 }
 
-
+export async function deleteTicket(id: string): Promise<void> {
+  await getApiClient().delete(`/tickets/${id}`);
+}

@@ -4,6 +4,16 @@ import { useTicketsStore } from '@/features/tickets/store';
 import { useUsersStore } from '@/features/users/store';
 import Papa from 'papaparse';
 import { useNavigate } from 'react-router-dom';
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+
+const COLORS = {
+  blue: '#3B82F6',
+  green: '#10B981',
+  yellow: '#F59E0B',
+  red: '#EF4444',
+  purple: '#8B5CF6',
+  gray: '#6B7280',
+};
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -30,25 +40,50 @@ export default function AdminDashboard() {
         title: 'Total Assets',
         value: assets.length,
         detail: `${assets.filter((a) => a.status === 'assigned').length} assigned`,
+        color: 'bg-blue-500',
       },
       {
         title: 'Open Tickets',
         value: tickets.filter((t) => ['open', 'in_progress'].includes(t.status)).length,
         detail: `${tickets.filter((t) => t.priority === 'high' || t.priority === 'critical').length} high priority`,
+        color: 'bg-yellow-500',
       },
       {
         title: 'Total Users',
         value: users.length,
-        detail: `${users.filter((u) => u.role === 'admin').length} admins`,
+        detail: `${users.filter((u) => u.role === 'ADMIN').length} admins`,
+        color: 'bg-purple-500',
       },
       {
         title: 'Maintenance',
         value: assets.filter((a) => ['maintenance', 'repair'].includes(a.status)).length,
         detail: 'Assets in service',
+        color: 'bg-red-500',
       },
     ],
     [assets, tickets, users]
   );
+
+  // Chart data
+  const ticketStatusData = useMemo(() => [
+    { name: 'Open', value: tickets.filter((t) => t.status === 'open').length, color: COLORS.blue },
+    { name: 'In Progress', value: tickets.filter((t) => t.status === 'in_progress').length, color: COLORS.purple },
+    { name: 'Closed', value: tickets.filter((t) => t.status === 'closed').length, color: COLORS.gray },
+  ], [tickets]);
+
+  const ticketPriorityData = useMemo(() => [
+    { name: 'Low', value: tickets.filter((t) => t.priority === 'low').length, color: COLORS.green },
+    { name: 'Medium', value: tickets.filter((t) => t.priority === 'medium').length, color: COLORS.yellow },
+    { name: 'High', value: tickets.filter((t) => t.priority === 'high').length, color: COLORS.red },
+    { name: 'Critical', value: tickets.filter((t) => t.priority === 'critical').length, color: COLORS.red },
+  ], [tickets]);
+
+  const assetStatusData = useMemo(() => [
+    { name: 'Available', value: assets.filter((a) => a.status === 'available').length },
+    { name: 'Assigned', value: assets.filter((a) => a.status === 'assigned').length },
+    { name: 'Maintenance', value: assets.filter((a) => a.status === 'maintenance').length },
+    { name: 'Retired', value: assets.filter((a) => a.status === 'retired').length },
+  ], [assets]);
 
   const downloadCSVTemplate = () => {
     const template =
@@ -116,17 +151,84 @@ export default function AdminDashboard() {
         <p className="text-gray-600">Manage assets, tickets, and users</p>
       </div>
 
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((s) => (
-          <div key={s.title} className="border rounded-lg bg-white p-4">
-            <p className="text-sm text-gray-600">{s.title}</p>
-            <p className="text-3xl font-bold mt-2">{s.value}</p>
-            <p className="text-sm text-gray-600 mt-1">{s.detail}</p>
+          <div key={s.title} className="border rounded-lg bg-white p-4 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">{s.title}</p>
+                <p className="text-3xl font-bold mt-2">{s.value}</p>
+                <p className="text-sm text-gray-600 mt-1">{s.detail}</p>
+              </div>
+              <div className={`w-12 h-12 ${s.color} rounded-lg opacity-10`}></div>
+            </div>
           </div>
         ))}
       </div>
 
-      <div className="border rounded-lg bg-white">
+      {/* Charts Row */}
+      <div className="grid md:grid-cols-2 gap-6">
+        {/* Ticket Status Chart */}
+        <div className="border rounded-lg bg-white p-6 shadow-sm">
+          <h3 className="font-semibold mb-4">Tickets by Status</h3>
+          <ResponsiveContainer width="100%" height={250}>
+            <PieChart>
+              <Pie
+                data={ticketStatusData}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ name, value }) => `${name}: ${value}`}
+                outerRadius={80}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {ticketStatusData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Ticket Priority Chart */}
+        <div className="border rounded-lg bg-white p-6 shadow-sm">
+          <h3 className="font-semibold mb-4">Tickets by Priority</h3>
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart data={ticketPriorityData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="value" fill={COLORS.blue}>
+                {ticketPriorityData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Asset Status Chart */}
+        <div className="border rounded-lg bg-white p-6 shadow-sm md:col-span-2">
+          <h3 className="font-semibold mb-4">Assets by Status</h3>
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart data={assetStatusData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="value" fill={COLORS.blue} name="Assets" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* CSV Upload Section */}
+      <div className="border rounded-lg bg-white shadow-sm">
         <div className="p-4 border-b">
           <h2 className="font-semibold">Bulk Asset Import (CSV)</h2>
         </div>
@@ -148,65 +250,39 @@ export default function AdminDashboard() {
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
-              className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+              className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-400"
             >
               {uploading ? 'Uploading...' : 'Upload CSV File'}
             </button>
           </div>
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-            <h4 className="font-semibold text-blue-900 mb-1">CSV Format Requirements:</h4>
-            <ul className="text-sm text-blue-800 space-y-1 list-disc pl-5">
-              <li>
-                <strong>AssetID</strong> - Unique identifier (required)
-              </li>
-              <li>
-                <strong>Name</strong> - Asset name (required)
-              </li>
-              <li>
-                <strong>AssetType</strong> - Type of asset (Laptop, Desktop, Monitor, etc.)
-              </li>
-              <li>
-                <strong>Condition</strong> - Physical condition (Good, Excellent, Fair, Poor)
-              </li>
-              <li>
-                <strong>AssignedTo</strong> - User email if assigned
-              </li>
-              <li>
-                <strong>Ownership</strong> - Ownership type (Company, Personal, etc.)
-              </li>
-              <li>
-                <strong>Office Location</strong> - Physical location
-              </li>
-              <li>Other fields: ScannedBy, ScanDateTime, Description, Extension, Deskphones, Mouse, Keyboard, Department</li>
-            </ul>
-          </div>
         </div>
       </div>
 
+      {/* Quick Actions */}
       <div className="grid md:grid-cols-2 gap-4">
-        <div className="border rounded-lg bg-white">
+        <div className="border rounded-lg bg-white shadow-sm">
           <div className="p-4 border-b">
             <h3 className="font-semibold">Asset Management</h3>
           </div>
           <div className="p-4 space-y-3">
-            <button onClick={() => navigate('/assets')} className="w-full justify-start px-4 py-2 rounded-md border hover:bg-gray-50">
+            <button onClick={() => navigate('/assets')} className="w-full text-left px-4 py-2 rounded-md border hover:bg-gray-50">
               Manage All Assets ({assets.length})
             </button>
-            <button className="w-full justify-start px-4 py-2 rounded-md border hover:bg-gray-50">
+            <button onClick={() => navigate('/assets')} className="w-full text-left px-4 py-2 rounded-md border hover:bg-gray-50">
               Assets in Maintenance ({assets.filter((a) => ['maintenance', 'repair'].includes(a.status)).length})
             </button>
           </div>
         </div>
 
-        <div className="border rounded-lg bg-white">
+        <div className="border rounded-lg bg-white shadow-sm">
           <div className="p-4 border-b">
             <h3 className="font-semibold">Ticket Management</h3>
           </div>
           <div className="p-4 space-y-3">
-            <button onClick={() => navigate('/tickets')} className="w-full justify-start px-4 py-2 rounded-md border hover:bg-gray-50">
+            <button onClick={() => navigate('/tickets')} className="w-full text-left px-4 py-2 rounded-md border hover:bg-gray-50">
               Open Tickets ({tickets.filter((t) => t.status === 'open').length})
             </button>
-            <button className="w-full justify-start px-4 py-2 rounded-md border hover:bg-gray-50">
+            <button onClick={() => navigate('/tickets')} className="w-full text-left px-4 py-2 rounded-md border hover:bg-gray-50">
               High Priority ({tickets.filter((t) => t.priority === 'high' || t.priority === 'critical').length})
             </button>
           </div>

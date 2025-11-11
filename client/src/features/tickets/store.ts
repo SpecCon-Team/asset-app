@@ -13,6 +13,7 @@ interface TicketsState {
   fetchTicketById: (id: string) => Promise<void>;
   createTicket: (data: CreateTicketInput) => Promise<Ticket>;
   updateTicket: (id: string, data: UpdateTicketInput) => Promise<Ticket>;
+  deleteTicket: (id: string) => Promise<void>;
   clearCurrentTicket: () => void;
 }
 
@@ -67,6 +68,21 @@ export const useTicketsStore = create<TicketsState>((set) => ({
         isLoading: false,
       }));
       return updatedTicket;
+    } catch (error) {
+      set({ error: (error as Error).message, isLoading: false });
+      throw error;
+    }
+  },
+
+  deleteTicket: async (id) => {
+    set({ isLoading: true, error: null });
+    try {
+      await api.deleteTicket(id);
+      set((state) => ({
+        tickets: state.tickets.filter((t) => t.id !== id),
+        currentTicket: state.currentTicket?.id === id ? null : state.currentTicket,
+        isLoading: false,
+      }));
     } catch (error) {
       set({ error: (error as Error).message, isLoading: false });
       throw error;

@@ -8,49 +8,76 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
+  id        String    @id @default(cuid())
+  email     String    @unique
   name      String?
   password  String
-  role      Role     @default(USER)
-  tickets   Ticket[] @relation("UserTickets")
-  assigned  Ticket[] @relation("AssignedTickets")
+  role      Role      @default(USER)
+  tickets   Ticket[]  @relation("UserTickets")
+  assigned  Ticket[]  @relation("AssignedTickets")
   assets    Asset[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  comments  Comment[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 model Asset {
-  id         String   @id @default(cuid())
-  code       String   @unique
-  name       String
-  type       String
-  condition  String
-  location   String?
-  owner      User?    @relation(fields: [ownerId], references: [id])
-  ownerId    String?
-  // Back-reference for tickets linked to this asset
-  tickets    Ticket[]
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id              String   @id @default(cuid())
+  asset_code      String   @unique
+  name            String
+  asset_type      String?
+  condition       String?
+  status          String   @default("available")
+  assigned_to     String?
+  scanned_by      String?
+  scan_datetime   String?
+  description     String?
+  ownership       String?
+  office_location String?
+  extension       String?
+  deskphones      String?
+  mouse           String?
+  keyboard        String?
+  department      String?
+  notes           String?
+  
+  // Relations
+  owner           User?    @relation(fields: [ownerId], references: [id])
+  ownerId         String?
+  tickets         Ticket[]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 
 model Ticket {
-  id          String   @id @default(cuid())
-  number      String   @unique
-  title       String
-  description String
-  status      String   @default("open")
-  priority    String   @default("medium")
-  createdBy   User     @relation("UserTickets", fields: [createdById], references: [id])
-  createdById String
-  assignedTo  User?    @relation("AssignedTickets", fields: [assignedToId], references: [id])
+  id           String    @id @default(cuid())
+  number       String    @unique
+  title        String
+  description  String
+  status       String    @default("open")
+  priority     String    @default("medium")
+  createdBy    User      @relation("UserTickets", fields: [createdById], references: [id])
+  createdById  String
+  assignedTo   User?     @relation("AssignedTickets", fields: [assignedToId], references: [id])
   assignedToId String?
-  asset       Asset?   @relation(fields: [assetId], references: [id])
-  assetId     String?
-  resolution  String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  asset        Asset?    @relation(fields: [assetId], references: [id])
+  assetId      String?
+  resolution   String?
+  comments     Comment[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  ticketId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum Role {
@@ -58,5 +85,3 @@ enum Role {
   USER
   TECHNICIAN
 }
-
-

@@ -45,6 +45,40 @@ router.post('/', async (req, res) => {
   res.json(ticket);
 });
 
+router.patch('/bulk', async (req, res) => {
+  const schema = z.object({
+    ticketIds: z.array(z.string()),
+    updates: z.object({
+      status: z.string().optional(),
+      priority: z.string().optional(),
+      assignedToId: z.string().nullable().optional(),
+    }),
+  });
+
+  const parsed = schema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json(parsed.error.flatten());
+
+  try {
+    await prisma.ticket.updateMany({
+      where: { id: { in: parsed.data.ticketIds } },
+      data: parsed.data.updates,
+    });
+
+    const updatedTickets = await prisma.ticket.findMany({
+      where: { id: { in: parsed.data.ticketIds } },
+      include: {
+        createdBy: { select: { id: true, email: true } },
+        assignedTo: { select: { id: true, email: true } },
+        asset: true,
+      },
+    });
+
+    res.json(updatedTickets);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to update tickets' });
+  }
+});
+
 router.patch('/:id', async (req, res) => {
   const parsed = createSchema.partial().extend({
     status: z.string().optional(),
@@ -59,6 +93,15 @@ router.patch('/:id', async (req, res) => {
   res.json(ticket);
 });
 
+router.delete('/:id', async (req, res) => {
+  try {
+    await prisma.ticket.delete({
+      where: { id: req.params.id },
+    });
+    res.json({ message: 'Ticket deleted successfully' });
+  } catch (error) {
+    res.status(404).json({ message: 'Ticket not found' });
+  }
+});
+
 export default router;
-
-

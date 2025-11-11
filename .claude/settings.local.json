@@ -4,7 +4,10 @@
       "Bash(npm install)",
       "Bash(cmd /c npm install)",
       "Bash(dir \"c:\\Users\\Opiwe\\OneDrive\\Desktop\\asset-app\")",
-      "Bash(powershell -Command:*)"
+      "Bash(powershell -Command:*)",
+      "Bash(dir:*)",
+      "Bash(Get-Content \"c:\\Users\\Opiwe\\OneDrive\\Desktop\\asset-app\\client\\src\\features\\assets\\pages\\AssetDetailsPage.tsx\")",
+      "Bash(cmd /c type \"c:\\Users\\Opiwe\\OneDrive\\Desktop\\asset-app\\client\\src\\features\\assets\\pages\\AssetDetailsPage.tsx\")"
     ],
     "deny": [],
     "ask": []

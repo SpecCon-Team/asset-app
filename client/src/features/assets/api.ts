@@ -64,8 +64,6 @@ export async function bulkCreateAssets(
 ): Promise<{ created: number; failed: number }> {
   const client = getApiClient();
   const payload = z.array(CreateAssetSchema).parse(dtos);
-  const res = await client.post('/assets:bulk', payload);
+  const res = await client.post('/assets/bulk', payload);
   return z.object({ created: z.number(), failed: z.number().default(0) }).parse(res.data);
 }
-
-
