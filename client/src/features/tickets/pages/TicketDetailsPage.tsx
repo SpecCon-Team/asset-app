@@ -6,6 +6,7 @@ import type { User } from '@/features/users/types';
 import CommentSection from '../components/CommentSection';
 import { isTechnician } from '@/features/auth/hooks';
 import { showSuccess, showError } from '@/lib/swal-config';
+import { formatDateTime } from '@/lib/dateFormatter';
 
 export default function TicketDetailsPage() {
   const { id } = useParams();
@@ -296,17 +297,13 @@ export default function TicketDetailsPage() {
               <div>
                 <span className="text-gray-500 dark:text-gray-400">Created at:</span>
                 <p className="font-medium mt-1 dark:text-white">
-                  {currentTicket.createdAt
-                    ? new Date(currentTicket.createdAt).toLocaleString()
-                    : '-'}
+                  {formatDateTime(currentTicket.createdAt)}
                 </p>
               </div>
               <div>
                 <span className="text-gray-500 dark:text-gray-400">Updated at:</span>
                 <p className="font-medium mt-1 dark:text-white">
-                  {currentTicket.updatedAt
-                    ? new Date(currentTicket.updatedAt).toLocaleString()
-                    : '-'}
+                  {formatDateTime(currentTicket.updatedAt)}
                 </p>
               </div>
               {currentTicket.asset && (

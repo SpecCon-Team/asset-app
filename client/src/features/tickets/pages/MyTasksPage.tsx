@@ -4,6 +4,7 @@ import { useTicketsStore } from '../store';
 import { Ticket, Clock, CheckCircle, Activity, Wifi } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getApiClient } from '@/features/assets/lib/apiClient';
+import { formatDate } from '@/lib/dateFormatter';
 
 export default function MyTasksPage() {
   const navigate = useNavigate();
@@ -45,28 +46,28 @@ export default function MyTasksPage() {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'critical':
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
       case 'high':
-        return 'bg-orange-100 text-orange-800';
+        return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300';
       case 'medium':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300';
       case 'low':
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'open':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
       case 'in_progress':
-        return 'bg-purple-100 text-purple-800';
+        return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300';
       case 'closed':
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
     }
   };
 
@@ -520,7 +521,7 @@ export default function MyTasksPage() {
                   <div className="space-x-4">
                     <span>Created by: {ticket.createdBy?.name || ticket.createdBy?.email || 'Unknown'}</span>
                     {ticket.createdAt && (
-                      <span>Created: {new Date(ticket.createdAt).toLocaleDateString()}</span>
+                      <span>Created: {formatDate(ticket.createdAt)}</span>
                     )}
                   </div>
                 </div>

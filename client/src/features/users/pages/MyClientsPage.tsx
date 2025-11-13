@@ -4,6 +4,7 @@ import { getApiClient } from '@/features/assets/lib/apiClient';
 import type { User } from '../types';
 import { Users, Shield, UserCheck, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { formatDate } from '@/lib/dateFormatter';
 
 export default function MyClientsPage() {
   const [users, setUsers] = useState<User[]>([]);
@@ -321,9 +322,7 @@ export default function MyClientsPage() {
                       </select>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      {user.createdAt
-                        ? new Date(user.createdAt).toLocaleDateString()
-                        : 'N/A'}
+                      {formatDate(user.createdAt)}
                     </td>
                   </tr>
                 ))}

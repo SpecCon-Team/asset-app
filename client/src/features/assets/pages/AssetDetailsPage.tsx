@@ -4,6 +4,7 @@ import { useAssetsStore } from '../store';
 import { listUsers } from '@/features/users/api';
 import type { CreateAssetDto } from '../types';
 import type { User } from '@/features/users/types';
+import { formatDate } from '@/lib/dateFormatter';
 
 export default function AssetDetailsPage() {
   const navigate = useNavigate();
@@ -531,7 +532,7 @@ export default function AssetDetailsPage() {
                         </span>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                        {ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString() : '-'}
+                        {formatDate(ticket.createdAt)}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm">
                         <button

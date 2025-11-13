@@ -2,6 +2,7 @@ import React, { useMemo, useEffect } from 'react';
 import { useTicketsStore } from '@/features/tickets/store';
 import { useNavigate } from 'react-router-dom';
 import { ClipboardList, CheckCircle, Clock, AlertCircle, TrendingUp } from 'lucide-react';
+import { formatDate } from '@/lib/dateFormatter';
 
 export default function TechnicianDashboard() {
   const navigate = useNavigate();
@@ -127,17 +128,17 @@ export default function TechnicianDashboard() {
             <div
               key={index}
               onClick={stat.action}
-              className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer"
+              className="bg-white dark:bg-gradient-to-br dark:from-gray-700 dark:to-gray-750 border border-gray-200 dark:border-gray-600 rounded-lg shadow-md dark:shadow-xl p-6 hover:shadow-lg dark:hover:shadow-2xl transition-all duration-300 cursor-pointer"
             >
               <div className="flex items-center justify-between mb-4">
                 <div className={`${stat.color} p-3 rounded-lg`}>
                   <Icon className="w-6 h-6 text-white" />
                 </div>
-                <TrendingUp className="w-5 h-5 text-gray-400" />
+                <TrendingUp className="w-5 h-5 text-gray-400 dark:text-gray-500" />
               </div>
-              <h3 className="text-gray-600 dark:text-gray-400 text-sm font-medium">{stat.title}</h3>
-              <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">{stat.value}</p>
-              <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">{stat.detail}</p>
+              <h3 className="text-gray-600 dark:text-gray-300 text-sm font-medium">{stat.title}</h3>
+              <p className="text-3xl font-bold text-gray-900 dark:text-white mt-1">{stat.value}</p>
+              <p className="text-gray-500 dark:text-gray-300 text-sm mt-1">{stat.detail}</p>
             </div>
           );
         })}
@@ -186,7 +187,7 @@ export default function TechnicianDashboard() {
                       <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-1">{ticket.title}</h4>
                       <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">{ticket.description}</p>
                       <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
-                        Created {new Date(ticket.createdAt).toLocaleDateString()}
+                        Created {formatDate(ticket.createdAt)}
                       </p>
                     </div>
                   </div>

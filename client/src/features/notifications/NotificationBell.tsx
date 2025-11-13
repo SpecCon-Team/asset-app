@@ -3,6 +3,7 @@ import { Bell, X, Check, CheckCheck } from 'lucide-react';
 import { useNotificationsStore } from './store';
 import { useCurrentUser } from '@/features/auth/hooks';
 import { useNavigate } from 'react-router-dom';
+import { formatDateTime, formatDate } from '@/lib/dateFormatter';
 
 export default function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);
@@ -109,7 +110,7 @@ export default function NotificationBell() {
         upload: uploadMatch ? parseFloat(uploadMatch[1]) : 0,
         ping: pingMatch ? parseInt(pingMatch[1]) : 0,
         quality: qualityMatch ? qualityMatch[1] : 'Unknown',
-        timestamp: timeMatch ? timeMatch[1] : new Date(notification.createdAt).toLocaleString(),
+        timestamp: timeMatch ? timeMatch[1] : formatDateTime(notification.createdAt),
       });
       setShowSpeedTestModal(true);
       setIsOpen(false);
@@ -163,7 +164,7 @@ export default function NotificationBell() {
     if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
     if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
     if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
-    return date.toLocaleDateString();
+    return formatDate(date);
   };
 
   return (

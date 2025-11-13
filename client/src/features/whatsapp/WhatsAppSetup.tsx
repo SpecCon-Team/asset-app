@@ -45,22 +45,22 @@ export default function WhatsAppSetup() {
       </div>
 
       {/* Status Card */}
-      <div className={`border rounded-lg p-6 ${isConnected ? 'bg-green-50 border-green-200' : 'bg-yellow-50 border-yellow-200'}`}>
+      <div className={`border rounded-lg p-6 ${isConnected ? 'bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-700' : 'bg-yellow-50 dark:bg-yellow-900/30 border-yellow-200 dark:border-yellow-700'}`}>
         <div className="flex items-center gap-3">
           {isConnected ? (
             <>
-              <CheckCircle className="w-6 h-6 text-green-600" />
+              <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
               <div>
-                <h3 className="font-semibold text-green-900">WhatsApp Connected</h3>
-                <p className="text-sm text-green-700">Your WhatsApp Business account is active</p>
+                <h3 className="font-semibold text-green-900 dark:text-green-100">WhatsApp Connected</h3>
+                <p className="text-sm text-green-700 dark:text-green-300">Your WhatsApp Business account is active</p>
               </div>
             </>
           ) : (
             <>
-              <AlertCircle className="w-6 h-6 text-yellow-600" />
+              <AlertCircle className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
               <div>
-                <h3 className="font-semibold text-yellow-900">WhatsApp Not Connected</h3>
-                <p className="text-sm text-yellow-700">Configure your WhatsApp Business API to enable notifications</p>
+                <h3 className="font-semibold text-yellow-900 dark:text-yellow-100">WhatsApp Not Connected</h3>
+                <p className="text-sm text-yellow-700 dark:text-yellow-300">Configure your WhatsApp Business API to enable notifications</p>
               </div>
             </>
           )}
@@ -188,9 +188,9 @@ export default function WhatsAppSetup() {
       )}
 
       {/* Setup Instructions */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-        <h3 className="font-semibold text-blue-900 mb-3">Setup Instructions</h3>
-        <ol className="list-decimal list-inside space-y-2 text-sm text-blue-800">
+      <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg p-6">
+        <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-3">Setup Instructions</h3>
+        <ol className="list-decimal list-inside space-y-2 text-sm text-blue-800 dark:text-blue-200">
           <li>Create a WhatsApp Business account at business.whatsapp.com</li>
           <li>Get your API credentials from the WhatsApp Business dashboard</li>
           <li>Enter your phone number and API key above</li>

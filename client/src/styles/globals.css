@@ -485,6 +485,60 @@ thead.sticky {
    ================================================ */
 
 /* ================================================
+   React Hot Toast Dark Mode Support
+   ================================================ */
+
+/* Light mode toast colors */
+:root {
+  /* Default toast */
+  --toast-bg: #ffffff;
+  --toast-text: #1f2937;
+  --toast-border: #e5e7eb;
+
+  /* Success toast */
+  --toast-success-bg: #f0fdf4;
+  --toast-success-text: #166534;
+  --toast-success-border: #86efac;
+
+  /* Error toast */
+  --toast-error-bg: #fef2f2;
+  --toast-error-text: #991b1b;
+  --toast-error-border: #fca5a5;
+
+  /* Loading toast */
+  --toast-loading-bg: #eff6ff;
+  --toast-loading-text: #1e40af;
+  --toast-loading-border: #93c5fd;
+}
+
+/* Dark mode toast colors */
+.dark {
+  /* Default toast */
+  --toast-bg: #1f2937;
+  --toast-text: #f3f4f6;
+  --toast-border: #374151;
+
+  /* Success toast */
+  --toast-success-bg: #064e3b;
+  --toast-success-text: #86efac;
+  --toast-success-border: #065f46;
+
+  /* Error toast */
+  --toast-error-bg: #7f1d1d;
+  --toast-error-text: #fca5a5;
+  --toast-error-border: #991b1b;
+
+  /* Loading toast */
+  --toast-loading-bg: #1e3a8a;
+  --toast-loading-text: #93c5fd;
+  --toast-loading-border: #1e40af;
+}
+
+/* ================================================
+   End React Hot Toast Dark Mode Support
+   ================================================ */
+
+/* ================================================
    Accessibility - Focus Indicators
    ================================================ */
 

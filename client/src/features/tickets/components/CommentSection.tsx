@@ -3,6 +3,7 @@ import { listUsers } from '@/features/users/api';
 import type { User } from '@/features/users/types';
 import { getCurrentUserEmail, isAdmin, isTechnician } from '@/features/auth/hooks';
 import Swal from 'sweetalert2';
+import { formatDateTime } from '@/lib/dateFormatter';
 
 interface Comment {
   id: string;
@@ -240,7 +241,7 @@ export default function CommentSection({ ticketId }: CommentSectionProps) {
                       </span>
                     )}
                     <span className="text-gray-500 text-xs">
-                      {new Date(comment.createdAt).toLocaleString()}
+                      {formatDateTime(comment.createdAt)}
                     </span>
                   </div>
                   {canModifyTicket && (

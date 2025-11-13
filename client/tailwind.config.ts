@@ -4,7 +4,13 @@ export default {
   darkMode: 'class',
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        gray: {
+          750: '#2d3748',
+        },
+      },
+    },
   },
   plugins: [],
 } satisfies Config

@@ -15,6 +15,54 @@ const COLORS = {
   gray: '#6B7280',
 };
 
+// Custom Tooltip Component with Dark Mode Support
+const CustomTooltip = ({ active, payload, label }: any) => {
+  const isDarkMode = document.documentElement.classList.contains('dark');
+
+  if (active && payload && payload.length) {
+    return (
+      <div
+        style={{
+          backgroundColor: isDarkMode ? 'rgba(31, 41, 55, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+          border: isDarkMode ? '1px solid #4B5563' : '1px solid #e0e0e0',
+          borderRadius: '8px',
+          padding: '12px',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+        }}
+      >
+        {label && (
+          <p
+            style={{
+              fontWeight: 'bold',
+              color: isDarkMode ? '#F3F4F6' : '#1F2937',
+              marginBottom: '8px',
+              fontSize: '14px',
+            }}
+          >
+            {label}
+          </p>
+        )}
+        {payload.map((entry: any, index: number) => (
+          <p
+            key={`item-${index}`}
+            style={{
+              color: isDarkMode ? '#D1D5DB' : '#4B5563',
+              margin: '4px 0',
+              fontSize: '13px',
+            }}
+          >
+            <span style={{ color: entry.color, fontWeight: '600' }}>
+              {entry.name}:
+            </span>{' '}
+            {entry.value}
+          </p>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
+
 export default function AdminDashboard() {
   const navigate = useNavigate();
   
@@ -224,14 +272,14 @@ export default function AdminDashboard() {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((s) => (
-          <div key={s.title} className="border rounded-lg bg-white p-4 shadow-sm hover:shadow-md transition-shadow">
+          <div key={s.title} className="border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gradient-to-br dark:from-gray-700 dark:to-gray-750 p-4 shadow-md dark:shadow-xl hover:shadow-lg dark:hover:shadow-2xl transition-all duration-300">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">{s.title}</p>
-                <p className="text-3xl font-bold mt-2">{s.value}</p>
-                <p className="text-sm text-gray-600 mt-1">{s.detail}</p>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">{s.title}</p>
+                <p className="text-3xl font-bold mt-2 text-gray-900 dark:text-white">{s.value}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{s.detail}</p>
               </div>
-              <div className={`w-12 h-12 ${s.color} rounded-lg opacity-10`}></div>
+              <div className={`w-12 h-12 ${s.color} rounded-lg opacity-20 dark:opacity-30`}></div>
             </div>
           </div>
         ))}
@@ -240,8 +288,8 @@ export default function AdminDashboard() {
       {/* Charts Row */}
       <div className="grid md:grid-cols-2 gap-6">
         {/* Ticket Status Chart */}
-        <div className="border rounded-lg bg-white p-6 shadow-sm">
-          <h3 className="font-semibold mb-4">Tickets by Status</h3>
+        <div className="border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 p-6 shadow-sm">
+          <h3 className="font-semibold mb-4 text-gray-900 dark:text-white">Tickets by Status</h3>
           <ResponsiveContainer width="100%" height={250}>
             <PieChart>
               <Pie
@@ -258,20 +306,20 @@ export default function AdminDashboard() {
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip content={<CustomTooltip />} />
             </PieChart>
           </ResponsiveContainer>
         </div>
 
         {/* Ticket Priority Chart */}
-        <div className="border rounded-lg bg-white p-6 shadow-sm">
-          <h3 className="font-semibold mb-4">Tickets by Priority</h3>
+        <div className="border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 p-6 shadow-sm">
+          <h3 className="font-semibold mb-4 text-gray-900 dark:text-white">Tickets by Priority</h3>
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={ticketPriorityData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
               <YAxis />
-              <Tooltip />
+              <Tooltip content={<CustomTooltip />} />
               <Bar dataKey="value" fill={COLORS.blue}>
                 {ticketPriorityData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
@@ -282,7 +330,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Live Ticket Traffic Monitor - BEAST MODE */}
-        <div className="relative border rounded-lg bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-blue-900/20 dark:to-purple-900/20 p-6 shadow-lg md:col-span-2 overflow-hidden">
+        <div className="relative border dark:border-gray-700 rounded-lg bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-blue-900/20 dark:to-purple-900/20 p-6 shadow-lg md:col-span-2 overflow-hidden">
           {/* Animated background particles */}
           <div className="absolute inset-0 opacity-10">
             <div className="absolute top-10 left-10 w-32 h-32 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
@@ -362,15 +410,7 @@ export default function AdminDashboard() {
                   stroke="#9CA3AF"
                   style={{ fontSize: '12px' }}
                 />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                    border: '1px solid #e0e0e0',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                  }}
-                  labelStyle={{ fontWeight: 'bold', color: '#1F2937' }}
-                />
+                <Tooltip content={<CustomTooltip />} />
                 <Area
                   type="monotone"
                   dataKey="open"
@@ -422,10 +462,10 @@ export default function AdminDashboard() {
       </div>
 
       {/* CSV Upload Section */}
-      <div className="border rounded-lg bg-white shadow-sm">
-        <div className="p-4 border-b">
-          <h2 className="font-semibold">Bulk Asset Import (CSV)</h2>
-          <p className="text-sm text-gray-600 mt-1">
+      <div className="border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 shadow-sm">
+        <div className="p-4 border-b dark:border-gray-700">
+          <h2 className="font-semibold text-gray-900 dark:text-white">Bulk Asset Import (CSV)</h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
             Asset codes are automatically generated - no need to provide them in the CSV
           </p>
         </div>
@@ -433,17 +473,17 @@ export default function AdminDashboard() {
           {uploadStatus && (
             <div
               className={`rounded-md border p-3 ${
-                uploadStatus.type === 'success' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800'
+                uploadStatus.type === 'success' ? 'bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-700 text-green-800 dark:text-green-300' : 'bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-700 text-red-800 dark:text-red-300'
               }`}
             >
               {uploadStatus.message}
             </div>
           )}
-          <div className="bg-blue-50 border border-blue-200 rounded-md p-3 text-sm text-blue-800">
+          <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-md p-3 text-sm text-blue-800 dark:text-blue-200">
             <strong>Note:</strong> Asset codes will be automatically generated for all imported assets. You only need to provide the asset name and other details.
           </div>
           <div className="flex flex-col sm:flex-row gap-3">
-            <button onClick={downloadCSVTemplate} className="px-4 py-2 rounded-md border hover:bg-gray-50">
+            <button onClick={downloadCSVTemplate} className="px-4 py-2 rounded-md border dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100">
               Download Template
             </button>
             <input ref={fileInputRef} type="file" accept=".csv" onChange={handleCSVUpload} className="hidden" />
@@ -460,29 +500,29 @@ export default function AdminDashboard() {
 
       {/* Quick Actions */}
       <div className="grid md:grid-cols-2 gap-4">
-        <div className="border rounded-lg bg-white shadow-sm">
-          <div className="p-4 border-b">
-            <h3 className="font-semibold">Asset Management</h3>
+        <div className="border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 shadow-sm">
+          <div className="p-4 border-b dark:border-gray-700">
+            <h3 className="font-semibold text-gray-900 dark:text-white">Asset Management</h3>
           </div>
           <div className="p-4 space-y-3">
-            <button onClick={() => navigate('/assets')} className="w-full text-left px-4 py-2 rounded-md border hover:bg-gray-50">
+            <button onClick={() => navigate('/assets')} className="w-full text-left px-4 py-2 rounded-md border dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100">
               Manage All Assets ({assets.length})
             </button>
-            <button onClick={() => navigate('/assets')} className="w-full text-left px-4 py-2 rounded-md border hover:bg-gray-50">
+            <button onClick={() => navigate('/assets')} className="w-full text-left px-4 py-2 rounded-md border dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100">
               Assets in Maintenance ({assets.filter((a) => ['maintenance', 'repair'].includes(a.status)).length})
             </button>
           </div>
         </div>
 
-        <div className="border rounded-lg bg-white shadow-sm">
-          <div className="p-4 border-b">
-            <h3 className="font-semibold">Ticket Management</h3>
+        <div className="border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 shadow-sm">
+          <div className="p-4 border-b dark:border-gray-700">
+            <h3 className="font-semibold text-gray-900 dark:text-white">Ticket Management</h3>
           </div>
           <div className="p-4 space-y-3">
-            <button onClick={() => navigate('/tickets')} className="w-full text-left px-4 py-2 rounded-md border hover:bg-gray-50">
+            <button onClick={() => navigate('/tickets')} className="w-full text-left px-4 py-2 rounded-md border dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100">
               Open Tickets ({tickets.filter((t) => t.status === 'open').length})
             </button>
-            <button onClick={() => navigate('/tickets')} className="w-full text-left px-4 py-2 rounded-md border hover:bg-gray-50">
+            <button onClick={() => navigate('/tickets')} className="w-full text-left px-4 py-2 rounded-md border dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100">
               High Priority ({tickets.filter((t) => t.priority === 'high' || t.priority === 'critical').length})
             </button>
           </div>

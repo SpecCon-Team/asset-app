@@ -49,18 +49,20 @@ export default function GeneralSettingsPage() {
   useEffect(() => {
     const userStr = localStorage.getItem('user');
     if (userStr) {
-      setCurrentUser(JSON.parse(userStr));
-    }
+      const user = JSON.parse(userStr);
+      setCurrentUser(user);
 
-    // Load saved settings from localStorage
-    const savedSettings = localStorage.getItem('appSettings');
-    if (savedSettings) {
-      const parsed = JSON.parse(savedSettings);
-      setSettings(parsed);
-      applyTheme(parsed.theme);
-    } else {
-      // Apply initial theme
-      applyTheme(settings.theme);
+      // Load saved settings from localStorage using user-specific key
+      const userSettingsKey = `appSettings_${user.id}`;
+      const savedSettings = localStorage.getItem(userSettingsKey);
+      if (savedSettings) {
+        const parsed = JSON.parse(savedSettings);
+        setSettings(parsed);
+        applyTheme(parsed.theme);
+      } else {
+        // Apply initial theme
+        applyTheme(settings.theme);
+      }
     }
   }, []);
 
@@ -101,8 +103,9 @@ export default function GeneralSettingsPage() {
   const handleSaveSettings = async () => {
     setIsSaving(true);
     try {
-      // Save to localStorage
-      localStorage.setItem('appSettings', JSON.stringify(settings));
+      // Save to localStorage with user-specific key
+      const userSettingsKey = `appSettings_${currentUser.id}`;
+      localStorage.setItem(userSettingsKey, JSON.stringify(settings));
 
       await getApiClient().patch(`/users/${currentUser.id}/settings`, settings);
       toast.success('Settings saved successfully!');
@@ -153,7 +156,7 @@ export default function GeneralSettingsPage() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading settings...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-300">Loading settings...</p>
         </div>
       </div>
     );
@@ -163,36 +166,36 @@ export default function GeneralSettingsPage() {
     <div className="max-w-4xl mx-auto p-8">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">General Settings</h1>
-        <p className="text-gray-600 mt-2">Manage your account preferences and security</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">General Settings</h1>
+        <p className="text-gray-600 dark:text-gray-300 mt-2">Manage your account preferences and security</p>
       </div>
 
       <div className="space-y-6">
         {/* Notification Settings */}
-        <div className="bg-white rounded-lg shadow-lg p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
           <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Bell className="w-6 h-6 text-blue-600" />
+            <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
+              <Bell className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">Notification Preferences</h2>
-              <p className="text-sm text-gray-500">Manage how you receive notifications</p>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Notification Preferences</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Manage how you receive notifications</p>
             </div>
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-center justify-between py-3 border-b">
+            <div className="flex items-center justify-between py-3 border-b dark:border-gray-700">
               <div className="flex items-center gap-3">
-                <Mail className="w-5 h-5 text-gray-500" />
+                <Mail className="w-5 h-5 text-gray-500 dark:text-gray-400" />
                 <div>
-                  <p className="font-medium text-gray-900">Email Notifications</p>
-                  <p className="text-sm text-gray-500">Receive notifications via email</p>
+                  <p className="font-medium text-gray-900 dark:text-gray-100">Email Notifications</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Receive notifications via email</p>
                 </div>
               </div>
               <button
                 onClick={() => handleToggle('emailNotifications')}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  settings.emailNotifications ? 'bg-blue-600' : 'bg-gray-300'
+                  settings.emailNotifications ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
                 }`}
               >
                 <span
@@ -203,18 +206,18 @@ export default function GeneralSettingsPage() {
               </button>
             </div>
 
-            <div className="flex items-center justify-between py-3 border-b">
+            <div className="flex items-center justify-between py-3 border-b dark:border-gray-700">
               <div className="flex items-center gap-3">
-                <MessageSquare className="w-5 h-5 text-gray-500" />
+                <MessageSquare className="w-5 h-5 text-gray-500 dark:text-gray-400" />
                 <div>
-                  <p className="font-medium text-gray-900">Push Notifications</p>
-                  <p className="text-sm text-gray-500">Receive push notifications in browser</p>
+                  <p className="font-medium text-gray-900 dark:text-gray-100">Push Notifications</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Receive push notifications in browser</p>
                 </div>
               </div>
               <button
                 onClick={() => handleToggle('pushNotifications')}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  settings.pushNotifications ? 'bg-blue-600' : 'bg-gray-300'
+                  settings.pushNotifications ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
                 }`}
               >
                 <span
@@ -225,15 +228,15 @@ export default function GeneralSettingsPage() {
               </button>
             </div>
 
-            <div className="flex items-center justify-between py-3 border-b">
+            <div className="flex items-center justify-between py-3 border-b dark:border-gray-700">
               <div>
-                <p className="font-medium text-gray-900">Ticket Updates</p>
-                <p className="text-sm text-gray-500">Get notified about ticket status changes</p>
+                <p className="font-medium text-gray-900 dark:text-gray-100">Ticket Updates</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Get notified about ticket status changes</p>
               </div>
               <button
                 onClick={() => handleToggle('ticketUpdates')}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  settings.ticketUpdates ? 'bg-blue-600' : 'bg-gray-300'
+                  settings.ticketUpdates ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
                 }`}
               >
                 <span
@@ -244,15 +247,15 @@ export default function GeneralSettingsPage() {
               </button>
             </div>
 
-            <div className="flex items-center justify-between py-3 border-b">
+            <div className="flex items-center justify-between py-3 border-b dark:border-gray-700">
               <div>
-                <p className="font-medium text-gray-900">Asset Updates</p>
-                <p className="text-sm text-gray-500">Get notified about asset assignments</p>
+                <p className="font-medium text-gray-900 dark:text-gray-100">Asset Updates</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Get notified about asset assignments</p>
               </div>
               <button
                 onClick={() => handleToggle('assetUpdates')}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  settings.assetUpdates ? 'bg-blue-600' : 'bg-gray-300'
+                  settings.assetUpdates ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
                 }`}
               >
                 <span
@@ -265,13 +268,13 @@ export default function GeneralSettingsPage() {
 
             <div className="flex items-center justify-between py-3">
               <div>
-                <p className="font-medium text-gray-900">Weekly Digest</p>
-                <p className="text-sm text-gray-500">Receive weekly summary emails</p>
+                <p className="font-medium text-gray-900 dark:text-gray-100">Weekly Digest</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Receive weekly summary emails</p>
               </div>
               <button
                 onClick={() => handleToggle('weeklyDigest')}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  settings.weeklyDigest ? 'bg-blue-600' : 'bg-gray-300'
+                  settings.weeklyDigest ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
                 }`}
               >
                 <span
@@ -285,24 +288,24 @@ export default function GeneralSettingsPage() {
         </div>
 
         {/* Privacy Settings */}
-        <div className="bg-white rounded-lg shadow-lg p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
           <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <Shield className="w-6 h-6 text-purple-600" />
+            <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
+              <Shield className="w-6 h-6 text-purple-600 dark:text-purple-400" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">Privacy Settings</h2>
-              <p className="text-sm text-gray-500">Control your privacy preferences</p>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Privacy Settings</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Control your privacy preferences</p>
             </div>
           </div>
 
           <div className="space-y-4">
-            <div className="py-3 border-b">
-              <label className="block font-medium text-gray-900 mb-2">Profile Visibility</label>
+            <div className="py-3 border-b dark:border-gray-700">
+              <label className="block font-medium text-gray-900 dark:text-gray-100 mb-2">Profile Visibility</label>
               <select
                 value={settings.profileVisibility}
                 onChange={(e) => handleSelectChange('profileVisibility', e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="all">Everyone</option>
                 <option value="team">Team Members Only</option>
@@ -310,15 +313,15 @@ export default function GeneralSettingsPage() {
               </select>
             </div>
 
-            <div className="flex items-center justify-between py-3 border-b">
+            <div className="flex items-center justify-between py-3 border-b dark:border-gray-700">
               <div>
-                <p className="font-medium text-gray-900">Show Email Address</p>
-                <p className="text-sm text-gray-500">Make your email visible to others</p>
+                <p className="font-medium text-gray-900 dark:text-gray-100">Show Email Address</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Make your email visible to others</p>
               </div>
               <button
                 onClick={() => handleToggle('showEmail')}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  settings.showEmail ? 'bg-blue-600' : 'bg-gray-300'
+                  settings.showEmail ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
                 }`}
               >
                 <span
@@ -331,13 +334,13 @@ export default function GeneralSettingsPage() {
 
             <div className="flex items-center justify-between py-3">
               <div>
-                <p className="font-medium text-gray-900">Show Phone Number</p>
-                <p className="text-sm text-gray-500">Make your phone visible to others</p>
+                <p className="font-medium text-gray-900 dark:text-gray-100">Show Phone Number</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Make your phone visible to others</p>
               </div>
               <button
                 onClick={() => handleToggle('showPhone')}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  settings.showPhone ? 'bg-blue-600' : 'bg-gray-300'
+                  settings.showPhone ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
                 }`}
               >
                 <span
@@ -351,24 +354,24 @@ export default function GeneralSettingsPage() {
         </div>
 
         {/* Display Settings */}
-        <div className="bg-white rounded-lg shadow-lg p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
           <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <Globe className="w-6 h-6 text-green-600" />
+            <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
+              <Globe className="w-6 h-6 text-green-600 dark:text-green-400" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">Display Settings</h2>
-              <p className="text-sm text-gray-500">Customize your viewing preferences</p>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Display Settings</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Customize your viewing preferences</p>
             </div>
           </div>
 
           <div className="space-y-4">
-            <div className="py-3 border-b">
-              <label className="block font-medium text-gray-900 mb-2">Language</label>
+            <div className="py-3 border-b dark:border-gray-700">
+              <label className="block font-medium text-gray-900 dark:text-gray-100 mb-2">Language</label>
               <select
                 value={settings.language}
                 onChange={(e) => handleSelectChange('language', e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="en">English</option>
                 <option value="es">Spanish</option>
@@ -377,12 +380,12 @@ export default function GeneralSettingsPage() {
               </select>
             </div>
 
-            <div className="py-3 border-b">
-              <label className="block font-medium text-gray-900 mb-2">Timezone</label>
+            <div className="py-3 border-b dark:border-gray-700">
+              <label className="block font-medium text-gray-900 dark:text-gray-100 mb-2">Timezone</label>
               <select
                 value={settings.timezone}
                 onChange={(e) => handleSelectChange('timezone', e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="UTC">UTC (Coordinated Universal Time)</option>
                 <option value="America/New_York">Eastern Time (ET)</option>
@@ -392,12 +395,12 @@ export default function GeneralSettingsPage() {
               </select>
             </div>
 
-            <div className="py-3 border-b">
-              <label className="block font-medium text-gray-900 mb-2">Date Format</label>
+            <div className="py-3 border-b dark:border-gray-700">
+              <label className="block font-medium text-gray-900 dark:text-gray-100 mb-2">Date Format</label>
               <select
                 value={settings.dateFormat}
                 onChange={(e) => handleSelectChange('dateFormat', e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="MM/DD/YYYY">MM/DD/YYYY</option>
                 <option value="DD/MM/YYYY">DD/MM/YYYY</option>
@@ -406,11 +409,11 @@ export default function GeneralSettingsPage() {
             </div>
 
             <div className="py-3">
-              <label className="block font-medium text-gray-900 mb-2">Theme</label>
+              <label className="block font-medium text-gray-900 dark:text-gray-100 mb-2">Theme</label>
               <select
                 value={settings.theme}
                 onChange={(e) => handleSelectChange('theme', e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="light">Light</option>
                 <option value="dark">Dark</option>
@@ -421,20 +424,20 @@ export default function GeneralSettingsPage() {
         </div>
 
         {/* Security - Change Password */}
-        <div className="bg-white rounded-lg shadow-lg p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
           <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-red-100 rounded-lg">
-              <Lock className="w-6 h-6 text-red-600" />
+            <div className="p-2 bg-red-100 dark:bg-red-900 rounded-lg">
+              <Lock className="w-6 h-6 text-red-600 dark:text-red-400" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">Security</h2>
-              <p className="text-sm text-gray-500">Update your password</p>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Security</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Update your password</p>
             </div>
           </div>
 
           <form onSubmit={handleChangePassword} className="space-y-4">
             <div>
-              <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Current Password
               </label>
               <div className="relative">
@@ -445,7 +448,7 @@ export default function GeneralSettingsPage() {
                   type="password"
                   value={passwordData.currentPassword}
                   onChange={handlePasswordChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Enter current password"
                   required
                 />
@@ -453,7 +456,7 @@ export default function GeneralSettingsPage() {
             </div>
 
             <div>
-              <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 New Password
               </label>
               <div className="relative">
@@ -464,17 +467,17 @@ export default function GeneralSettingsPage() {
                   type="password"
                   value={passwordData.newPassword}
                   onChange={handlePasswordChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Enter new password"
                   required
                   minLength={12}
                 />
               </div>
-              <p className="mt-1 text-xs text-gray-500">Must be at least 12 characters</p>
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Must be at least 12 characters</p>
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Confirm New Password
               </label>
               <div className="relative">
@@ -485,7 +488,7 @@ export default function GeneralSettingsPage() {
                   type="password"
                   value={passwordData.confirmPassword}
                   onChange={handlePasswordChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Confirm new password"
                   required
                 />
@@ -507,7 +510,7 @@ export default function GeneralSettingsPage() {
         <div className="flex justify-end gap-4">
           <button
             onClick={() => window.history.back()}
-            className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            className="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
             Cancel
           </button>

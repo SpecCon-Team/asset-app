@@ -11,11 +11,15 @@ export default function AppLayout() {
   const sidebarRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    // Get logged in user from localStorage
+    // Get logged in user from localStorage and apply their theme
     const loadUser = () => {
       const userStr = localStorage.getItem('user');
       if (userStr) {
-        setCurrentUser(JSON.parse(userStr));
+        const user = JSON.parse(userStr);
+        setCurrentUser(user);
+
+        // Apply user's theme preference
+        applyUserTheme(user.id);
       } else {
         // If no user, redirect to login
         navigate('/login');
@@ -35,6 +39,37 @@ export default function AppLayout() {
       window.removeEventListener('userUpdated', handleUserUpdate);
     };
   }, [navigate]);
+
+  // Apply user-specific theme
+  const applyUserTheme = (userId: string) => {
+    try {
+      const userSettingsKey = `appSettings_${userId}`;
+      const savedSettings = localStorage.getItem(userSettingsKey);
+
+      if (savedSettings) {
+        const settings = JSON.parse(savedSettings);
+        const theme = settings.theme || 'light';
+
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else if (theme === 'light') {
+          document.documentElement.classList.remove('dark');
+        } else if (theme === 'auto') {
+          const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          if (isDark) {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+        }
+      } else {
+        // Default to light theme if no settings
+        document.documentElement.classList.remove('dark');
+      }
+    } catch (error) {
+      console.error('Failed to apply user theme:', error);
+    }
+  };
 
   // Close mobile menu when clicking outside
   useEffect(() => {

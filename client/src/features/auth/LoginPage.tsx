@@ -156,9 +156,9 @@ export default function LoginPage() {
         </div>
 
         {/* Demo Credentials */}
-        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <p className="text-sm font-semibold text-blue-900 mb-2">Demo Credentials:</p>
-          <div className="text-sm text-blue-800 space-y-1">
+        <div className="mt-6 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
+          <p className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-2">Demo Credentials:</p>
+          <div className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
             <p><strong>Admin:</strong> admin@example.com / admin123</p>
             <p><strong>User:</strong> test@example.com / password123</p>
           </div>
