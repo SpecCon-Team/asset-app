@@ -1,0 +1,8 @@
+{
+  "claudeCode.environmentVariables": [
+    {
+      "name": "PATH",
+      "value": "C:\\Program Files\\Git\\bin;C:\\Program Files\\Git\\cmd;${env:PATH}"
+    }
+  ]
+}

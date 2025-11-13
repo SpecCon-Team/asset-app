@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { MessageCircle, CheckCircle, AlertCircle } from 'lucide-react';
+import { MessageCircle, CheckCircle, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import Swal from 'sweetalert2';
 
 export default function WhatsAppSetup() {
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -7,19 +8,31 @@ export default function WhatsAppSetup() {
   const [webhookUrl, setWebhookUrl] = useState('');
   const [isConnected, setIsConnected] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
+  const [showApiKey, setShowApiKey] = useState(false);
 
   const handleConnect = async (e: React.FormEvent) => {
     e.preventDefault();
     // Implement WhatsApp Business API connection
-    alert('WhatsApp connection feature - To be implemented with WhatsApp Business API');
+    await Swal.fire({
+      title: 'WhatsApp Connection',
+      text: 'WhatsApp connection feature - To be implemented with WhatsApp Business API',
+      icon: 'info',
+      confirmButtonColor: '#3B82F6',
+    });
     setIsConnected(true);
   };
 
   const handleTestMessage = async () => {
     setIsTesting(true);
     // Implement test message sending
-    setTimeout(() => {
-      alert('Test message sent successfully!');
+    setTimeout(async () => {
+      await Swal.fire({
+        title: 'Success!',
+        text: 'Test message sent successfully!',
+        icon: 'success',
+        confirmButtonColor: '#10B981',
+        timer: 2000,
+      });
       setIsTesting(false);
     }, 1500);
   };
@@ -78,14 +91,24 @@ export default function WhatsAppSetup() {
             <label className="block text-sm font-medium mb-2">
               API Key / Access Token
             </label>
-            <input
-              type="password"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              placeholder="Enter your WhatsApp Business API key"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              required
-            />
+            <div className="relative">
+              <input
+                type={showApiKey ? "text" : "password"}
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder="Enter your WhatsApp Business API key"
+                className="w-full px-4 py-2 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowApiKey(!showApiKey)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                aria-label={showApiKey ? "Hide API key" : "Show API key"}
+              >
+                {showApiKey ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+              </button>
+            </div>
             <p className="text-sm text-gray-500 mt-1">Get this from WhatsApp Business API dashboard</p>
           </div>
 

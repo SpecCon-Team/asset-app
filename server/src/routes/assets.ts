@@ -1,30 +1,53 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 const router = Router();
 
-// Validation schema
+// Helper function to generate unique asset code
+async function generateAssetCode(): Promise<string> {
+  const timestamp = Date.now();
+  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+  const code = `AST-${timestamp}-${random}`;
+
+  // Check if code already exists (very unlikely but just in case)
+  const existing = await prisma.asset.findUnique({
+    where: { asset_code: code }
+  });
+
+  if (existing) {
+    // Recursively try again if duplicate found
+    return generateAssetCode();
+  }
+
+  return code;
+}
+
+// Helper to transform empty strings to null
+const emptyStringToNull = z.string().transform(val => val === '' ? null : val).nullable().optional();
+
+// Validation schema - asset_code is now optional (will be auto-generated)
 const createSchema = z.object({
-  asset_code: z.string(),
+  asset_code: z.string().optional(),
   name: z.string(),
-  asset_type: z.string().optional().nullable(),
-  condition: z.string().optional().nullable(),
+  serial_number: emptyStringToNull,
+  remote_id: emptyStringToNull,
+  asset_type: emptyStringToNull,
+  condition: emptyStringToNull,
   status: z.string().default('available'),
-  assigned_to: z.string().optional().nullable(),
-  scanned_by: z.string().optional().nullable(),
-  scan_datetime: z.string().optional().nullable(),
-  description: z.string().optional().nullable(),
-  ownership: z.string().optional().nullable(),
-  office_location: z.string().optional().nullable(),
-  extension: z.string().optional().nullable(),
-  deskphones: z.string().optional().nullable(),
-  mouse: z.string().optional().nullable(),
-  keyboard: z.string().optional().nullable(),
-  department: z.string().optional().nullable(),
-  notes: z.string().optional().nullable(),
+  assigned_to: emptyStringToNull,
+  scanned_by: emptyStringToNull,
+  scan_datetime: emptyStringToNull,
+  description: emptyStringToNull,
+  ownership: emptyStringToNull,
+  office_location: emptyStringToNull,
+  extension: emptyStringToNull,
+  deskphones: emptyStringToNull,
+  mouse: emptyStringToNull,
+  keyboard: emptyStringToNull,
+  department: emptyStringToNull,
+  notes: emptyStringToNull,
+  ownerId: emptyStringToNull,
 });
 
 const updateSchema = createSchema.partial();
@@ -35,7 +58,8 @@ router.get('/', async (req, res) => {
     console.log('Assets GET request received');
     const search = (req.query.search as string) || undefined;
     const status = (req.query.status as string) || undefined;
-    
+    const ownerId = (req.query.ownerId as string) || undefined;
+
     const assets = await prisma.asset.findMany({
       where: {
         AND: [
@@ -47,11 +71,21 @@ router.get('/', async (req, res) => {
             ],
           } : {},
           status ? { status } : {},
+          ownerId ? { ownerId } : {},
         ],
+      },
+      include: {
+        owner: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+          },
+        },
       },
       orderBy: { createdAt: 'desc' },
     });
-    
+
     console.log(`Found ${assets.length} assets`);
     res.json(assets);
   } catch (error) {
@@ -85,25 +119,30 @@ router.get('/:id', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     console.log('POST /api/assets - Request body:', req.body);
-    
+
     const validatedData = createSchema.parse(req.body);
-    
+
+    // Auto-generate asset code if not provided
+    if (!validatedData.asset_code) {
+      validatedData.asset_code = await generateAssetCode();
+    }
+
     const asset = await prisma.asset.create({
-      data: validatedData,
+      data: validatedData as any,
     });
-    
+
     console.log('Asset created:', asset);
     res.status(201).json(asset);
   } catch (error) {
     console.error('POST /api/assets error:', error);
-    
+
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ 
-        message: 'Validation error', 
-        errors: error.errors 
+      return res.status(400).json({
+        message: 'Validation error',
+        errors: error.errors
       });
     }
-    
+
     res.status(500).json({ message: 'Failed to create asset', error: String(error) });
   }
 });
@@ -155,26 +194,34 @@ router.delete('/:id', async (req, res) => {
 router.post('/bulk', async (req, res) => {
   try {
     console.log('POST /api/assets/bulk - Request body:', req.body);
-    
+
     const assetsData = z.array(createSchema).parse(req.body);
-    
+
+    // Auto-generate asset codes for any missing ones
+    const assetsWithCodes = await Promise.all(
+      assetsData.map(async (asset) => ({
+        ...asset,
+        asset_code: asset.asset_code || await generateAssetCode(),
+      }))
+    );
+
     const assets = await prisma.asset.createMany({
-      data: assetsData,
+      data: assetsWithCodes as any,
       skipDuplicates: true,
     });
-    
+
     console.log(`Bulk created ${assets.count} assets`);
     res.status(201).json({ count: assets.count, message: `Created ${assets.count} assets` });
   } catch (error) {
     console.error('POST /api/assets/bulk error:', error);
-    
+
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ 
-        message: 'Validation error', 
-        errors: error.errors 
+      return res.status(400).json({
+        message: 'Validation error',
+        errors: error.errors
       });
     }
-    
+
     res.status(500).json({ message: 'Failed to bulk create assets', error: String(error) });
   }
 });

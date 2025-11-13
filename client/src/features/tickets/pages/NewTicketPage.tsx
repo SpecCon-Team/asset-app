@@ -5,6 +5,7 @@ import { listUsers } from '@/features/users/api';
 import { listAssets } from '@/features/assets/api';
 import type { User } from '@/features/users/types';
 import type { Asset } from '@/features/assets/types';
+import Swal from 'sweetalert2';
 
 export default function NewTicketPage() {
   const navigate = useNavigate();
@@ -37,27 +38,34 @@ export default function NewTicketPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [usersData, assetsData] = await Promise.all([
-          listUsers(),
-          listAssets(),
-        ]);
+        const usersData = await listUsers();
         setUsers(usersData);
-        setAssets(assetsData);
+
+        // Find current user in users list
+        const matchedUser = usersData.find(u => u.email === currentUser?.email);
 
         // Auto-select current user if they're not an admin
-        if (currentUser && currentUser.role !== 'ADMIN') {
-          const matchedUser = usersData.find(u => u.email === currentUser.email);
-          if (matchedUser) {
-            setFormData(prev => ({ ...prev, createdById: matchedUser.id }));
-          }
+        if (currentUser && currentUser.role !== 'ADMIN' && matchedUser) {
+          setFormData(prev => ({ ...prev, createdById: matchedUser.id }));
         }
+
+        // Fetch assets - filter by user if not admin
+        let assetsData;
+        if (currentUser && currentUser.role !== 'ADMIN' && matchedUser) {
+          // Regular users only see their assigned assets
+          assetsData = await listAssets({ ownerId: matchedUser.id });
+        } else {
+          // Admins see all assets
+          assetsData = await listAssets();
+        }
+        setAssets(assetsData);
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
         setLoadingData(false);
       }
     };
-    
+
     if (currentUser) {
       fetchData();
     }
@@ -112,10 +120,22 @@ export default function NewTicketPage() {
       };
 
       const newTicket = await createTicket(ticketData as any);
-      alert('Ticket created successfully!');
+      await Swal.fire({
+        title: 'Success!',
+        text: 'Ticket created successfully!',
+        icon: 'success',
+        confirmButtonColor: '#10B981',
+        timer: 1500,
+        showConfirmButton: false,
+      });
       navigate(`/tickets/${newTicket.id}`);
     } catch (error) {
-      alert('Failed to create ticket. Please try again.');
+      await Swal.fire({
+        title: 'Error',
+        text: 'Failed to create ticket. Please try again.',
+        icon: 'error',
+        confirmButtonColor: '#EF4444',
+      });
       console.error('Error creating ticket:', error);
     }
   };

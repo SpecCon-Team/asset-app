@@ -19,6 +19,7 @@ const PaginatedAssetsSchema = z.object({
 export type ListAssetsParams = {
   search?: string;
   status?: string;
+  ownerId?: string;
   page?: number;
   pageSize?: number;
 };

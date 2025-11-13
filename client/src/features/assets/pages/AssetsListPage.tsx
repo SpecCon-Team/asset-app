@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAssetsStore } from '../store';
+import Swal from 'sweetalert2';
 
 export default function AssetsListPage() {
   const navigate = useNavigate();
@@ -9,13 +10,43 @@ export default function AssetsListPage() {
 
   const { assets, isLoading, error, fetchAssets, deleteAsset } = useAssetsStore();
 
+  // Redirect non-admin users
+  useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      if (user.role !== 'ADMIN') {
+        navigate('/my/assets');
+      }
+    }
+  }, [navigate]);
+
   useEffect(() => {
     fetchAssets({ search, status: statusFilter });
   }, [search, statusFilter, fetchAssets]);
 
   const handleDelete = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this asset?')) {
+    const result = await Swal.fire({
+      title: 'Delete Asset?',
+      text: 'Are you sure you want to delete this asset? This action cannot be undone.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#EF4444',
+      cancelButtonColor: '#6B7280',
+      confirmButtonText: 'Yes, delete it',
+      cancelButtonText: 'Cancel',
+    });
+
+    if (result.isConfirmed) {
       await deleteAsset(id);
+      await Swal.fire({
+        title: 'Deleted!',
+        text: 'Asset has been deleted successfully.',
+        icon: 'success',
+        confirmButtonColor: '#10B981',
+        timer: 1500,
+        showConfirmButton: false,
+      });
     }
   };
 

@@ -4,6 +4,8 @@ export const AssetSchema = z.object({
   id: z.string().optional(),
   asset_code: z.string(),
   name: z.string(),
+  serial_number: z.string().optional().nullable(),
+  remote_id: z.string().optional().nullable(),
   asset_type: z.string().optional().nullable(),
   condition: z.string().optional().nullable(),
   status: z.enum(['available', 'assigned', 'maintenance', 'repair', 'retired']).default('available'),
@@ -19,13 +21,16 @@ export const AssetSchema = z.object({
   keyboard: z.string().optional().nullable(),
   department: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
+  ownerId: z.string().optional().nullable(),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
 });
 
 export type Asset = z.infer<typeof AssetSchema>;
 
-export const CreateAssetSchema = AssetSchema.omit({ id: true, createdAt: true, updatedAt: true });
+export const CreateAssetSchema = AssetSchema.omit({ id: true, createdAt: true, updatedAt: true }).extend({
+  asset_code: z.string().optional(), // Make asset_code optional for creation (will be auto-generated)
+});
 export type CreateAssetDto = z.infer<typeof CreateAssetSchema>;
 
 export const UpdateAssetSchema = CreateAssetSchema.partial();

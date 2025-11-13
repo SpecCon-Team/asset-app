@@ -4,6 +4,7 @@ import { useTicketsStore } from '../store';
 import { listUsers } from '@/features/users/api';
 import type { User } from '@/features/users/types';
 import { getApiClient } from '@/features/assets/lib/apiClient';
+import Swal from 'sweetalert2';
 
 export default function TicketsListPage() {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ export default function TicketsListPage() {
   const [bulkPriority, setBulkPriority] = useState('');
   const [bulkAssignee, setBulkAssignee] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const { tickets, isLoading, error, fetchTickets } = useTicketsStore();
 
@@ -129,12 +131,22 @@ export default function TicketsListPage() {
 
   const handleBulkUpdate = async () => {
     if (selectedTickets.size === 0) {
-      alert('Please select at least one ticket');
+      await Swal.fire({
+        title: 'No Tickets Selected',
+        text: 'Please select at least one ticket',
+        icon: 'warning',
+        confirmButtonColor: '#3B82F6',
+      });
       return;
     }
 
     if (!bulkStatus && !bulkPriority && !bulkAssignee) {
-      alert('Please select at least one field to update');
+      await Swal.fire({
+        title: 'No Updates Selected',
+        text: 'Please select at least one field to update',
+        icon: 'warning',
+        confirmButtonColor: '#3B82F6',
+      });
       return;
     }
 
@@ -150,7 +162,14 @@ export default function TicketsListPage() {
         updates,
       });
 
-      alert(`Successfully updated ${selectedTickets.size} ticket(s)!`);
+      await Swal.fire({
+        title: 'Success!',
+        text: `Successfully updated ${selectedTickets.size} ticket(s)!`,
+        icon: 'success',
+        confirmButtonColor: '#10B981',
+        timer: 2000,
+        showConfirmButton: false,
+      });
       setSelectedTickets(new Set());
       setShowBulkActions(false);
       setBulkStatus('');
@@ -158,16 +177,77 @@ export default function TicketsListPage() {
       setBulkAssignee('');
       fetchTickets({ status: statusFilter, priority: priorityFilter });
     } catch (error) {
-      alert('Failed to update tickets');
+      await Swal.fire({
+        title: 'Error',
+        text: 'Failed to update tickets',
+        icon: 'error',
+        confirmButtonColor: '#EF4444',
+      });
       console.error('Bulk update error:', error);
     } finally {
       setIsUpdating(false);
     }
   };
 
+  const handleBulkDelete = async () => {
+    if (selectedTickets.size === 0) {
+      await Swal.fire({
+        title: 'No Tickets Selected',
+        text: 'Please select at least one ticket',
+        icon: 'warning',
+        confirmButtonColor: '#3B82F6',
+      });
+      return;
+    }
+
+    const result = await Swal.fire({
+      title: 'Delete Tickets?',
+      text: `Are you sure you want to delete ${selectedTickets.size} ticket(s)? This action cannot be undone.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#EF4444',
+      cancelButtonColor: '#6B7280',
+      confirmButtonText: 'Yes, delete them',
+      cancelButtonText: 'Cancel',
+    });
+
+    if (!result.isConfirmed) return;
+
+    setIsDeleting(true);
+    try {
+      await getApiClient().delete('/tickets/bulk', {
+        data: {
+          ticketIds: Array.from(selectedTickets),
+        },
+      });
+
+      await Swal.fire({
+        title: 'Deleted!',
+        text: `Successfully deleted ${selectedTickets.size} ticket(s)!`,
+        icon: 'success',
+        confirmButtonColor: '#10B981',
+        timer: 2000,
+        showConfirmButton: false,
+      });
+      setSelectedTickets(new Set());
+      setShowBulkActions(false);
+      fetchTickets({ status: statusFilter, priority: priorityFilter });
+    } catch (error) {
+      await Swal.fire({
+        title: 'Error',
+        text: 'Failed to delete tickets',
+        icon: 'error',
+        confirmButtonColor: '#EF4444',
+      });
+      console.error('Bulk delete error:', error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
-    <div className="p-8">
-      <div className="mb-6 flex justify-between items-center">
+    <div className="h-screen overflow-hidden flex flex-col p-8">
+      <div className="mb-6 flex justify-between items-center flex-shrink-0">
         <div>
           <h1 className="text-3xl font-bold">Ticket Management</h1>
           <p className="text-gray-600">Manage and track support tickets</p>
@@ -181,7 +261,7 @@ export default function TicketsListPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-4 gap-6 mb-8 flex-shrink-0">
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-sm font-medium text-gray-500">Total Tickets</h3>
           <p className="text-3xl font-bold mt-2">{filteredTickets.length}</p>
@@ -207,7 +287,7 @@ export default function TicketsListPage() {
       </div>
 
       {/* Search Bar */}
-      <div className="mb-6">
+      <div className="mb-6 flex-shrink-0">
         <input
           type="text"
           placeholder="Search tickets by title, number, or description..."
@@ -218,7 +298,7 @@ export default function TicketsListPage() {
       </div>
 
       {/* Filters and Bulk Actions */}
-      <div className="mb-6 flex gap-4 items-center flex-wrap">
+      <div className="mb-6 flex gap-4 items-center flex-wrap flex-shrink-0">
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
@@ -277,9 +357,9 @@ export default function TicketsListPage() {
 
       {/* Bulk Actions Panel */}
       {showBulkActions && selectedTickets.size > 0 && (
-        <div className="mb-6 bg-purple-50 border border-purple-200 rounded-lg p-4">
+        <div className="mb-6 bg-purple-50 border border-purple-200 rounded-lg p-4 flex-shrink-0">
           <h3 className="font-semibold mb-3">Update {selectedTickets.size} selected ticket(s)</h3>
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-4 gap-4 mb-4">
             <select
               value={bulkStatus}
               onChange={(e) => setBulkStatus(e.target.value)}
@@ -325,26 +405,39 @@ export default function TicketsListPage() {
               {isUpdating ? 'Updating...' : 'Apply Changes'}
             </button>
           </div>
+          <div className="flex justify-end border-t border-purple-200 pt-4">
+            <button
+              onClick={handleBulkDelete}
+              disabled={isDeleting}
+              className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 flex items-center gap-2"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              {isDeleting ? 'Deleting...' : `Delete Selected (${selectedTickets.size})`}
+            </button>
+          </div>
         </div>
       )}
 
       {/* Tickets Table */}
-      {filteredTickets.length === 0 ? (
-        <div className="bg-white p-12 rounded-lg shadow text-center">
-          <p className="text-gray-500">No tickets found</p>
-          {(statusFilter || priorityFilter || assigneeFilter || searchQuery) && (
-            <button
-              onClick={clearFilters}
-              className="mt-4 text-blue-600 hover:text-blue-800 underline"
-            >
-              Clear all filters
-            </button>
-          )}
-        </div>
-      ) : (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+      <div className="flex-1 overflow-hidden">
+        {filteredTickets.length === 0 ? (
+          <div className="bg-white p-12 rounded-lg shadow text-center">
+            <p className="text-gray-500">No tickets found</p>
+            {(statusFilter || priorityFilter || assigneeFilter || searchQuery) && (
+              <button
+                onClick={clearFilters}
+                className="mt-4 text-blue-600 hover:text-blue-800 underline"
+              >
+                Clear all filters
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="bg-white rounded-lg shadow h-full overflow-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 sticky top-0 z-[1]">
               <tr>
                 <th className="px-6 py-3 text-left">
                   <input
@@ -354,13 +447,13 @@ export default function TicketsListPage() {
                     className="w-4 h-4"
                   />
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ticket #</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Title</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Priority</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Assigned To</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase tracking-wider">Ticket #</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase tracking-wider">Title</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase tracking-wider">Priority</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase tracking-wider">Assigned To</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase tracking-wider">Created</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -406,8 +499,9 @@ export default function TicketsListPage() {
               ))}
             </tbody>
           </table>
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

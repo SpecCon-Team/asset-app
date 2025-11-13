@@ -8,23 +8,33 @@ datasource db {
 }
 
 model User {
-  id        String    @id @default(cuid())
-  email     String    @unique
-  name      String?
-  password  String
-  role      Role      @default(USER)
-  tickets   Ticket[]  @relation("UserTickets")
-  assigned  Ticket[]  @relation("AssignedTickets")
-  assets    Asset[]
-  comments  Comment[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id                  String         @id @default(cuid())
+  email               String         @unique
+  name                String?
+  password            String
+  role                Role           @default(USER)
+  isAvailable         Boolean        @default(true)
+  phone               String?
+  department          String?
+  location            String?
+  bio                 String?
+  profilePicture      String?        @db.Text
+  tickets             Ticket[]       @relation("UserTickets")
+  assigned            Ticket[]       @relation("AssignedTickets")
+  assets              Asset[]
+  comments            Comment[]
+  notifications       Notification[] @relation("NotificationRecipient")
+  sentNotifications   Notification[] @relation("NotificationSender")
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
 }
 
 model Asset {
   id              String   @id @default(cuid())
   asset_code      String   @unique
   name            String
+  serial_number   String?
+  remote_id       String?
   asset_type      String?
   condition       String?
   status          String   @default("available")
@@ -40,12 +50,12 @@ model Asset {
   keyboard        String?
   department      String?
   notes           String?
-  
+
   // Relations
   owner           User?    @relation(fields: [ownerId], references: [id])
   ownerId         String?
   tickets         Ticket[]
-  
+
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
@@ -76,6 +86,22 @@ model Comment {
   ticketId  String
   author    User     @relation(fields: [authorId], references: [id])
   authorId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  type      String   // 'comment', 'ticket_status', 'ticket_assigned', 'asset_assigned'
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  userId    String
+  user      User     @relation("NotificationRecipient", fields: [userId], references: [id], onDelete: Cascade)
+  senderId  String?  // User who triggered this notification
+  sender    User?    @relation("NotificationSender", fields: [senderId], references: [id], onDelete: SetNull)
+  ticketId  String?  // Optional link to related ticket
+  assetId   String?  // Optional link to related asset
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

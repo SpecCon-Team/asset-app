@@ -2,12 +2,316 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  scroll-behavior: smooth;
+}
+
 html, body, #root {
   height: 100%;
 }
 
 body {
   @apply bg-gray-50 text-gray-900;
+}
+
+/* Dark mode styles */
+.dark body {
+  @apply bg-gray-900 text-gray-100;
+}
+
+.dark {
+  color-scheme: dark;
+}
+
+/* Dark mode for common elements */
+.dark input,
+.dark textarea,
+.dark select {
+  background-color: #1f2937; /* gray-800 */
+  border-color: #374151; /* gray-700 */
+  color: #f3f4f6; /* gray-100 */
+}
+
+.dark input:focus,
+.dark textarea:focus,
+.dark select:focus {
+  --tw-ring-color: #3b82f6; /* blue-500 */
+  border-color: #3b82f6; /* blue-500 */
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #6b7280; /* gray-500 */
+}
+
+.dark input:disabled,
+.dark textarea:disabled,
+.dark select:disabled {
+  background-color: #111827; /* gray-900 */
+  color: #9ca3af; /* gray-400 */
+}
+
+/* Dark mode text colors - make everything visible */
+.dark h1,
+.dark h2,
+.dark h3,
+.dark h4,
+.dark h5,
+.dark h6 {
+  color: #f3f4f6 !important; /* gray-100 */
+}
+
+.dark p,
+.dark span,
+.dark div,
+.dark label {
+  color: #e5e7eb; /* gray-200 */
+}
+
+.dark .text-gray-900,
+.dark .text-gray-800,
+.dark .text-gray-700 {
+  color: #f3f4f6 !important; /* gray-100 */
+}
+
+.dark .text-gray-600,
+.dark .text-gray-500 {
+  color: #d1d5db !important; /* gray-300 */
+}
+
+.dark .text-gray-400 {
+  color: #9ca3af !important; /* gray-400 */
+}
+
+/* Dark mode for cards and panels */
+.dark .bg-white:not(.bg-blue-600):not(.bg-red-600):not(.bg-green-600):not(.bg-purple-600):not(.bg-yellow-600) {
+  background-color: #1f2937 !important; /* gray-800 */
+}
+
+.dark .border-gray-200,
+.dark .border-gray-300 {
+  border-color: #374151 !important; /* gray-700 */
+}
+
+.dark .bg-gray-50,
+.dark .bg-gray-100 {
+  background-color: #111827 !important; /* gray-900 */
+}
+
+/* Dark mode for tables */
+.dark thead {
+  background-color: #1f2937 !important; /* gray-800 */
+  color: #f3f4f6 !important; /* gray-100 */
+}
+
+.dark tbody {
+  background-color: #1f2937 !important; /* gray-800 */
+}
+
+.dark tr {
+  border-color: #374151 !important; /* gray-700 */
+}
+
+.dark td,
+.dark th {
+  color: #e5e7eb !important; /* gray-200 */
+}
+
+/* Dark mode for hover states */
+.dark .hover\:bg-gray-50:hover,
+.dark .hover\:bg-gray-100:hover {
+  background-color: #374151 !important; /* gray-700 */
+}
+
+.dark .hover\:bg-gray-200:hover {
+  background-color: #4b5563 !important; /* gray-600 */
+}
+
+/* Dark mode for shadows */
+.dark .shadow,
+.dark .shadow-lg,
+.dark .shadow-md {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Dark mode for dividers */
+.dark .divide-gray-200 > *,
+.dark .divide-gray-100 > * {
+  border-color: #374151 !important; /* gray-700 */
+}
+
+/* Keep colored text visible in dark mode */
+.dark .text-blue-600 {
+  color: #60a5fa !important; /* blue-400 */
+}
+
+.dark .text-blue-500 {
+  color: #60a5fa !important; /* blue-400 */
+}
+
+.dark .text-red-600 {
+  color: #f87171 !important; /* red-400 */
+}
+
+.dark .text-red-500 {
+  color: #f87171 !important; /* red-400 */
+}
+
+.dark .text-green-600 {
+  color: #4ade80 !important; /* green-400 */
+}
+
+.dark .text-green-500 {
+  color: #4ade80 !important; /* green-400 */
+}
+
+.dark .text-yellow-600 {
+  color: #fbbf24 !important; /* yellow-400 */
+}
+
+.dark .text-yellow-500 {
+  color: #fbbf24 !important; /* yellow-400 */
+}
+
+.dark .text-purple-600 {
+  color: #c084fc !important; /* purple-400 */
+}
+
+.dark .text-purple-500 {
+  color: #c084fc !important; /* purple-400 */
+}
+
+/* Dark mode for status badges */
+.dark .bg-blue-100 {
+  background-color: #1e3a8a !important; /* blue-900 */
+}
+
+.dark .bg-green-100 {
+  background-color: #14532d !important; /* green-900 */
+}
+
+.dark .bg-yellow-100 {
+  background-color: #713f12 !important; /* yellow-900 */
+}
+
+.dark .bg-red-100 {
+  background-color: #7f1d1d !important; /* red-900 */
+}
+
+.dark .bg-purple-100 {
+  background-color: #581c87 !important; /* purple-900 */
+}
+
+/* Dark mode for buttons and links */
+.dark button {
+  color: #e5e7eb; /* gray-200 */
+}
+
+.dark a {
+  color: #93c5fd; /* blue-300 */
+}
+
+.dark a:hover {
+  color: #60a5fa; /* blue-400 */
+}
+
+/* Dark mode for placeholder text */
+.dark ::placeholder {
+  color: #6b7280 !important; /* gray-500 */
+}
+
+/* Animation delays for chart background */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+/* Smooth scroll for all scrollable elements */
+* {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar styling for webkit browsers */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.dark *::-webkit-scrollbar-track {
+  background: #1f2937;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.dark *::-webkit-scrollbar-thumb {
+  background: #4b5563;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.dark *::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+/* Table scroll container */
+.table-container {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Table responsive styles */
+table {
+  min-width: 100%;
+}
+
+/* Sticky table header */
+thead.sticky {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #f9fafb;
+}
+
+/* Table scrollbar styling */
+.table-container::-webkit-scrollbar {
+  height: 10px;
+}
+
+.table-container::-webkit-scrollbar-track {
+  background: #f8f9fa;
+  border-radius: 5px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 5px;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
 }
 
 

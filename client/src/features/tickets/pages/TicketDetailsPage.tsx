@@ -4,10 +4,13 @@ import { useTicketsStore } from '../store';
 import { listUsers } from '@/features/users/api';
 import type { User } from '@/features/users/types';
 import CommentSection from '../components/CommentSection';
+import { isTechnician } from '@/features/auth/hooks';
+import Swal from 'sweetalert2';
 
 export default function TicketDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const canModifyTicket = isTechnician(); // Admin or Technician can modify tickets
 
   const { currentTicket, isLoading, fetchTicketById, updateTicket, deleteTicket, clearCurrentTicket } = useTicketsStore();
 
@@ -59,15 +62,27 @@ export default function TicketDetailsPage() {
       }
 
       try {
-        await updateTicket(id, { 
-          status, 
+        await updateTicket(id, {
+          status,
           priority,
           assignedToId: assignedToId || null,
         });
-        alert('Ticket updated successfully!');
+        await Swal.fire({
+          title: 'Success!',
+          text: 'Ticket updated successfully!',
+          icon: 'success',
+          confirmButtonColor: '#10B981',
+          timer: 1500,
+          showConfirmButton: false,
+        });
         fetchTicketById(id);
       } catch (error) {
-        alert('Failed to update ticket');
+        await Swal.fire({
+          title: 'Error',
+          text: 'Failed to update ticket',
+          icon: 'error',
+          confirmButtonColor: '#EF4444',
+        });
         console.error('Update error:', error);
       }
     }
@@ -77,10 +92,22 @@ export default function TicketDetailsPage() {
     if (id) {
       try {
         await deleteTicket(id);
-        alert('Ticket deleted successfully!');
+        await Swal.fire({
+          title: 'Deleted!',
+          text: 'Ticket deleted successfully!',
+          icon: 'success',
+          confirmButtonColor: '#10B981',
+          timer: 1500,
+          showConfirmButton: false,
+        });
         navigate('/tickets');
       } catch (error) {
-        alert('Failed to delete ticket');
+        await Swal.fire({
+          title: 'Error',
+          text: 'Failed to delete ticket',
+          icon: 'error',
+          confirmButtonColor: '#EF4444',
+        });
         console.error('Delete error:', error);
       }
     }
@@ -104,7 +131,7 @@ export default function TicketDetailsPage() {
       <div className="mb-6 flex justify-between items-center">
         <div>
           <button
-            onClick={() => navigate('/tickets')}
+            onClick={() => navigate(canModifyTicket ? '/tickets' : '/my/tickets')}
             className="text-blue-600 hover:text-blue-800 mb-4 block"
           >
             ← Back to Tickets
@@ -112,12 +139,14 @@ export default function TicketDetailsPage() {
           <h1 className="text-3xl font-bold">Ticket Details</h1>
           <p className="text-gray-600">Ticket #{currentTicket.number || currentTicket.id}</p>
         </div>
-        <button
-          onClick={() => setShowDeleteConfirm(true)}
-          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-        >
-          Delete Ticket
-        </button>
+        {canModifyTicket && (
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+          >
+            Delete Ticket
+          </button>
+        )}
       </div>
 
       {/* Delete Confirmation Modal */}
@@ -155,62 +184,90 @@ export default function TicketDetailsPage() {
               <h2 className="text-xl font-semibold mb-2">{currentTicket.title}</h2>
             </div>
 
-            {/* Status, Priority & Assignee Controls */}
-            <div className="grid grid-cols-3 gap-6 p-4 bg-gray-50 rounded-lg">
-              <div>
-                <label className="block text-sm font-medium mb-2">Status</label>
-                <select
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="open">Open</option>
-                  <option value="in_progress">In Progress</option>
-                  <option value="closed">Closed</option>
-                </select>
+            {/* Current Status and Priority (for all users) */}
+            {!canModifyTicket && (
+              <div className="grid grid-cols-3 gap-6 p-4 bg-gray-50 rounded-lg">
+                <div>
+                  <span className="block text-sm font-medium text-gray-500 mb-2">Status</span>
+                  <span className="inline-flex px-3 py-1 text-sm rounded-full bg-blue-100 text-blue-800">
+                    {currentTicket.status?.replace('_', ' ') || 'Open'}
+                  </span>
+                </div>
+                <div>
+                  <span className="block text-sm font-medium text-gray-500 mb-2">Priority</span>
+                  <span className="inline-flex px-3 py-1 text-sm rounded-full bg-yellow-100 text-yellow-800">
+                    {currentTicket.priority || 'Medium'}
+                  </span>
+                </div>
+                <div>
+                  <span className="block text-sm font-medium text-gray-500 mb-2">Assigned To</span>
+                  <span className="text-sm text-gray-900">
+                    {currentTicket.assignedTo
+                      ? `${currentTicket.assignedTo.name || currentTicket.assignedTo.email}`
+                      : 'Unassigned'}
+                  </span>
+                </div>
               </div>
+            )}
 
-              <div>
-                <label className="block text-sm font-medium mb-2">Priority</label>
-                <select
-                  value={priority}
-                  onChange={(e) => setPriority(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                  <option value="critical">Critical</option>
-                </select>
-              </div>
+            {/* Status, Priority & Assignee Controls (for admins/technicians only) */}
+            {canModifyTicket && (
+              <div className="grid grid-cols-3 gap-6 p-4 bg-gray-50 rounded-lg">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Status</label>
+                  <select
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="open">Open</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="closed">Closed</option>
+                  </select>
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-2">Assign To</label>
-                <select
-                  value={assignedToId}
-                  onChange={(e) => setAssignedToId(e.target.value)}
-                  disabled={loadingUsers}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-                >
-                  <option value="">Unassigned</option>
-                  {users.map((user) => (
-                    <option key={user.id} value={user.id}>
-                      {user.name || user.email}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Priority</label>
+                  <select
+                    value={priority}
+                    onChange={(e) => setPriority(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                    <option value="critical">Critical</option>
+                  </select>
+                </div>
 
-              <div className="col-span-3">
-                <button
-                  onClick={handleUpdate}
-                  disabled={!hasChanges}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                >
-                  Update Ticket
-                </button>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Assign To</label>
+                  <select
+                    value={assignedToId}
+                    onChange={(e) => setAssignedToId(e.target.value)}
+                    disabled={loadingUsers}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+                  >
+                    <option value="">Unassigned</option>
+                    {users.map((user) => (
+                      <option key={user.id} value={user.id}>
+                        {user.name || user.email}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="col-span-3">
+                  <button
+                    onClick={handleUpdate}
+                    disabled={!hasChanges}
+                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  >
+                    Update Ticket
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Description */}
             <div>
@@ -276,10 +333,22 @@ export default function TicketDetailsPage() {
                     : '-'}
                 </p>
               </div>
-              {currentTicket.assetId && (
-                <div>
-                  <span className="text-gray-500">Related Asset:</span>
-                  <p className="font-medium mt-1">{currentTicket.assetId}</p>
+              {currentTicket.asset && (
+                <div className="pt-3 border-t border-gray-200">
+                  <span className="text-gray-500 block mb-2">Related Asset:</span>
+                  <div className="bg-blue-50 p-3 rounded-lg">
+                    <p className="font-semibold text-blue-900">{currentTicket.asset.name}</p>
+                    <p className="text-sm text-blue-700 mt-1">Code: {currentTicket.asset.asset_code}</p>
+                    <p className="text-xs text-blue-600 mt-1">
+                      Status: <span className="font-medium capitalize">{currentTicket.asset.status}</span>
+                    </p>
+                    <button
+                      onClick={() => navigate(`/assets/${currentTicket.asset?.id}`)}
+                      className="mt-2 text-xs text-blue-600 hover:text-blue-800 underline"
+                    >
+                      View asset details →
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

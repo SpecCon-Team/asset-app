@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -7,25 +9,58 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [touched, setTouched] = useState({
+    email: false,
+    password: false,
+  });
+
+  const handleBlur = (field: keyof typeof touched) => {
+    setTouched({ ...touched, [field]: true });
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
 
+    // Mark all fields as touched
+    setTouched({
+      email: true,
+      password: true,
+    });
+
     try {
-      // For demo purposes - in production, validate with backend
-      if (email === 'admin@example.com' && password === 'admin123') {
-        localStorage.setItem('user', JSON.stringify({ email, role: 'ADMIN' }));
+      // Call backend API for authentication
+      const response = await fetch('http://localhost:4000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Login failed');
+      }
+
+      const data = await response.json();
+
+      // Store user info in localStorage
+      localStorage.setItem('user', JSON.stringify(data.user));
+      localStorage.setItem('token', data.token);
+
+      // Show success toast
+      toast.success('Login successful!');
+
+      // Navigate based on role
+      if (data.user.role === 'ADMIN' || data.user.role === 'TECHNICIAN') {
         navigate('/');
-      } else if (email === 'test@example.com' && password === 'password123') {
-        localStorage.setItem('user', JSON.stringify({ email, role: 'USER' }));
-        navigate('/my/tickets');
       } else {
-        setError('Invalid email or password');
+        navigate('/my/tickets');
       }
     } catch (err) {
-      setError('Login failed. Please try again.');
+      setError(err instanceof Error ? err.message : 'Login failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -61,25 +96,41 @@ export default function LoginPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                onBlur={() => handleBlur('email')}
                 placeholder="you@example.com"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
+                className={`w-full px-4 py-3 border ${touched.email && !email ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
               />
+              {touched.email && !email && (
+                <p className="mt-1 text-xs text-red-600">This field is required</p>
+              )}
             </div>
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                 Password
               </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  onBlur={() => handleBlur('password')}
+                  placeholder="••••••••••••"
+                  className={`w-full px-4 py-3 pr-12 border ${touched.password && !password ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+                </button>
+              </div>
+              {touched.password && !password && (
+                <p className="mt-1 text-xs text-red-600">This field is required</p>
+              )}
             </div>
 
             <button
@@ -91,10 +142,16 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-6 text-center">
-            <a href="#" className="text-sm text-blue-600 hover:text-blue-700">
+          <div className="mt-6 text-center space-y-3">
+            <a href="#" className="text-sm text-blue-600 hover:text-blue-700 block">
               Forgot password?
             </a>
+            <p className="text-sm text-gray-600">
+              Don't have an account?{' '}
+              <Link to="/signup" className="text-blue-600 hover:text-blue-700 font-medium">
+                Sign up
+              </Link>
+            </p>
           </div>
         </div>
 
