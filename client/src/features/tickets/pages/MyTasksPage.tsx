@@ -331,44 +331,44 @@ export default function MyTasksPage() {
     <div className="h-screen overflow-hidden flex flex-col p-8">
       {/* Header */}
       <div className="mb-6 flex-shrink-0">
-        <h1 className="text-3xl font-bold text-gray-900">My Tasks</h1>
-        <p className="text-gray-600 mt-2">Tickets assigned to you</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">My Tasks</h1>
+        <p className="text-gray-600 dark:text-gray-300 mt-2">Tickets assigned to you</p>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 flex-shrink-0">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500">Open Tasks</p>
-              <p className="text-3xl font-bold text-blue-600 mt-2">{openTasks}</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Open Tasks</p>
+              <p className="text-3xl font-bold text-blue-600 dark:text-blue-400 mt-2">{openTasks}</p>
             </div>
-            <div className="p-3 bg-blue-100 rounded-full">
-              <Clock className="w-6 h-6 text-blue-600" />
+            <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-full">
+              <Clock className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500">In Progress</p>
-              <p className="text-3xl font-bold text-purple-600 mt-2">{inProgressTasks}</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">In Progress</p>
+              <p className="text-3xl font-bold text-purple-600 dark:text-purple-400 mt-2">{inProgressTasks}</p>
             </div>
-            <div className="p-3 bg-purple-100 rounded-full">
-              <Activity className="w-6 h-6 text-purple-600" />
+            <div className="p-3 bg-purple-100 dark:bg-purple-900 rounded-full">
+              <Activity className="w-6 h-6 text-purple-600 dark:text-purple-400" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500">Completed</p>
-              <p className="text-3xl font-bold text-green-600 mt-2">{completedTasks}</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Completed</p>
+              <p className="text-3xl font-bold text-green-600 dark:text-green-400 mt-2">{completedTasks}</p>
             </div>
-            <div className="p-3 bg-green-100 rounded-full">
-              <CheckCircle className="w-6 h-6 text-green-600" />
+            <div className="p-3 bg-green-100 dark:bg-green-900 rounded-full">
+              <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
             </div>
           </div>
         </div>
@@ -376,20 +376,20 @@ export default function MyTasksPage() {
 
       {/* Network Speed Test Section */}
       <div className="mb-6 flex-shrink-0">
-        <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg shadow p-6 border border-blue-200">
+        <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-700 rounded-lg shadow p-6 border border-blue-200 dark:border-gray-600">
           <div className="flex items-start justify-between gap-6">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-3">
-                <Wifi className="w-6 h-6 text-blue-600" />
-                <h3 className="text-lg font-semibold text-gray-900">Network Speed Test</h3>
+                <Wifi className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Network Speed Test</h3>
               </div>
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
                 Comprehensive test including ping, download, and upload speeds. Results automatically sent to admin.
               </p>
 
               {/* Progress Indicator */}
               {isTestingSpeed && (
-                <div className="mb-4 p-4 bg-white rounded-lg border border-gray-200">
+                <div className="mb-4 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600">
                   <div className="flex items-center gap-4">
                     <div className="relative w-20 h-20">
                       {/* Background circle */}
@@ -434,8 +434,8 @@ export default function MyTasksPage() {
                       </div>
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">{testStatus}</p>
-                      <div className="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">{testStatus}</p>
+                      <div className="mt-2 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                         <div
                           className="h-full bg-blue-600 transition-all duration-300"
                           style={{ width: `${testProgress}%` }}
@@ -448,20 +448,20 @@ export default function MyTasksPage() {
 
               {/* Results Display */}
               {speedResults && !isTestingSpeed && (
-                <div className="grid grid-cols-3 gap-4 p-4 bg-white rounded-lg border border-gray-200">
+                <div className="grid grid-cols-3 gap-4 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600">
                   <div className="text-center">
-                    <p className="text-xs text-gray-500 mb-1">Ping</p>
-                    <p className="text-2xl font-bold text-green-600">{speedResults.ping} ms</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Ping</p>
+                    <p className="text-2xl font-bold text-green-600 dark:text-green-400">{speedResults.ping} ms</p>
                     <p className="text-xs text-gray-400 mt-1">Latency</p>
                   </div>
-                  <div className="text-center border-l border-r border-gray-200">
-                    <p className="text-xs text-gray-500 mb-1">Download</p>
-                    <p className="text-2xl font-bold text-blue-600">{speedResults.downloadSpeed} Mbps</p>
+                  <div className="text-center border-l border-r border-gray-200 dark:border-gray-700">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Download</p>
+                    <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{speedResults.downloadSpeed} Mbps</p>
                     <p className="text-xs text-gray-400 mt-1">Speed</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-xs text-gray-500 mb-1">Upload</p>
-                    <p className="text-2xl font-bold text-purple-600">{speedResults.uploadSpeed} Mbps</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Upload</p>
+                    <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{speedResults.uploadSpeed} Mbps</p>
                     <p className="text-xs text-gray-400 mt-1">Speed</p>
                   </div>
                 </div>
@@ -482,23 +482,23 @@ export default function MyTasksPage() {
       {/* Tasks List */}
       <div className="flex-1 overflow-y-auto">
         {myTasks.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-12 text-center">
-            <Ticket className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No tasks assigned yet</h3>
-            <p className="text-gray-500">You don't have any tickets assigned to you at the moment</p>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-12 text-center">
+            <Ticket className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No tasks assigned yet</h3>
+            <p className="text-gray-500 dark:text-gray-400">You don't have any tickets assigned to you at the moment</p>
           </div>
         ) : (
           <div className="space-y-4">
             {myTasks.map((ticket) => (
               <div
                 key={ticket.id}
-                className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer"
+                className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer"
                 onClick={() => navigate(`/tickets/${ticket.id}`)}
               >
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">{ticket.title}</h3>
-                    <p className="text-sm text-gray-500">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{ticket.title}</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
                       Ticket #{ticket.number || ticket.id}
                     </p>
                   </div>
@@ -512,11 +512,11 @@ export default function MyTasksPage() {
                   </div>
                 </div>
 
-                <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-2">
                   {ticket.description || 'No description'}
                 </p>
 
-                <div className="flex justify-between items-center text-sm text-gray-500">
+                <div className="flex justify-between items-center text-sm text-gray-500 dark:text-gray-400">
                   <div className="space-x-4">
                     <span>Created by: {ticket.createdBy?.name || ticket.createdBy?.email || 'Unknown'}</span>
                     {ticket.createdAt && (

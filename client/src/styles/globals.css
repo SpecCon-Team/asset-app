@@ -314,4 +314,289 @@ thead.sticky {
   background: #a0aec0;
 }
 
+/* ================================================
+   SweetAlert2 Dark Mode Support
+   ================================================ */
+
+/* Dark mode base popup styling */
+.dark .swal2-popup {
+  background-color: #1F2937 !important; /* gray-800 */
+  color: #F9FAFB !important; /* gray-50 */
+  border: 1px solid #374151 !important; /* gray-700 */
+}
+
+/* Dark mode custom class for popup */
+.dark-mode-swal {
+  border: 1px solid #374151 !important; /* gray-700 */
+}
+
+/* Dark mode title */
+.dark .swal2-title,
+.swal-dark-title {
+  color: #F9FAFB !important; /* gray-50 */
+}
+
+/* Dark mode content */
+.dark .swal2-html-container,
+.swal-dark-content {
+  color: #D1D5DB !important; /* gray-300 */
+}
+
+/* Dark mode close button */
+.dark .swal2-close {
+  color: #D1D5DB !important; /* gray-300 */
+}
+
+.dark .swal2-close:hover {
+  color: #F9FAFB !important; /* gray-50 */
+}
+
+/* Dark mode icon border */
+.dark .swal2-icon {
+  border-color: #374151 !important; /* gray-700 */
+}
+
+/* Success icon in dark mode */
+.dark .swal2-success-ring {
+  border-color: rgba(34, 197, 94, 0.3) !important; /* green-500 with opacity */
+}
+
+.dark .swal2-success-line-tip,
+.dark .swal2-success-line-long {
+  background-color: #22C55E !important; /* green-500 */
+}
+
+/* Error icon in dark mode */
+.dark .swal2-error [class^='swal2-x-mark-line'] {
+  background-color: #EF4444 !important; /* red-500 */
+}
+
+/* Warning icon in dark mode */
+.dark .swal2-warning {
+  border-color: #F59E0B !important; /* amber-500 */
+  color: #F59E0B !important;
+}
+
+/* Info icon in dark mode */
+.dark .swal2-info {
+  border-color: #3B82F6 !important; /* blue-500 */
+  color: #3B82F6 !important;
+}
+
+/* Question icon in dark mode */
+.dark .swal2-question {
+  border-color: #6366F1 !important; /* indigo-500 */
+  color: #6366F1 !important;
+}
+
+/* Styled confirm button */
+.swal-confirm-btn {
+  background-color: #3B82F6 !important; /* blue-600 */
+  color: white !important;
+  padding: 0.5rem 1.5rem !important;
+  border-radius: 0.5rem !important;
+  font-weight: 500 !important;
+  border: none !important;
+  transition: background-color 0.2s ease !important;
+}
+
+.swal-confirm-btn:hover {
+  background-color: #2563EB !important; /* blue-700 */
+}
+
+.swal-confirm-btn:focus {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5) !important;
+}
+
+/* Styled cancel button */
+.swal-cancel-btn {
+  background-color: #6B7280 !important; /* gray-500 */
+  color: white !important;
+  padding: 0.5rem 1.5rem !important;
+  border-radius: 0.5rem !important;
+  font-weight: 500 !important;
+  border: none !important;
+  transition: background-color 0.2s ease !important;
+}
+
+.swal-cancel-btn:hover {
+  background-color: #4B5563 !important; /* gray-600 */
+}
+
+.swal-cancel-btn:focus {
+  box-shadow: 0 0 0 3px rgba(107, 114, 128, 0.5) !important;
+}
+
+/* Dark mode input fields in SweetAlert2 */
+.dark .swal2-input,
+.dark .swal2-textarea,
+.dark .swal2-select {
+  background-color: #1F2937 !important; /* gray-800 */
+  border-color: #374151 !important; /* gray-700 */
+  color: #F9FAFB !important; /* gray-50 */
+}
+
+.dark .swal2-input:focus,
+.dark .swal2-textarea:focus,
+.dark .swal2-select:focus {
+  border-color: #3B82F6 !important; /* blue-500 */
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3) !important;
+}
+
+.dark .swal2-input::placeholder,
+.dark .swal2-textarea::placeholder {
+  color: #6B7280 !important; /* gray-500 */
+}
+
+/* Dark mode validation message */
+.dark .swal2-validation-message {
+  background-color: #7F1D1D !important; /* red-900 */
+  color: #FCA5A5 !important; /* red-300 */
+  border-color: #991B1B !important; /* red-800 */
+}
+
+/* Dark mode footer */
+.dark .swal2-footer {
+  border-color: #374151 !important; /* gray-700 */
+  color: #D1D5DB !important; /* gray-300 */
+}
+
+/* Dark mode progress steps */
+.dark .swal2-progress-steps .swal2-progress-step {
+  background-color: #3B82F6 !important; /* blue-500 */
+}
+
+.dark .swal2-progress-steps .swal2-progress-step-line {
+  background-color: #374151 !important; /* gray-700 */
+}
+
+/* Dark mode timer progress bar */
+.dark .swal2-timer-progress-bar {
+  background-color: rgba(59, 130, 246, 0.6) !important; /* blue-500 with opacity */
+}
+
+/* Dark mode backdrop */
+.dark .swal2-backdrop-show {
+  background-color: rgba(0, 0, 0, 0.7) !important;
+}
+
+/* ================================================
+   End SweetAlert2 Dark Mode Support
+   ================================================ */
+
+/* ================================================
+   Accessibility - Focus Indicators
+   ================================================ */
+
+/* Global focus styles with proper contrast */
+*:focus-visible {
+  outline: 2px solid #3B82F6; /* blue-500 */
+  outline-offset: 2px;
+}
+
+.dark *:focus-visible {
+  outline: 2px solid #60A5FA; /* blue-400 - better contrast in dark mode */
+  outline-offset: 2px;
+}
+
+/* Button focus styles */
+button:focus-visible {
+  outline: 2px solid #3B82F6;
+  outline-offset: 2px;
+}
+
+.dark button:focus-visible {
+  outline: 2px solid #60A5FA;
+  outline-offset: 2px;
+}
+
+/* Link focus styles */
+a:focus-visible {
+  outline: 2px solid #3B82F6;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.dark a:focus-visible {
+  outline: 2px solid #60A5FA;
+  outline-offset: 2px;
+}
+
+/* Input focus styles - enhanced for visibility */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid #3B82F6 !important;
+  outline-offset: 0px;
+  border-color: #3B82F6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+
+.dark input:focus-visible,
+.dark textarea:focus-visible,
+.dark select:focus-visible {
+  outline: 2px solid #60A5FA !important;
+  outline-offset: 0px;
+  border-color: #60A5FA !important;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2) !important;
+}
+
+/* Interactive element focus - for custom components */
+[role="button"]:focus-visible,
+[role="menuitem"]:focus-visible,
+[role="tab"]:focus-visible,
+[role="switch"]:focus-visible,
+[role="checkbox"]:focus-visible,
+[role="radio"]:focus-visible {
+  outline: 2px solid #3B82F6;
+  outline-offset: 2px;
+}
+
+.dark [role="button"]:focus-visible,
+.dark [role="menuitem"]:focus-visible,
+.dark [role="tab"]:focus-visible,
+.dark [role="switch"]:focus-visible,
+.dark [role="checkbox"]:focus-visible,
+.dark [role="radio"]:focus-visible {
+  outline: 2px solid #60A5FA;
+  outline-offset: 2px;
+}
+
+/* Skip to main content link - for keyboard navigation */
+.skip-to-main {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: #3B82F6;
+  color: white;
+  padding: 8px 16px;
+  text-decoration: none;
+  z-index: 10000;
+  border-radius: 0 0 4px 0;
+}
+
+.skip-to-main:focus {
+  top: 0;
+}
+
+.dark .skip-to-main {
+  background: #60A5FA;
+  color: #1F2937;
+}
+
+/* Focus within - for container elements */
+.focus-within-ring:focus-within {
+  ring: 2px;
+  ring-color: #3B82F6;
+  ring-offset: 2px;
+}
+
+.dark .focus-within-ring:focus-within {
+  ring-color: #60A5FA;
+}
+
+/* ================================================
+   End Accessibility - Focus Indicators
+   ================================================ */
+
 

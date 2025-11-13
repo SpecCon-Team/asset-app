@@ -111,7 +111,7 @@ export default function MyProfilePage() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading profile...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-300">Loading profile...</p>
         </div>
       </div>
     );
@@ -121,11 +121,11 @@ export default function MyProfilePage() {
     <div className="max-w-4xl mx-auto p-8">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">My Profile</h1>
-        <p className="text-gray-600 mt-2">Manage your personal information</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">My Profile</h1>
+        <p className="text-gray-600 dark:text-gray-300 mt-2">Manage your personal information</p>
       </div>
 
-      <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
         {/* Profile Header Section */}
         <div className="bg-gradient-to-r from-blue-500 to-purple-600 h-32"></div>
 
@@ -169,10 +169,10 @@ export default function MyProfilePage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Basic Information */}
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Basic Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Full Name
                   </label>
                   <div className="relative">
@@ -190,7 +190,7 @@ export default function MyProfilePage() {
                 </div>
 
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Email Address
                   </label>
                   <div className="relative">
@@ -206,11 +206,11 @@ export default function MyProfilePage() {
                       disabled
                     />
                   </div>
-                  <p className="mt-1 text-xs text-gray-500">Email cannot be changed</p>
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Email cannot be changed</p>
                 </div>
 
                 <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Phone Number
                   </label>
                   <div className="relative">
@@ -226,11 +226,11 @@ export default function MyProfilePage() {
                       placeholder="+27 (0XX) XXX-XXXX"
                     />
                   </div>
-                  <p className="mt-1 text-xs text-gray-500">Maximum 10 digits</p>
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Maximum 10 digits</p>
                 </div>
 
                 <div>
-                  <label htmlFor="department" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="department" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Department
                   </label>
                   <div className="relative">
@@ -248,7 +248,7 @@ export default function MyProfilePage() {
                 </div>
 
                 <div className="md:col-span-2">
-                  <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="location" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Location
                   </label>
                   <div className="relative">
@@ -269,9 +269,9 @@ export default function MyProfilePage() {
 
             {/* Bio Section */}
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">About</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">About</h3>
               <div>
-                <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="bio" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Bio
                 </label>
                 <textarea
@@ -283,7 +283,7 @@ export default function MyProfilePage() {
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                   placeholder="Tell us about yourself..."
                 />
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                   {formData.bio.length}/500 characters
                 </p>
               </div>
@@ -294,7 +294,7 @@ export default function MyProfilePage() {
               <button
                 type="button"
                 onClick={() => window.history.back()}
-                className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                className="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >
                 Cancel
               </button>

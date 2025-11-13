@@ -5,7 +5,7 @@ import { listUsers } from '@/features/users/api';
 import { listAssets } from '@/features/assets/api';
 import type { User } from '@/features/users/types';
 import type { Asset } from '@/features/assets/types';
-import Swal from 'sweetalert2';
+import { showSuccess, showError } from '@/lib/swal-config';
 
 export default function NewTicketPage() {
   const navigate = useNavigate();
@@ -120,22 +120,10 @@ export default function NewTicketPage() {
       };
 
       const newTicket = await createTicket(ticketData as any);
-      await Swal.fire({
-        title: 'Success!',
-        text: 'Ticket created successfully!',
-        icon: 'success',
-        confirmButtonColor: '#10B981',
-        timer: 1500,
-        showConfirmButton: false,
-      });
+      await showSuccess('Success!', 'Ticket created successfully!', 1500);
       navigate(`/tickets/${newTicket.id}`);
     } catch (error) {
-      await Swal.fire({
-        title: 'Error',
-        text: 'Failed to create ticket. Please try again.',
-        icon: 'error',
-        confirmButtonColor: '#EF4444',
-      });
+      await showError('Error', 'Failed to create ticket. Please try again.');
       console.error('Error creating ticket:', error);
     }
   };
@@ -155,14 +143,14 @@ export default function NewTicketPage() {
         >
           ← Back to Tickets
         </button>
-        <h1 className="text-3xl font-bold">Create New Ticket</h1>
-        <p className="text-gray-600">Fill in the details to create a new support ticket</p>
+        <h1 className="text-3xl font-bold dark:text-white">Create New Ticket</h1>
+        <p className="text-gray-600 dark:text-gray-300">Fill in the details to create a new support ticket</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-8 space-y-6">
+      <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 space-y-6">
         {/* Title */}
         <div>
-          <label htmlFor="title" className="block text-sm font-medium mb-2">
+          <label htmlFor="title" className="block text-sm font-medium dark:text-gray-200 mb-2">
             Title <span className="text-red-500">*</span>
           </label>
           <input
@@ -181,7 +169,7 @@ export default function NewTicketPage() {
 
         {/* Description */}
         <div>
-          <label htmlFor="description" className="block text-sm font-medium mb-2">
+          <label htmlFor="description" className="block text-sm font-medium dark:text-gray-200 mb-2">
             Description <span className="text-red-500">*</span>
           </label>
           <textarea
@@ -201,7 +189,7 @@ export default function NewTicketPage() {
         {/* Created By - Only shown for admins */}
         {isAdmin && (
           <div>
-            <label htmlFor="createdById" className="block text-sm font-medium mb-2">
+            <label htmlFor="createdById" className="block text-sm font-medium dark:text-gray-200 mb-2">
               Created By <span className="text-red-500">*</span>
             </label>
             <select
@@ -231,7 +219,7 @@ export default function NewTicketPage() {
 
         {/* Priority */}
         <div>
-          <label htmlFor="priority" className="block text-sm font-medium mb-2">
+          <label htmlFor="priority" className="block text-sm font-medium dark:text-gray-200 mb-2">
             Priority
           </label>
           <select
@@ -250,7 +238,7 @@ export default function NewTicketPage() {
 
         {/* Asset Dropdown */}
         <div>
-          <label htmlFor="assetId" className="block text-sm font-medium mb-2">
+          <label htmlFor="assetId" className="block text-sm font-medium dark:text-gray-200 mb-2">
             Related Asset (Optional)
           </label>
           <select
@@ -284,7 +272,7 @@ export default function NewTicketPage() {
           <button
             type="button"
             onClick={() => navigate('/tickets')}
-            className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+            className="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
           >
             Cancel
           </button>

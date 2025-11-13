@@ -100,13 +100,13 @@ export default function MyTicketsPage() {
   };
 
   return (
-    <div className="h-screen overflow-hidden bg-gray-50">
+    <div className="h-screen overflow-hidden bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto p-8 h-full flex flex-col">
         {/* Header */}
         <div className="mb-8 flex justify-between items-start flex-shrink-0">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">My Tickets</h1>
-            <p className="text-gray-600 mt-2">Track your support requests</p>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">My Tickets</h1>
+            <p className="text-gray-600 dark:text-gray-300 mt-2">Track your support requests</p>
           </div>
           {archivedCount > 0 && (
             <button
@@ -132,51 +132,51 @@ export default function MyTicketsPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 flex-shrink-0">
           <div
             onClick={() => setFilterStatus('open')}
-            className={`bg-white rounded-lg shadow p-6 cursor-pointer transition-all hover:shadow-lg ${
+            className={`bg-white dark:bg-gray-800 rounded-lg shadow p-6 cursor-pointer transition-all hover:shadow-lg ${
               filterStatus === 'open' ? 'ring-2 ring-blue-600 ring-offset-2' : ''
             }`}
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">Open Tickets</p>
-                <p className="text-3xl font-bold text-blue-600 mt-2">{openTickets}</p>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Open Tickets</p>
+                <p className="text-3xl font-bold text-blue-600 dark:text-blue-400 mt-2">{openTickets}</p>
               </div>
-              <div className="p-3 bg-blue-100 rounded-full">
-                <Ticket className="w-6 h-6 text-blue-600" />
+              <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-full">
+                <Ticket className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
             </div>
           </div>
 
           <div
             onClick={() => setFilterStatus('closed')}
-            className={`bg-white rounded-lg shadow p-6 cursor-pointer transition-all hover:shadow-lg ${
+            className={`bg-white dark:bg-gray-800 rounded-lg shadow p-6 cursor-pointer transition-all hover:shadow-lg ${
               filterStatus === 'closed' ? 'ring-2 ring-green-600 ring-offset-2' : ''
             }`}
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">Resolved</p>
-                <p className="text-3xl font-bold text-green-600 mt-2">{resolvedTickets}</p>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Resolved</p>
+                <p className="text-3xl font-bold text-green-600 dark:text-green-400 mt-2">{resolvedTickets}</p>
               </div>
-              <div className="p-3 bg-green-100 rounded-full">
-                <Ticket className="w-6 h-6 text-green-600" />
+              <div className="p-3 bg-green-100 dark:bg-green-900 rounded-full">
+                <Ticket className="w-6 h-6 text-green-600 dark:text-green-400" />
               </div>
             </div>
           </div>
 
           <div
             onClick={() => setFilterStatus('all')}
-            className={`bg-white rounded-lg shadow p-6 cursor-pointer transition-all hover:shadow-lg ${
+            className={`bg-white dark:bg-gray-800 rounded-lg shadow p-6 cursor-pointer transition-all hover:shadow-lg ${
               filterStatus === 'all' ? 'ring-2 ring-gray-600 ring-offset-2' : ''
             }`}
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">Total Tickets</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">{totalTickets}</p>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Tickets</p>
+                <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{totalTickets}</p>
               </div>
-              <div className="p-3 bg-gray-100 rounded-full">
-                <Ticket className="w-6 h-6 text-gray-600" />
+              <div className="p-3 bg-gray-100 dark:bg-gray-700 rounded-full">
+                <Ticket className="w-6 h-6 text-gray-600 dark:text-gray-400" />
               </div>
             </div>
           </div>
@@ -184,11 +184,11 @@ export default function MyTicketsPage() {
 
         {/* Archive Notice Banner */}
         {showArchived && (
-          <div className="mb-6 bg-gray-100 border border-gray-300 rounded-lg p-4 flex items-center gap-3 flex-shrink-0">
-            <Archive className="w-5 h-5 text-gray-600" />
+          <div className="mb-6 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-4 flex items-center gap-3 flex-shrink-0">
+            <Archive className="w-5 h-5 text-gray-600 dark:text-gray-400" />
             <div className="flex-1">
-              <p className="text-sm font-medium text-gray-900">Viewing Archived Tickets</p>
-              <p className="text-xs text-gray-600">Showing tickets older than 30 days</p>
+              <p className="text-sm font-medium text-gray-900 dark:text-white">Viewing Archived Tickets</p>
+              <p className="text-xs text-gray-600 dark:text-gray-300">Showing tickets older than 30 days</p>
             </div>
           </div>
         )}
@@ -223,10 +223,10 @@ export default function MyTicketsPage() {
         {/* Tickets List */}
         <div className="flex-1 overflow-y-auto">
           {myTickets.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-12 text-center">
-            <Ticket className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No tickets yet</h3>
-            <p className="text-gray-500 mb-6">Create your first support ticket to get started</p>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-12 text-center">
+            <Ticket className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No tickets yet</h3>
+            <p className="text-gray-500 dark:text-gray-400 mb-6">Create your first support ticket to get started</p>
             <button
               onClick={() => navigate('/tickets/new')}
               className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -235,10 +235,10 @@ export default function MyTicketsPage() {
             </button>
           </div>
         ) : displayTickets.length === 0 && showArchived ? (
-          <div className="bg-white rounded-lg shadow p-12 text-center">
-            <Archive className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No archived tickets</h3>
-            <p className="text-gray-500 mb-6">You don't have any tickets older than 30 days</p>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-12 text-center">
+            <Archive className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No archived tickets</h3>
+            <p className="text-gray-500 dark:text-gray-400 mb-6">You don't have any tickets older than 30 days</p>
             <button
               onClick={() => setShowArchived(false)}
               className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
@@ -247,12 +247,12 @@ export default function MyTicketsPage() {
             </button>
           </div>
         ) : filteredTickets.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-12 text-center">
-            <Ticket className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-12 text-center">
+            <Ticket className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
               No {filterStatus === 'open' ? 'open' : 'resolved'} tickets found
             </h3>
-            <p className="text-gray-500 mb-6">
+            <p className="text-gray-500 dark:text-gray-400 mb-6">
               {filterStatus === 'open'
                 ? "You don't have any open tickets at the moment"
                 : "You don't have any resolved tickets yet"}
@@ -269,13 +269,13 @@ export default function MyTicketsPage() {
             {filteredTickets.map((ticket) => (
               <div
                 key={ticket.id}
-                className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer"
+                className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer"
                 onClick={() => navigate(`/tickets/${ticket.id}`)}
               >
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">{ticket.title}</h3>
-                    <p className="text-sm text-gray-500">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{ticket.title}</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
                       Ticket #{ticket.number || ticket.id}
                     </p>
                   </div>
@@ -289,11 +289,11 @@ export default function MyTicketsPage() {
                   </div>
                 </div>
 
-                <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-2">
                   {ticket.description || 'No description'}
                 </p>
 
-                <div className="flex justify-between items-center text-sm text-gray-500">
+                <div className="flex justify-between items-center text-sm text-gray-500 dark:text-gray-400">
                   <div className="space-x-4">
                     <span>Assigned to: {ticket.assignedTo?.email || 'Unassigned'}</span>
                     {ticket.createdAt && (
@@ -301,7 +301,7 @@ export default function MyTicketsPage() {
                     )}
                   </div>
                   {ticket.resolution && (
-                    <div className="flex items-center gap-1 text-green-600">
+                    <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
                       <AlertCircle className="w-4 h-4" />
                       <span className="text-xs font-medium">Resolved</span>
                     </div>

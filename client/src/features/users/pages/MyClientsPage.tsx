@@ -81,13 +81,13 @@ export default function MyClientsPage() {
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
       case 'ADMIN':
-        return 'bg-purple-100 text-purple-800 border-purple-200';
+        return 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 border-purple-200 dark:border-purple-700';
       case 'TECHNICIAN':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
+        return 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-700';
       case 'USER':
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-600';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-600';
     }
   };
 
@@ -105,7 +105,7 @@ export default function MyClientsPage() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading users...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-300">Loading users...</p>
         </div>
       </div>
     );
@@ -115,84 +115,84 @@ export default function MyClientsPage() {
     <div className="h-screen overflow-hidden flex flex-col p-8">
       {/* Header */}
       <div className="mb-6 flex-shrink-0">
-        <h1 className="text-3xl font-bold text-gray-900">My Clients</h1>
-        <p className="text-gray-600 mt-2">Manage users and their access levels</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">My Clients</h1>
+        <p className="text-gray-600 dark:text-gray-300 mt-2">Manage users and their access levels</p>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-8 flex-shrink-0">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500">Total Users</p>
-              <p className="text-3xl font-bold mt-2">{stats.total}</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Users</p>
+              <p className="text-3xl font-bold dark:text-white mt-2">{stats.total}</p>
             </div>
-            <div className="p-3 bg-gray-100 rounded-full">
-              <Users className="w-6 h-6 text-gray-600" />
+            <div className="p-3 bg-gray-100 dark:bg-gray-700 rounded-full">
+              <Users className="w-6 h-6 text-gray-600 dark:text-gray-400" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500">Online</p>
-              <p className="text-3xl font-bold text-green-600 mt-2">{stats.online}</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Online</p>
+              <p className="text-3xl font-bold text-green-600 dark:text-green-400 mt-2">{stats.online}</p>
             </div>
-            <div className="p-3 bg-green-100 rounded-full">
+            <div className="p-3 bg-green-100 dark:bg-green-900 rounded-full">
               <div className="w-6 h-6 flex items-center justify-center">
-                <div className="w-3 h-3 bg-green-600 rounded-full"></div>
+                <div className="w-3 h-3 bg-green-600 dark:bg-green-400 rounded-full"></div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500">Offline</p>
-              <p className="text-3xl font-bold text-red-600 mt-2">{stats.offline}</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Offline</p>
+              <p className="text-3xl font-bold text-red-600 dark:text-red-400 mt-2">{stats.offline}</p>
             </div>
-            <div className="p-3 bg-red-100 rounded-full">
+            <div className="p-3 bg-red-100 dark:bg-red-900 rounded-full">
               <div className="w-6 h-6 flex items-center justify-center">
-                <div className="w-3 h-3 bg-red-600 rounded-full"></div>
+                <div className="w-3 h-3 bg-red-600 dark:bg-red-400 rounded-full"></div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500">Admins</p>
-              <p className="text-3xl font-bold text-purple-600 mt-2">{stats.admins}</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Admins</p>
+              <p className="text-3xl font-bold text-purple-600 dark:text-purple-400 mt-2">{stats.admins}</p>
             </div>
-            <div className="p-3 bg-purple-100 rounded-full">
-              <Shield className="w-6 h-6 text-purple-600" />
+            <div className="p-3 bg-purple-100 dark:bg-purple-900 rounded-full">
+              <Shield className="w-6 h-6 text-purple-600 dark:text-purple-400" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500">Technicians</p>
-              <p className="text-3xl font-bold text-blue-600 mt-2">{stats.technicians}</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Technicians</p>
+              <p className="text-3xl font-bold text-blue-600 dark:text-blue-400 mt-2">{stats.technicians}</p>
             </div>
-            <div className="p-3 bg-blue-100 rounded-full">
-              <UserCheck className="w-6 h-6 text-blue-600" />
+            <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-full">
+              <UserCheck className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500">Regular Users</p>
-              <p className="text-3xl font-bold text-gray-600 mt-2">{stats.users}</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Regular Users</p>
+              <p className="text-3xl font-bold text-gray-600 dark:text-gray-400 mt-2">{stats.users}</p>
             </div>
-            <div className="p-3 bg-gray-100 rounded-full">
-              <Users className="w-6 h-6 text-gray-600" />
+            <div className="p-3 bg-gray-100 dark:bg-gray-700 rounded-full">
+              <Users className="w-6 h-6 text-gray-600 dark:text-gray-400" />
             </div>
           </div>
         </div>
@@ -224,34 +224,34 @@ export default function MyClientsPage() {
 
       {/* Users Table */}
       <div className="flex-1 overflow-y-auto">
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50 sticky top-0 z-[1]">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-700 sticky top-0 z-[1]">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     User
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Email
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Current Role
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Change Role
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Joined
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 {filteredUsers.map((user) => (
-                  <tr key={user.id} className="hover:bg-gray-50">
+                  <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="relative flex-shrink-0">
@@ -276,7 +276,7 @@ export default function MyClientsPage() {
                           ></div>
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-medium text-gray-900 dark:text-white">
                             {user.name || 'No Name'}
                           </div>
                         </div>
@@ -297,7 +297,7 @@ export default function MyClientsPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{user.email}</div>
+                      <div className="text-sm text-gray-900 dark:text-white">{user.email}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
@@ -320,7 +320,7 @@ export default function MyClientsPage() {
                         <option value="ADMIN">Admin</option>
                       </select>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                       {user.createdAt
                         ? new Date(user.createdAt).toLocaleDateString()
                         : 'N/A'}
@@ -335,8 +335,8 @@ export default function MyClientsPage() {
 
       {filteredUsers.length === 0 && (
         <div className="text-center py-12">
-          <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500">No users found</p>
+          <Users className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+          <p className="text-gray-500 dark:text-gray-400">No users found</p>
         </div>
       )}
     </div>

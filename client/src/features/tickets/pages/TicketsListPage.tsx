@@ -4,7 +4,7 @@ import { useTicketsStore } from '../store';
 import { listUsers } from '@/features/users/api';
 import type { User } from '@/features/users/types';
 import { getApiClient } from '@/features/assets/lib/apiClient';
-import Swal from 'sweetalert2';
+import { showThemedAlert, showSuccess, showError, showConfirmation } from '@/lib/swal-config';
 
 export default function TicketsListPage() {
   const navigate = useNavigate();
@@ -131,7 +131,7 @@ export default function TicketsListPage() {
 
   const handleBulkUpdate = async () => {
     if (selectedTickets.size === 0) {
-      await Swal.fire({
+      await showThemedAlert({
         title: 'No Tickets Selected',
         text: 'Please select at least one ticket',
         icon: 'warning',
@@ -141,7 +141,7 @@ export default function TicketsListPage() {
     }
 
     if (!bulkStatus && !bulkPriority && !bulkAssignee) {
-      await Swal.fire({
+      await showThemedAlert({
         title: 'No Updates Selected',
         text: 'Please select at least one field to update',
         icon: 'warning',
@@ -162,14 +162,7 @@ export default function TicketsListPage() {
         updates,
       });
 
-      await Swal.fire({
-        title: 'Success!',
-        text: `Successfully updated ${selectedTickets.size} ticket(s)!`,
-        icon: 'success',
-        confirmButtonColor: '#10B981',
-        timer: 2000,
-        showConfirmButton: false,
-      });
+      await showSuccess('Success!', `Successfully updated ${selectedTickets.size} ticket(s)!`, 2000);
       setSelectedTickets(new Set());
       setShowBulkActions(false);
       setBulkStatus('');
@@ -177,12 +170,7 @@ export default function TicketsListPage() {
       setBulkAssignee('');
       fetchTickets({ status: statusFilter, priority: priorityFilter });
     } catch (error) {
-      await Swal.fire({
-        title: 'Error',
-        text: 'Failed to update tickets',
-        icon: 'error',
-        confirmButtonColor: '#EF4444',
-      });
+      await showError('Error', 'Failed to update tickets');
       console.error('Bulk update error:', error);
     } finally {
       setIsUpdating(false);
@@ -191,7 +179,7 @@ export default function TicketsListPage() {
 
   const handleBulkDelete = async () => {
     if (selectedTickets.size === 0) {
-      await Swal.fire({
+      await showThemedAlert({
         title: 'No Tickets Selected',
         text: 'Please select at least one ticket',
         icon: 'warning',
@@ -200,16 +188,12 @@ export default function TicketsListPage() {
       return;
     }
 
-    const result = await Swal.fire({
-      title: 'Delete Tickets?',
-      text: `Are you sure you want to delete ${selectedTickets.size} ticket(s)? This action cannot be undone.`,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#EF4444',
-      cancelButtonColor: '#6B7280',
-      confirmButtonText: 'Yes, delete them',
-      cancelButtonText: 'Cancel',
-    });
+    const result = await showConfirmation(
+      'Delete Tickets?',
+      `Are you sure you want to delete ${selectedTickets.size} ticket(s)? This action cannot be undone.`,
+      'Yes, delete them',
+      'Cancel'
+    );
 
     if (!result.isConfirmed) return;
 
@@ -221,24 +205,12 @@ export default function TicketsListPage() {
         },
       });
 
-      await Swal.fire({
-        title: 'Deleted!',
-        text: `Successfully deleted ${selectedTickets.size} ticket(s)!`,
-        icon: 'success',
-        confirmButtonColor: '#10B981',
-        timer: 2000,
-        showConfirmButton: false,
-      });
+      await showSuccess('Deleted!', `Successfully deleted ${selectedTickets.size} ticket(s)!`, 2000);
       setSelectedTickets(new Set());
       setShowBulkActions(false);
       fetchTickets({ status: statusFilter, priority: priorityFilter });
     } catch (error) {
-      await Swal.fire({
-        title: 'Error',
-        text: 'Failed to delete tickets',
-        icon: 'error',
-        confirmButtonColor: '#EF4444',
-      });
+      await showError('Error', 'Failed to delete tickets');
       console.error('Bulk delete error:', error);
     } finally {
       setIsDeleting(false);
@@ -246,41 +218,41 @@ export default function TicketsListPage() {
   };
 
   return (
-    <div className="h-screen overflow-hidden flex flex-col p-8">
-      <div className="mb-6 flex justify-between items-center flex-shrink-0">
+    <div className="h-screen overflow-hidden flex flex-col p-4 md:p-8">
+      <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 flex-shrink-0">
         <div>
-          <h1 className="text-3xl font-bold">Ticket Management</h1>
-          <p className="text-gray-600">Manage and track support tickets</p>
+          <h1 className="text-3xl font-bold dark:text-white">Ticket Management</h1>
+          <p className="text-gray-600 dark:text-gray-300">Manage and track support tickets</p>
         </div>
         <button
           onClick={() => navigate('/tickets/new')}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+          className="w-full sm:w-auto px-4 py-2 min-h-[44px] bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2"
         >
           <span>+</span> New Ticket
         </button>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-4 gap-6 mb-8 flex-shrink-0">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-sm font-medium text-gray-500">Total Tickets</h3>
-          <p className="text-3xl font-bold mt-2">{filteredTickets.length}</p>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8 flex-shrink-0">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Tickets</h3>
+          <p className="text-3xl font-bold mt-2 dark:text-white">{filteredTickets.length}</p>
         </div>
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-sm font-medium text-gray-500">Open</h3>
-          <p className="text-3xl font-bold mt-2 text-blue-600">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Open</h3>
+          <p className="text-3xl font-bold mt-2 text-blue-600 dark:text-blue-400">
             {filteredTickets.filter((t) => t.status === 'open').length}
           </p>
         </div>
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-sm font-medium text-gray-500">In Progress</h3>
-          <p className="text-3xl font-bold mt-2 text-purple-600">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">In Progress</h3>
+          <p className="text-3xl font-bold mt-2 text-purple-600 dark:text-purple-400">
             {filteredTickets.filter((t) => t.status === 'in_progress').length}
           </p>
         </div>
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-sm font-medium text-gray-500">High Priority</h3>
-          <p className="text-3xl font-bold mt-2 text-red-600">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">High Priority</h3>
+          <p className="text-3xl font-bold mt-2 text-red-600 dark:text-red-400">
             {filteredTickets.filter((t) => t.priority === 'high' || t.priority === 'critical').length}
           </p>
         </div>
@@ -357,9 +329,9 @@ export default function TicketsListPage() {
 
       {/* Bulk Actions Panel */}
       {showBulkActions && selectedTickets.size > 0 && (
-        <div className="mb-6 bg-purple-50 border border-purple-200 rounded-lg p-4 flex-shrink-0">
-          <h3 className="font-semibold mb-3">Update {selectedTickets.size} selected ticket(s)</h3>
-          <div className="grid grid-cols-4 gap-4 mb-4">
+        <div className="mb-6 bg-purple-50 dark:bg-purple-900/50 border border-purple-200 dark:border-purple-700 rounded-lg p-4 flex-shrink-0">
+          <h3 className="font-semibold mb-3 dark:text-white">Update {selectedTickets.size} selected ticket(s)</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
             <select
               value={bulkStatus}
               onChange={(e) => setBulkStatus(e.target.value)}
@@ -405,7 +377,7 @@ export default function TicketsListPage() {
               {isUpdating ? 'Updating...' : 'Apply Changes'}
             </button>
           </div>
-          <div className="flex justify-end border-t border-purple-200 pt-4">
+          <div className="flex justify-end border-t border-purple-200 dark:border-purple-700 pt-4">
             <button
               onClick={handleBulkDelete}
               disabled={isDeleting}
@@ -423,8 +395,8 @@ export default function TicketsListPage() {
       {/* Tickets Table */}
       <div className="flex-1 overflow-hidden">
         {filteredTickets.length === 0 ? (
-          <div className="bg-white p-12 rounded-lg shadow text-center">
-            <p className="text-gray-500">No tickets found</p>
+          <div className="bg-white dark:bg-gray-800 p-12 rounded-lg shadow text-center">
+            <p className="text-gray-500 dark:text-gray-400">No tickets found</p>
             {(statusFilter || priorityFilter || assigneeFilter || searchQuery) && (
               <button
                 onClick={clearFilters}
@@ -435,9 +407,74 @@ export default function TicketsListPage() {
             )}
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow h-full overflow-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 sticky top-0 z-[1]">
+          <>
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-4 overflow-auto h-full pb-4">
+              {filteredTickets.map((ticket) => (
+                <div
+                  key={ticket.id}
+                  className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-700"
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        checked={selectedTickets.has(ticket.id!)}
+                        onChange={() => handleSelectTicket(ticket.id!)}
+                        className="w-5 h-5 mt-1"
+                      />
+                      <div>
+                        <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                          {ticket.number || ticket.id}
+                        </div>
+                        <h3 className="font-semibold text-gray-900 dark:text-white">
+                          {ticket.title}
+                        </h3>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 mb-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">Status:</span>
+                      <span className={`px-3 py-1 text-xs rounded-full ${getStatusColor(ticket.status || '')}`}>
+                        {ticket.status?.replace('_', ' ')}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">Priority:</span>
+                      <span className={`px-3 py-1 text-xs rounded-full ${getPriorityColor(ticket.priority || '')}`}>
+                        {ticket.priority}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">Assigned To:</span>
+                      <span className="text-sm text-gray-900 dark:text-gray-300">
+                        {ticket.assignedTo?.name || ticket.assignedTo?.email || 'Unassigned'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">Created:</span>
+                      <span className="text-sm text-gray-900 dark:text-gray-300">
+                        {ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString() : '-'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => navigate(`/tickets/${ticket.id}`)}
+                    className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium min-h-[44px]"
+                  >
+                    View Details
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden md:block bg-white dark:bg-gray-800 rounded-lg shadow h-full overflow-auto">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 dark:from-gray-700 dark:via-gray-700 dark:to-gray-700 sticky top-0 z-[1]">
               <tr>
                 <th className="px-6 py-3 text-left">
                   <input
@@ -456,9 +493,9 @@ export default function TicketsListPage() {
                 <th className="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {filteredTickets.map((ticket) => (
-                <tr key={ticket.id} className="hover:bg-gray-50">
+                <tr key={ticket.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <input
                       type="checkbox"
@@ -470,7 +507,7 @@ export default function TicketsListPage() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     {ticket.number || ticket.id}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">{ticket.title}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm dark:text-gray-300">{ticket.title}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-3 py-1 text-xs rounded-full ${getStatusColor(ticket.status || '')}`}>
                       {ticket.status?.replace('_', ' ')}
@@ -499,7 +536,8 @@ export default function TicketsListPage() {
               ))}
             </tbody>
           </table>
-          </div>
+            </div>
+          </>
         )}
       </div>
     </div>

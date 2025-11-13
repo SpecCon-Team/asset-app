@@ -5,7 +5,7 @@ import { listUsers } from '@/features/users/api';
 import type { User } from '@/features/users/types';
 import CommentSection from '../components/CommentSection';
 import { isTechnician } from '@/features/auth/hooks';
-import Swal from 'sweetalert2';
+import { showSuccess, showError } from '@/lib/swal-config';
 
 export default function TicketDetailsPage() {
   const { id } = useParams();
@@ -67,22 +67,10 @@ export default function TicketDetailsPage() {
           priority,
           assignedToId: assignedToId || null,
         });
-        await Swal.fire({
-          title: 'Success!',
-          text: 'Ticket updated successfully!',
-          icon: 'success',
-          confirmButtonColor: '#10B981',
-          timer: 1500,
-          showConfirmButton: false,
-        });
+        await showSuccess('Success!', 'Ticket updated successfully!', 1500);
         fetchTicketById(id);
       } catch (error) {
-        await Swal.fire({
-          title: 'Error',
-          text: 'Failed to update ticket',
-          icon: 'error',
-          confirmButtonColor: '#EF4444',
-        });
+        await showError('Error', 'Failed to update ticket');
         console.error('Update error:', error);
       }
     }
@@ -92,22 +80,10 @@ export default function TicketDetailsPage() {
     if (id) {
       try {
         await deleteTicket(id);
-        await Swal.fire({
-          title: 'Deleted!',
-          text: 'Ticket deleted successfully!',
-          icon: 'success',
-          confirmButtonColor: '#10B981',
-          timer: 1500,
-          showConfirmButton: false,
-        });
+        await showSuccess('Deleted!', 'Ticket deleted successfully!', 1500);
         navigate('/tickets');
       } catch (error) {
-        await Swal.fire({
-          title: 'Error',
-          text: 'Failed to delete ticket',
-          icon: 'error',
-          confirmButtonColor: '#EF4444',
-        });
+        await showError('Error', 'Failed to delete ticket');
         console.error('Delete error:', error);
       }
     }
@@ -136,8 +112,8 @@ export default function TicketDetailsPage() {
           >
             ← Back to Tickets
           </button>
-          <h1 className="text-3xl font-bold">Ticket Details</h1>
-          <p className="text-gray-600">Ticket #{currentTicket.number || currentTicket.id}</p>
+          <h1 className="text-3xl font-bold dark:text-white">Ticket Details</h1>
+          <p className="text-gray-600 dark:text-gray-300">Ticket #{currentTicket.number || currentTicket.id}</p>
         </div>
         {canModifyTicket && (
           <button
@@ -151,16 +127,16 @@ export default function TicketDetailsPage() {
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-xl font-bold mb-4">Delete Ticket?</h3>
-            <p className="text-gray-600 mb-6">
+        <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-xl font-bold mb-4 dark:text-white">Delete Ticket?</h3>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
               Are you sure you want to delete ticket <strong>#{currentTicket.number}</strong>? This action cannot be undone.
             </p>
             <div className="flex gap-4 justify-end">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
               >
                 Cancel
               </button>
@@ -178,30 +154,30 @@ export default function TicketDetailsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Content - Left Column */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white rounded-lg shadow p-8 space-y-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 space-y-6">
             {/* Title */}
             <div>
-              <h2 className="text-xl font-semibold mb-2">{currentTicket.title}</h2>
+              <h2 className="text-xl font-semibold mb-2 dark:text-white">{currentTicket.title}</h2>
             </div>
 
             {/* Current Status and Priority (for all users) */}
             {!canModifyTicket && (
-              <div className="grid grid-cols-3 gap-6 p-4 bg-gray-50 rounded-lg">
+              <div className="grid grid-cols-3 gap-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                 <div>
-                  <span className="block text-sm font-medium text-gray-500 mb-2">Status</span>
-                  <span className="inline-flex px-3 py-1 text-sm rounded-full bg-blue-100 text-blue-800">
+                  <span className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Status</span>
+                  <span className="inline-flex px-3 py-1 text-sm rounded-full bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
                     {currentTicket.status?.replace('_', ' ') || 'Open'}
                   </span>
                 </div>
                 <div>
-                  <span className="block text-sm font-medium text-gray-500 mb-2">Priority</span>
-                  <span className="inline-flex px-3 py-1 text-sm rounded-full bg-yellow-100 text-yellow-800">
+                  <span className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Priority</span>
+                  <span className="inline-flex px-3 py-1 text-sm rounded-full bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200">
                     {currentTicket.priority || 'Medium'}
                   </span>
                 </div>
                 <div>
-                  <span className="block text-sm font-medium text-gray-500 mb-2">Assigned To</span>
-                  <span className="text-sm text-gray-900">
+                  <span className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Assigned To</span>
+                  <span className="text-sm text-gray-900 dark:text-white">
                     {currentTicket.assignedTo
                       ? `${currentTicket.assignedTo.name || currentTicket.assignedTo.email}`
                       : 'Unassigned'}
@@ -212,9 +188,9 @@ export default function TicketDetailsPage() {
 
             {/* Status, Priority & Assignee Controls (for admins/technicians only) */}
             {canModifyTicket && (
-              <div className="grid grid-cols-3 gap-6 p-4 bg-gray-50 rounded-lg">
+              <div className="grid grid-cols-3 gap-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Status</label>
+                  <label className="block text-sm font-medium mb-2 dark:text-gray-200">Status</label>
                   <select
                     value={status}
                     onChange={(e) => setStatus(e.target.value)}
@@ -227,7 +203,7 @@ export default function TicketDetailsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Priority</label>
+                  <label className="block text-sm font-medium mb-2 dark:text-gray-200">Priority</label>
                   <select
                     value={priority}
                     onChange={(e) => setPriority(e.target.value)}
@@ -241,7 +217,7 @@ export default function TicketDetailsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Assign To</label>
+                  <label className="block text-sm font-medium mb-2 dark:text-gray-200">Assign To</label>
                   <select
                     value={assignedToId}
                     onChange={(e) => setAssignedToId(e.target.value)}
@@ -271,9 +247,9 @@ export default function TicketDetailsPage() {
 
             {/* Description */}
             <div>
-              <h3 className="text-sm font-medium text-gray-700 mb-2">Description</h3>
-              <div className="p-4 bg-gray-50 rounded-lg">
-                <p className="text-gray-900 whitespace-pre-wrap">
+              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</h3>
+              <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <p className="text-gray-900 dark:text-white whitespace-pre-wrap">
                   {currentTicket.description || 'No description provided'}
                 </p>
               </div>
@@ -282,69 +258,69 @@ export default function TicketDetailsPage() {
             {/* Resolution */}
             {currentTicket.resolution && (
               <div>
-                <h3 className="text-sm font-medium text-gray-700 mb-2">Resolution</h3>
-                <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <p className="text-gray-900 whitespace-pre-wrap">{currentTicket.resolution}</p>
+                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Resolution</h3>
+                <div className="p-4 bg-green-50 dark:bg-green-900/50 border border-green-200 dark:border-green-700 rounded-lg">
+                  <p className="text-gray-900 dark:text-white whitespace-pre-wrap">{currentTicket.resolution}</p>
                 </div>
               </div>
             )}
           </div>
 
           {/* Comments Section */}
-          <div className="bg-white rounded-lg shadow p-8">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8">
             <CommentSection ticketId={currentTicket.id!} />
           </div>
         </div>
 
         {/* Sidebar - Right Column */}
         <div className="space-y-6">
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="font-semibold mb-4">Ticket Information</h3>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <h3 className="font-semibold mb-4 dark:text-white">Ticket Information</h3>
             <div className="space-y-3 text-sm">
               <div>
-                <span className="text-gray-500">Created by:</span>
-                <p className="font-medium mt-1">
-                  {(currentTicket as any).createdBy 
-                    ? `${(currentTicket as any).createdBy.name || (currentTicket as any).createdBy.email}` 
+                <span className="text-gray-500 dark:text-gray-400">Created by:</span>
+                <p className="font-medium mt-1 dark:text-white">
+                  {(currentTicket as any).createdBy
+                    ? `${(currentTicket as any).createdBy.name || (currentTicket as any).createdBy.email}`
                     : currentTicket.createdById || '-'}
                 </p>
               </div>
               <div>
-                <span className="text-gray-500">Assigned to:</span>
-                <p className="font-medium mt-1">
-                  {currentTicket.assignedTo 
-                    ? `${currentTicket.assignedTo.name || currentTicket.assignedTo.email}` 
+                <span className="text-gray-500 dark:text-gray-400">Assigned to:</span>
+                <p className="font-medium mt-1 dark:text-white">
+                  {currentTicket.assignedTo
+                    ? `${currentTicket.assignedTo.name || currentTicket.assignedTo.email}`
                     : 'Unassigned'}
                 </p>
               </div>
               <div>
-                <span className="text-gray-500">Created at:</span>
-                <p className="font-medium mt-1">
+                <span className="text-gray-500 dark:text-gray-400">Created at:</span>
+                <p className="font-medium mt-1 dark:text-white">
                   {currentTicket.createdAt
                     ? new Date(currentTicket.createdAt).toLocaleString()
                     : '-'}
                 </p>
               </div>
               <div>
-                <span className="text-gray-500">Updated at:</span>
-                <p className="font-medium mt-1">
+                <span className="text-gray-500 dark:text-gray-400">Updated at:</span>
+                <p className="font-medium mt-1 dark:text-white">
                   {currentTicket.updatedAt
                     ? new Date(currentTicket.updatedAt).toLocaleString()
                     : '-'}
                 </p>
               </div>
               {currentTicket.asset && (
-                <div className="pt-3 border-t border-gray-200">
-                  <span className="text-gray-500 block mb-2">Related Asset:</span>
-                  <div className="bg-blue-50 p-3 rounded-lg">
-                    <p className="font-semibold text-blue-900">{currentTicket.asset.name}</p>
-                    <p className="text-sm text-blue-700 mt-1">Code: {currentTicket.asset.asset_code}</p>
-                    <p className="text-xs text-blue-600 mt-1">
+                <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
+                  <span className="text-gray-500 dark:text-gray-400 block mb-2">Related Asset:</span>
+                  <div className="bg-blue-50 dark:bg-blue-900/50 p-3 rounded-lg">
+                    <p className="font-semibold text-blue-900 dark:text-blue-200">{currentTicket.asset.name}</p>
+                    <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">Code: {currentTicket.asset.asset_code}</p>
+                    <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
                       Status: <span className="font-medium capitalize">{currentTicket.asset.status}</span>
                     </p>
                     <button
                       onClick={() => navigate(`/assets/${currentTicket.asset?.id}`)}
-                      className="mt-2 text-xs text-blue-600 hover:text-blue-800 underline"
+                      className="mt-2 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline"
                     >
                       View asset details →
                     </button>

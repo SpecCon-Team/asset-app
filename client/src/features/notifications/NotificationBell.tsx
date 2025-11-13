@@ -8,9 +8,11 @@ export default function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);
   const [showSpeedTestModal, setShowSpeedTestModal] = useState(false);
   const [selectedSpeedTest, setSelectedSpeedTest] = useState<any>(null);
+  const [focusedIndex, setFocusedIndex] = useState<number>(-1);
   const currentUser = useCurrentUser();
   const navigate = useNavigate();
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const notificationRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const { notifications, unreadCount, fetchNotifications, fetchUnreadCount, markAsRead, markAllAsRead, deleteNotification } = useNotificationsStore();
 
@@ -40,6 +42,49 @@ export default function NotificationBell() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Keyboard navigation handler
+  useEffect(() => {
+    if (!isOpen) {
+      setFocusedIndex(-1);
+      return;
+    }
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsOpen(false);
+        // Return focus to the trigger button
+        const button = dropdownRef.current?.querySelector('button[aria-haspopup="true"]') as HTMLButtonElement;
+        button?.focus();
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setFocusedIndex((prev) => {
+          const next = prev < notifications.length - 1 ? prev + 1 : prev;
+          notificationRefs.current[next]?.focus();
+          return next;
+        });
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setFocusedIndex((prev) => {
+          const next = prev > 0 ? prev - 1 : 0;
+          notificationRefs.current[next]?.focus();
+          return next;
+        });
+      } else if (e.key === 'Home') {
+        e.preventDefault();
+        setFocusedIndex(0);
+        notificationRefs.current[0]?.focus();
+      } else if (e.key === 'End') {
+        e.preventDefault();
+        const lastIndex = notifications.length - 1;
+        setFocusedIndex(lastIndex);
+        notificationRefs.current[lastIndex]?.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, notifications.length]);
 
   const handleNotificationClick = async (notification: any) => {
     // Mark as read
@@ -128,11 +173,18 @@ export default function NotificationBell() {
         <button
           onClick={() => setIsOpen(!isOpen)}
           className="relative p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
-          aria-label="Notifications"
+          aria-label={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ''}`}
+          aria-expanded={isOpen}
+          aria-haspopup="true"
+          aria-controls="notifications-dropdown"
         >
           <Bell className="w-6 h-6" />
           {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+            <span
+              className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center"
+              role="status"
+              aria-label={`${unreadCount} unread notifications`}
+            >
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}
@@ -140,7 +192,12 @@ export default function NotificationBell() {
 
         {/* Dropdown */}
         {isOpen && (
-          <div className="absolute right-0 mt-2 w-96 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-[9999] max-h-[600px] flex flex-col">
+          <div
+            id="notifications-dropdown"
+            role="menu"
+            aria-label="Notifications menu"
+            className="absolute right-0 mt-2 w-96 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-[9999] max-h-[600px] flex flex-col"
+          >
             {/* Header */}
             <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
               <h3 className="font-semibold text-lg text-gray-900 dark:text-white">Notifications</h3>
@@ -148,8 +205,9 @@ export default function NotificationBell() {
                 {unreadCount > 0 && (
                   <button
                     onClick={handleMarkAllAsRead}
-                    className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                    className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex items-center gap-1"
                     title="Mark all as read"
+                    aria-label="Mark all notifications as read"
                   >
                     <CheckCheck className="w-4 h-4" />
                     Mark all read
@@ -167,13 +225,23 @@ export default function NotificationBell() {
                 </div>
               ) : (
                 <div className="divide-y divide-gray-100 dark:divide-gray-700">
-                  {notifications.map((notification) => (
+                  {notifications.map((notification, index) => (
                     <div
                       key={notification.id}
-                      className={`p-4 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors ${
+                      ref={(el) => (notificationRefs.current[index] = el)}
+                      role="menuitem"
+                      tabIndex={0}
+                      className={`p-4 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset ${
                         !notification.read ? 'bg-blue-50 dark:bg-blue-900/20' : ''
                       }`}
                       onClick={() => handleNotificationClick(notification)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          handleNotificationClick(notification);
+                        }
+                      }}
+                      aria-label={`${notification.title}${!notification.read ? ', unread' : ''}`}
                     >
                       <div className="flex gap-3">
                         {/* Sender Avatar or Icon */}
@@ -230,8 +298,9 @@ export default function NotificationBell() {
                             e.stopPropagation();
                             deleteNotification(notification.id);
                           }}
-                          className="flex-shrink-0 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 p-1"
+                          className="flex-shrink-0 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 p-1 focus:outline-none focus:ring-2 focus:ring-red-500 rounded"
                           title="Delete notification"
+                          aria-label={`Delete notification: ${notification.title}`}
                         >
                           <X className="w-4 h-4" />
                         </button>

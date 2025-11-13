@@ -18,7 +18,9 @@ interface UserProfileDropdownProps {
 export default function UserProfileDropdown({ user }: UserProfileDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isAvailable, setIsAvailable] = useState(user?.isAvailable ?? true);
+  const [focusedIndex, setFocusedIndex] = useState<number>(-1);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const menuItemRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const navigate = useNavigate();
 
   // Update isAvailable when user prop changes
@@ -37,6 +39,52 @@ export default function UserProfileDropdown({ user }: UserProfileDropdownProps) 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Keyboard navigation handler
+  useEffect(() => {
+    if (!isOpen) {
+      setFocusedIndex(-1);
+      return;
+    }
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Total number of menu items (4 menu items + 1 logout button = 5 total)
+      const totalItems = 5;
+
+      if (e.key === 'Escape') {
+        setIsOpen(false);
+        // Return focus to the trigger button
+        const button = dropdownRef.current?.querySelector('button') as HTMLButtonElement;
+        button?.focus();
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setFocusedIndex((prev) => {
+          const next = prev < totalItems - 1 ? prev + 1 : prev;
+          menuItemRefs.current[next]?.focus();
+          return next;
+        });
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setFocusedIndex((prev) => {
+          const next = prev > 0 ? prev - 1 : 0;
+          menuItemRefs.current[next]?.focus();
+          return next;
+        });
+      } else if (e.key === 'Home') {
+        e.preventDefault();
+        setFocusedIndex(0);
+        menuItemRefs.current[0]?.focus();
+      } else if (e.key === 'End') {
+        e.preventDefault();
+        const lastIndex = totalItems - 1;
+        setFocusedIndex(lastIndex);
+        menuItemRefs.current[lastIndex]?.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen]);
 
   const handleAvailabilityToggle = async () => {
     const newAvailability = !isAvailable;
@@ -123,6 +171,10 @@ export default function UserProfileDropdown({ user }: UserProfileDropdownProps) 
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+        aria-label={`User menu for ${getDisplayName()}`}
+        aria-expanded={isOpen}
+        aria-haspopup="true"
+        aria-controls="user-profile-dropdown"
       >
         <div className="relative">
           {user.profilePicture ? (
@@ -146,7 +198,12 @@ export default function UserProfileDropdown({ user }: UserProfileDropdownProps) 
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-72 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-[9999] animate-in fade-in slide-in-from-top-2 duration-200">
+        <div
+          id="user-profile-dropdown"
+          role="menu"
+          aria-label="User profile menu"
+          className="absolute right-0 mt-2 w-72 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-[9999] animate-in fade-in slide-in-from-top-2 duration-200"
+        >
           {/* User Info Header */}
           <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center gap-3">
@@ -185,12 +242,15 @@ export default function UserProfileDropdown({ user }: UserProfileDropdownProps) 
                     isAvailable ? 'bg-green-500' : 'bg-gray-400'
                   }`}></div>
                 </div>
-                <span className="text-sm text-gray-700 dark:text-gray-300">Available</span>
+                <span className="text-sm text-gray-700 dark:text-gray-300" id="availability-label">Available</span>
               </div>
               <button
                 onClick={handleAvailabilityToggle}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  isAvailable ? 'bg-green-500' : 'bg-gray-300'
+                role="switch"
+                aria-checked={isAvailable}
+                aria-labelledby="availability-label"
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 ${
+                  isAvailable ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'
                 }`}
               >
                 <span
@@ -209,8 +269,11 @@ export default function UserProfileDropdown({ user }: UserProfileDropdownProps) 
               return (
                 <button
                   key={index}
+                  ref={(el) => (menuItemRefs.current[index] = el)}
                   onClick={item.onClick}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  role="menuitem"
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+                  aria-label={item.label}
                 >
                   <Icon className="w-5 h-5 text-gray-500 dark:text-gray-400" />
                   <span>{item.label}</span>
@@ -222,8 +285,11 @@ export default function UserProfileDropdown({ user }: UserProfileDropdownProps) 
           {/* Logout */}
           <div className="border-t border-gray-200 dark:border-gray-700 pt-2">
             <button
+              ref={(el) => (menuItemRefs.current[menuItems.length] = el)}
               onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+              role="menuitem"
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-red-500"
+              aria-label="Log out"
             >
               <LogOut className="w-5 h-5" />
               <span>Log out</span>
