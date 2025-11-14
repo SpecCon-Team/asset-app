@@ -3,28 +3,50 @@ import { useNavigate } from 'react-router-dom';
 import { useTicketsStore } from '../store';
 import { Ticket, AlertCircle, Archive } from 'lucide-react';
 import { formatDate } from '@/lib/dateFormatter';
+import { PageLoader } from '@/components/LoadingSpinner';
 
 export default function MyTicketsPage() {
   const navigate = useNavigate();
   const { tickets, isLoading, error, fetchTickets } = useTicketsStore();
-  const [userEmail] = useState(() => {
+  const [user] = useState(() => {
     const userStr = localStorage.getItem('user');
     if (userStr) {
-      const user = JSON.parse(userStr);
-      return user.email;
+      return JSON.parse(userStr);
     }
-    return '';
+    return null;
   });
-  const [filterStatus, setFilterStatus] = useState<'all' | 'open' | 'closed'>('all');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'open' | 'in_progress' | 'closed'>('all');
   const [showArchived, setShowArchived] = useState(false);
 
   useEffect(() => {
     fetchTickets();
   }, [fetchTickets]);
 
-  const myTickets = tickets.filter(
-    (ticket) => ticket.createdBy?.email === userEmail
-  );
+  // Role-based ticket filtering
+  const myTickets = tickets.filter((ticket) => {
+    if (!user) return false;
+
+    // ADMIN: sees all tickets
+    if (user.role === 'ADMIN') {
+      return true;
+    }
+
+    // TECHNICIAN: sees tickets assigned to them OR created by them
+    if (user.role === 'TECHNICIAN') {
+      return (
+        ticket.assignedTo?.id === user.id ||
+        ticket.assignedTo?.email === user.email ||
+        ticket.createdBy?.id === user.id ||
+        ticket.createdBy?.email === user.email
+      );
+    }
+
+    // USER: sees only tickets they created
+    return (
+      ticket.createdBy?.id === user.id ||
+      ticket.createdBy?.email === user.email
+    );
+  });
 
   // Calculate date 30 days ago
   const thirtyDaysAgo = new Date();
@@ -47,21 +69,15 @@ export default function MyTicketsPage() {
   const displayTickets = showArchived ? archivedTickets : activeTickets;
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading your tickets...</p>
-        </div>
-      </div>
-    );
+    return <PageLoader message="Loading your tickets..." />;
   }
 
   if (error) {
-    return <div className="p-8 text-red-600">Error: {error}</div>;
+    return <div className="p-8 text-red-600 dark:text-red-400 bg-gray-50 dark:bg-gray-900 min-h-screen">Error: {error}</div>;
   }
 
   const openTickets = displayTickets.filter((t) => t.status === 'open').length;
+  const inProgressTickets = displayTickets.filter((t) => t.status === 'in_progress').length;
   const resolvedTickets = displayTickets.filter((t) => t.status === 'closed').length;
   const totalTickets = displayTickets.length;
   const archivedCount = archivedTickets.length;
@@ -106,8 +122,16 @@ export default function MyTicketsPage() {
         {/* Header */}
         <div className="mb-8 flex justify-between items-start flex-shrink-0">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">My Tickets</h1>
-            <p className="text-gray-600 dark:text-gray-300 mt-2">Track your support requests</p>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              {user?.role === 'ADMIN' ? 'All Tickets' : user?.role === 'TECHNICIAN' ? 'Assigned Tickets' : 'My Tickets'}
+            </h1>
+            <p className="text-gray-600 dark:text-gray-300 mt-2">
+              {user?.role === 'ADMIN'
+                ? 'View and manage all support tickets'
+                : user?.role === 'TECHNICIAN'
+                ? 'View tickets assigned to you'
+                : 'Track your support requests'}
+            </p>
           </div>
           {archivedCount > 0 && (
             <button
@@ -130,56 +154,93 @@ export default function MyTicketsPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 flex-shrink-0">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 flex-shrink-0">
           <div
             onClick={() => setFilterStatus('open')}
-            className={`bg-white dark:bg-gray-800 rounded-lg shadow p-6 cursor-pointer transition-all hover:shadow-lg ${
-              filterStatus === 'open' ? 'ring-2 ring-blue-600 ring-offset-2' : ''
+            className={`bg-white dark:bg-gray-800 rounded-lg shadow p-6 cursor-pointer transition-all hover:shadow-lg hover:scale-105 ${
+              filterStatus === 'open' ? 'ring-2 ring-blue-600 ring-offset-2 bg-blue-50 dark:bg-blue-900/20' : ''
             }`}
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Open Tickets</p>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Open</p>
                 <p className="text-3xl font-bold text-blue-600 dark:text-blue-400 mt-2">{openTickets}</p>
               </div>
               <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-full">
                 <Ticket className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
             </div>
+            {filterStatus === 'open' && (
+              <div className="mt-3 pt-3 border-t border-blue-200 dark:border-blue-800">
+                <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">Active Filter</p>
+              </div>
+            )}
           </div>
 
           <div
-            onClick={() => setFilterStatus('closed')}
-            className={`bg-white dark:bg-gray-800 rounded-lg shadow p-6 cursor-pointer transition-all hover:shadow-lg ${
-              filterStatus === 'closed' ? 'ring-2 ring-green-600 ring-offset-2' : ''
+            onClick={() => setFilterStatus('in_progress')}
+            className={`bg-white dark:bg-gray-800 rounded-lg shadow p-6 cursor-pointer transition-all hover:shadow-lg hover:scale-105 ${
+              filterStatus === 'in_progress' ? 'ring-2 ring-purple-600 ring-offset-2 bg-purple-50 dark:bg-purple-900/20' : ''
             }`}
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Resolved</p>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">In Progress</p>
+                <p className="text-3xl font-bold text-purple-600 dark:text-purple-400 mt-2">{inProgressTickets}</p>
+              </div>
+              <div className="p-3 bg-purple-100 dark:bg-purple-900 rounded-full">
+                <Ticket className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+              </div>
+            </div>
+            {filterStatus === 'in_progress' && (
+              <div className="mt-3 pt-3 border-t border-purple-200 dark:border-purple-800">
+                <p className="text-xs text-purple-600 dark:text-purple-400 font-medium">Active Filter</p>
+              </div>
+            )}
+          </div>
+
+          <div
+            onClick={() => setFilterStatus('closed')}
+            className={`bg-white dark:bg-gray-800 rounded-lg shadow p-6 cursor-pointer transition-all hover:shadow-lg hover:scale-105 ${
+              filterStatus === 'closed' ? 'ring-2 ring-green-600 ring-offset-2 bg-green-50 dark:bg-green-900/20' : ''
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Completed</p>
                 <p className="text-3xl font-bold text-green-600 dark:text-green-400 mt-2">{resolvedTickets}</p>
               </div>
               <div className="p-3 bg-green-100 dark:bg-green-900 rounded-full">
                 <Ticket className="w-6 h-6 text-green-600 dark:text-green-400" />
               </div>
             </div>
+            {filterStatus === 'closed' && (
+              <div className="mt-3 pt-3 border-t border-green-200 dark:border-green-800">
+                <p className="text-xs text-green-600 dark:text-green-400 font-medium">Active Filter</p>
+              </div>
+            )}
           </div>
 
           <div
             onClick={() => setFilterStatus('all')}
-            className={`bg-white dark:bg-gray-800 rounded-lg shadow p-6 cursor-pointer transition-all hover:shadow-lg ${
-              filterStatus === 'all' ? 'ring-2 ring-gray-600 ring-offset-2' : ''
+            className={`bg-white dark:bg-gray-800 rounded-lg shadow p-6 cursor-pointer transition-all hover:shadow-lg hover:scale-105 ${
+              filterStatus === 'all' ? 'ring-2 ring-gray-600 ring-offset-2 bg-gray-50 dark:bg-gray-700/20' : ''
             }`}
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Tickets</p>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total</p>
                 <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{totalTickets}</p>
               </div>
               <div className="p-3 bg-gray-100 dark:bg-gray-700 rounded-full">
                 <Ticket className="w-6 h-6 text-gray-600 dark:text-gray-400" />
               </div>
             </div>
+            {filterStatus === 'all' && (
+              <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                <p className="text-xs text-gray-600 dark:text-gray-400 font-medium">Showing All</p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -196,7 +257,7 @@ export default function MyTicketsPage() {
 
         {/* New Ticket Button */}
         <div className="mb-6 flex justify-between items-center flex-shrink-0">
-          {!showArchived && (
+          {!showArchived && user?.role !== 'ADMIN' && (
             <button
               onClick={() => navigate('/tickets/new')}
               className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
@@ -207,15 +268,27 @@ export default function MyTicketsPage() {
 
           {/* Active Filter Indicator */}
           {filterStatus !== 'all' && (
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">
-                Showing: <span className="font-semibold">{filterStatus === 'open' ? 'Open Tickets' : 'Resolved Tickets'}</span>
+            <div className="flex items-center gap-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg px-4 py-2">
+              <span className="text-sm text-gray-700 dark:text-gray-300">
+                Filtered by: <span className="font-semibold text-blue-700 dark:text-blue-300">
+                  {filterStatus === 'open' ? 'Open Tickets' :
+                   filterStatus === 'in_progress' ? 'In Progress Tickets' :
+                   filterStatus === 'closed' ? 'Completed Tickets' : 'All Tickets'}
+                </span>
               </span>
               <button
-                onClick={() => setFilterStatus('all')}
-                className="text-sm text-blue-600 hover:text-blue-700 underline"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setFilterStatus('all');
+                }}
+                className="ml-auto flex items-center gap-1 text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+                title="Clear filter and show all tickets"
               >
-                Clear filter
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                Clear
               </button>
             </div>
           )}
@@ -226,14 +299,24 @@ export default function MyTicketsPage() {
           {myTickets.length === 0 ? (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-12 text-center">
             <Ticket className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No tickets yet</h3>
-            <p className="text-gray-500 dark:text-gray-400 mb-6">Create your first support ticket to get started</p>
-            <button
-              onClick={() => navigate('/tickets/new')}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              Create Ticket
-            </button>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              {user?.role === 'ADMIN' ? 'No tickets in the system' : user?.role === 'TECHNICIAN' ? 'No tickets assigned yet' : 'No tickets yet'}
+            </h3>
+            <p className="text-gray-500 dark:text-gray-400 mb-6">
+              {user?.role === 'ADMIN'
+                ? 'No support tickets have been created yet'
+                : user?.role === 'TECHNICIAN'
+                ? 'You have no tickets assigned to you at the moment'
+                : 'Create your first support ticket to get started'}
+            </p>
+            {user?.role !== 'ADMIN' && (
+              <button
+                onClick={() => navigate('/tickets/new')}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Create Ticket
+              </button>
+            )}
           </div>
         ) : displayTickets.length === 0 && showArchived ? (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-12 text-center">
@@ -251,15 +334,25 @@ export default function MyTicketsPage() {
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-12 text-center">
             <Ticket className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              No {filterStatus === 'open' ? 'open' : 'resolved'} tickets found
+              No {filterStatus === 'open' ? 'open' :
+                  filterStatus === 'in_progress' ? 'in progress' :
+                  filterStatus === 'closed' ? 'completed' : ''} tickets found
             </h3>
             <p className="text-gray-500 dark:text-gray-400 mb-6">
               {filterStatus === 'open'
                 ? "You don't have any open tickets at the moment"
-                : "You don't have any resolved tickets yet"}
+                : filterStatus === 'in_progress'
+                ? "You don't have any tickets in progress"
+                : filterStatus === 'closed'
+                ? "You don't have any completed tickets yet"
+                : "No tickets found"}
             </p>
             <button
-              onClick={() => setFilterStatus('all')}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setFilterStatus('all');
+              }}
               className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
             >
               View All Tickets

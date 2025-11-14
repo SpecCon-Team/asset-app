@@ -6,6 +6,7 @@ import type { User } from '@/features/users/types';
 import { getApiClient } from '@/features/assets/lib/apiClient';
 import { showThemedAlert, showSuccess, showError, showConfirmation } from '@/lib/swal-config';
 import { formatDate } from '@/lib/dateFormatter';
+import { PageLoader } from '@/components/LoadingSpinner';
 
 export default function TicketsListPage() {
   const navigate = useNavigate();
@@ -54,11 +55,11 @@ export default function TicketsListPage() {
   }, [statusFilter, priorityFilter, fetchTickets]);
 
   if (isLoading) {
-    return <div className="p-8">Loading tickets...</div>;
+    return <PageLoader message="Loading tickets..." />;
   }
 
   if (error) {
-    return <div className="p-8 text-red-600">Error: {error}</div>;
+    return <div className="p-8 text-red-600 dark:text-red-400 bg-gray-50 dark:bg-gray-900 min-h-screen">Error: {error}</div>;
   }
 
   const getPriorityColor = (priority: string) => {
@@ -311,8 +312,12 @@ export default function TicketsListPage() {
 
         {(statusFilter || priorityFilter || assigneeFilter || searchQuery) && (
           <button
-            onClick={clearFilters}
-            className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 underline"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              clearFilters();
+            }}
+            className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 underline"
           >
             Clear Filters
           </button>
@@ -400,8 +405,12 @@ export default function TicketsListPage() {
             <p className="text-gray-500 dark:text-gray-400">No tickets found</p>
             {(statusFilter || priorityFilter || assigneeFilter || searchQuery) && (
               <button
-                onClick={clearFilters}
-                className="mt-4 text-blue-600 hover:text-blue-800 underline"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  clearFilters();
+                }}
+                className="mt-4 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline"
               >
                 Clear all filters
               </button>
