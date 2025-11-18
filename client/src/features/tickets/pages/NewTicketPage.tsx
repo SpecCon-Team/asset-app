@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTicketsStore } from '../store';
 import { listUsers } from '@/features/users/api';
@@ -24,6 +24,9 @@ export default function NewTicketPage() {
   const [loadingData, setLoadingData] = useState(true);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [assetSearch, setAssetSearch] = useState('');
+  const [showAssetDropdown, setShowAssetDropdown] = useState(false);
+  const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
 
   // Get logged in user
   useEffect(() => {
@@ -81,6 +84,52 @@ export default function NewTicketPage() {
     }));
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  // Filter assets based on search
+  const filteredAssets = useMemo(() => {
+    if (!assetSearch.trim()) return assets;
+
+    const searchLower = assetSearch.toLowerCase();
+    return assets.filter(asset =>
+      asset.asset_code.toLowerCase().includes(searchLower) ||
+      asset.name.toLowerCase().includes(searchLower) ||
+      asset.status.toLowerCase().includes(searchLower) ||
+      (asset.category && asset.category.toLowerCase().includes(searchLower))
+    );
+  }, [assets, assetSearch]);
+
+  const handleAssetSelect = (asset: Asset) => {
+    setSelectedAsset(asset);
+    setFormData(prev => ({ ...prev, assetId: asset.id }));
+    setAssetSearch('');
+    setShowAssetDropdown(false);
+  };
+
+  const handleClearAsset = () => {
+    setSelectedAsset(null);
+    setFormData(prev => ({ ...prev, assetId: '' }));
+    setAssetSearch('');
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'available': return 'text-green-600 bg-green-50';
+      case 'in_use': return 'text-blue-600 bg-blue-50';
+      case 'maintenance': return 'text-yellow-600 bg-yellow-50';
+      case 'retired': return 'text-gray-600 bg-gray-50';
+      default: return 'text-gray-600 bg-gray-50';
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'available': return '✓';
+      case 'in_use': return '●';
+      case 'maintenance': return '⚠';
+      case 'retired': return '✕';
+      default: return '○';
     }
   };
 
@@ -236,28 +285,150 @@ export default function NewTicketPage() {
           </select>
         </div>
 
-        {/* Asset Dropdown */}
-        <div>
-          <label htmlFor="assetId" className="block text-sm font-medium dark:text-gray-200 mb-2">
+        {/* Enhanced Asset Search & Selection */}
+        <div className="relative">
+          <label htmlFor="assetSearch" className="block text-sm font-medium dark:text-gray-200 mb-2">
             Related Asset (Optional)
+            {assets.length > 0 && (
+              <span className="ml-2 text-xs text-gray-500 font-normal">
+                {isAdmin ? `${assets.length} assets available` : `${assets.length} of your assets`}
+              </span>
+            )}
           </label>
-          <select
-            id="assetId"
-            name="assetId"
-            value={formData.assetId}
-            onChange={handleChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">Select an asset (optional)</option>
-            {assets.map((asset) => (
-              <option key={asset.id} value={asset.id}>
-                {asset.asset_code} - {asset.name} ({asset.status})
-              </option>
-            ))}
-          </select>
-          <p className="mt-1 text-sm text-gray-500">
-            Select the asset this ticket is related to, if applicable
-          </p>
+
+          {/* Selected Asset Display */}
+          {selectedAsset ? (
+            <div className="relative">
+              <div className="w-full px-4 py-3 border-2 border-blue-500 bg-blue-50 dark:bg-blue-900/20 rounded-lg flex items-center justify-between">
+                <div className="flex items-center gap-3 flex-1">
+                  <div className="flex-shrink-0">
+                    <span className="text-2xl">🔧</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold text-gray-900 dark:text-white">
+                        {selectedAsset.asset_code}
+                      </p>
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(selectedAsset.status)}`}>
+                        {getStatusIcon(selectedAsset.status)} {selectedAsset.status.replace('_', ' ')}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 truncate">
+                      {selectedAsset.name}
+                    </p>
+                    {selectedAsset.category && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {selectedAsset.category}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleClearAsset}
+                  className="ml-2 p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                  title="Clear selection"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                ✓ This ticket will be linked to <strong>{selectedAsset.asset_code}</strong>
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* Search Input */}
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <input
+                  type="text"
+                  id="assetSearch"
+                  value={assetSearch}
+                  onChange={(e) => setAssetSearch(e.target.value)}
+                  onFocus={() => setShowAssetDropdown(true)}
+                  onBlur={() => setTimeout(() => setShowAssetDropdown(false), 200)}
+                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder={assets.length > 0 ? "Search by code, name, or category..." : "No assets available"}
+                  disabled={assets.length === 0}
+                />
+                {assetSearch && (
+                  <button
+                    type="button"
+                    onClick={() => setAssetSearch('')}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                  >
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+
+              {/* Dropdown Results */}
+              {showAssetDropdown && filteredAssets.length > 0 && (
+                <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-y-auto">
+                  {filteredAssets.map((asset) => (
+                    <button
+                      key={asset.id}
+                      type="button"
+                      onClick={() => handleAssetSelect(asset)}
+                      className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 last:border-b-0 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-xl">🔧</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="font-semibold text-gray-900 dark:text-white">
+                              {asset.asset_code}
+                            </p>
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(asset.status)}`}>
+                              {getStatusIcon(asset.status)} {asset.status.replace('_', ' ')}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-600 dark:text-gray-300 truncate">
+                            {asset.name}
+                          </p>
+                          {asset.category && (
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                              📂 {asset.category}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* No Results Message */}
+              {showAssetDropdown && assetSearch && filteredAssets.length === 0 && (
+                <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg p-4 text-center">
+                  <p className="text-gray-500 dark:text-gray-400">
+                    No assets found matching "{assetSearch}"
+                  </p>
+                </div>
+              )}
+
+              {/* Help Text */}
+              <div className="mt-2 space-y-1">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  💡 Link this ticket to a specific asset/equipment if the issue is related to hardware
+                </p>
+                {assets.length === 0 && (
+                  <p className="text-sm text-yellow-600 dark:text-yellow-500">
+                    ⚠️ You don't have any assets assigned yet
+                  </p>
+                )}
+              </div>
+            </>
+          )}
         </div>
 
         {/* Action Buttons */}

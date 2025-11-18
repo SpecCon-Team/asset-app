@@ -18,18 +18,24 @@ export default function NotificationBell() {
   const { notifications, unreadCount, fetchNotifications, fetchUnreadCount, markAsRead, markAllAsRead, deleteNotification } = useNotificationsStore();
 
   useEffect(() => {
-    if (currentUser?.id) {
-      fetchNotifications(currentUser.id);
-      fetchUnreadCount(currentUser.id);
-
-      // Poll for new notifications every 30 seconds
-      const interval = setInterval(() => {
-        fetchNotifications(currentUser.id!);
-        fetchUnreadCount(currentUser.id!);
-      }, 30000);
-
-      return () => clearInterval(interval);
+    // Only fetch notifications if user is logged in and has a valid ID
+    if (!currentUser?.id) {
+      return;
     }
+
+    // Initial fetch
+    fetchNotifications(currentUser.id);
+    fetchUnreadCount(currentUser.id);
+
+    // Poll for new notifications every 30 seconds
+    const interval = setInterval(() => {
+      if (currentUser?.id) {
+        fetchNotifications(currentUser.id);
+        fetchUnreadCount(currentUser.id);
+      }
+    }, 30000);
+
+    return () => clearInterval(interval);
   }, [currentUser?.id, fetchNotifications, fetchUnreadCount]);
 
   // Close dropdown when clicking outside
@@ -119,10 +125,14 @@ export default function NotificationBell() {
 
     // Navigate to related resource
     if (notification.ticketId) {
-      navigate(`/tickets/${notification.ticketId}`);
+      // Use ticketNumber if available, otherwise fall back to ticketId
+      const ticketIdentifier = (notification as any).ticketNumber || notification.ticketId;
+      navigate(`/tickets/${ticketIdentifier}`);
       setIsOpen(false);
     } else if (notification.assetId) {
-      navigate(`/assets/${notification.assetId}`);
+      // Use assetCode if available, otherwise fall back to assetId
+      const assetIdentifier = (notification as any).assetCode || notification.assetId;
+      navigate(`/assets/${assetIdentifier}`);
       setIsOpen(false);
     }
   };
@@ -166,6 +176,11 @@ export default function NotificationBell() {
     if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
     return formatDate(date);
   };
+
+  // Don't render notification bell if user is not logged in
+  if (!currentUser) {
+    return null;
+  }
 
   return (
     <>
@@ -299,11 +314,11 @@ export default function NotificationBell() {
                             e.stopPropagation();
                             deleteNotification(notification.id);
                           }}
-                          className="flex-shrink-0 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 p-1 focus:outline-none focus:ring-2 focus:ring-red-500 rounded"
+                          className="flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500 rounded-lg transition-colors"
                           title="Delete notification"
                           aria-label={`Delete notification: ${notification.title}`}
                         >
-                          <X className="w-4 h-4" />
+                          <X className="w-5 h-5" />
                         </button>
                       </div>
                     </div>

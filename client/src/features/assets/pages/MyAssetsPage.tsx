@@ -1,50 +1,33 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAssetsStore } from '../store';
-import { listUsers } from '@/features/users/api';
 import { Package, AlertCircle } from 'lucide-react';
-import type { User } from '@/features/users/types';
+import { PageLoader } from '@/components/LoadingSpinner';
 
 export default function MyAssetsPage() {
   const navigate = useNavigate();
   const { assets, isLoading, error, fetchAssets } = useAssetsStore();
-  const [userEmail] = useState(() => {
+  const [user] = useState(() => {
     const userStr = localStorage.getItem('user');
     if (userStr) {
-      const user = JSON.parse(userStr);
-      return user.email;
+      return JSON.parse(userStr);
     }
-    return localStorage.getItem('userEmail') || '';
+    return null;
   });
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Fetch user ID based on email
+  // Fetch assets based on role
   useEffect(() => {
-    const fetchUserId = async () => {
-      try {
-        const users = await listUsers();
-        const user = users.find((u: User) => u.email === userEmail);
-        if (user) {
-          setCurrentUserId(user.id);
-        }
-      } catch (err) {
-        console.error('Failed to fetch user ID:', err);
-      }
-    };
-    if (userEmail) {
-      fetchUserId();
-    }
-  }, [userEmail]);
+    if (!user) return;
 
-  // Fetch assets filtered by ownerId
-  useEffect(() => {
-    if (currentUserId) {
-      fetchAssets({ ownerId: currentUserId });
-    }
-  }, [currentUserId, fetchAssets]);
+    // All roles can see all assets (read-only for users)
+    fetchAssets({});
+  }, [user, fetchAssets]);
 
-  const filteredAssets = assets.filter((asset) =>
+  // All users can see all assets
+  const myAssets = assets;
+
+  const filteredAssets = myAssets.filter((asset) =>
     asset.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     asset.asset_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
     asset.asset_type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -52,26 +35,20 @@ export default function MyAssetsPage() {
   );
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-300">Loading your assets...</p>
-        </div>
-      </div>
-    );
+    return <PageLoader message="Loading your assets..." />;
   }
 
   if (error) {
-    return <div className="p-8 text-red-600">Error: {error}</div>;
+    return <div className="p-8 text-red-600 dark:text-red-400 bg-gray-50 dark:bg-gray-900 min-h-screen">Error: {error}</div>;
   }
 
-  const goodConditionCount = assets.filter(
-    (a) => a.condition === 'good' || a.condition === 'excellent'
+  // Calculate stats based on user's assets
+  const goodConditionCount = myAssets.filter(
+    (a) => a.condition?.toLowerCase() === 'good' || a.condition?.toLowerCase() === 'excellent'
   ).length;
 
-  const needAttentionCount = assets.filter(
-    (a) => a.condition === 'poor' || a.condition === 'fair'
+  const needAttentionCount = myAssets.filter(
+    (a) => a.condition?.toLowerCase() === 'poor' || a.condition?.toLowerCase() === 'fair'
   ).length;
 
   return (
@@ -79,9 +56,17 @@ export default function MyAssetsPage() {
       <div className="max-w-7xl mx-auto p-4 md:p-8 h-full flex flex-col">
         {/* Header */}
         <div className="mb-8 flex-shrink-0">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">My Assets</h1>
-          <p className="text-gray-600 dark:text-gray-300 mt-2">View all assets assigned to you</p>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Logged in as: <span className="font-medium">{userEmail}</span></p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            {user?.role === 'ADMIN' ? 'All Assets' : user?.role === 'TECHNICIAN' ? 'Manage Assets' : 'My Assets'}
+          </h1>
+          <p className="text-gray-600 dark:text-gray-300 mt-2">
+            {user?.role === 'ADMIN'
+              ? 'View and manage all organization assets'
+              : user?.role === 'TECHNICIAN'
+              ? 'View and manage all assets'
+              : 'View all assets assigned to you'}
+          </p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Logged in as: <span className="font-medium">{user?.email}</span></p>
         </div>
 
         {/* Stats Cards */}
@@ -90,7 +75,7 @@ export default function MyAssetsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Assets</p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{assets.length}</p>
+                <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{myAssets.length}</p>
               </div>
               <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-full">
                 <Package className="w-6 h-6 text-blue-600 dark:text-blue-400" />
@@ -140,14 +125,24 @@ export default function MyAssetsPage() {
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-12 text-center">
             <Package className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              {assets.length === 0 ? 'No assets assigned yet' : 'No assets found'}
+              {myAssets.length === 0
+                ? user?.role === 'ADMIN'
+                  ? 'No assets in the system'
+                  : user?.role === 'TECHNICIAN'
+                  ? 'No assets available'
+                  : 'No assets assigned yet'
+                : 'No assets found'}
             </h3>
             <p className="text-gray-500 dark:text-gray-400">
-              {assets.length === 0
-                ? 'Contact your admin to get assets assigned to you'
+              {myAssets.length === 0
+                ? user?.role === 'ADMIN'
+                  ? 'Start by adding assets to the system'
+                  : user?.role === 'TECHNICIAN'
+                  ? 'Assets will appear here once they are added to the system'
+                  : 'Contact your admin to get assets assigned to you'
                 : 'Try adjusting your search terms'}
             </p>
-            {assets.length === 0 && (
+            {myAssets.length === 0 && user?.role !== 'ADMIN' && user?.role !== 'TECHNICIAN' && (
               <button
                 onClick={() => navigate('/tickets/new')}
                 className="mt-6 px-6 py-2 min-h-[44px] bg-blue-600 text-white rounded-lg hover:bg-blue-700"

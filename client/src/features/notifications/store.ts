@@ -24,40 +24,87 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
   fetchNotifications: async (userId: string) => {
     set({ isLoading: true, error: null });
     try {
+      const token = localStorage.getItem('token');
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch(`http://localhost:4000/api/notifications/user/${userId}`, {
         credentials: 'include',
+        headers,
       });
 
-      if (!response.ok) throw new Error('Failed to fetch notifications');
+      // Handle authentication errors silently
+      if (response.status === 401 || response.status === 403) {
+        set({ notifications: [], isLoading: false, error: null });
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch notifications: ${response.statusText}`);
+      }
 
       const data = await response.json();
       set({ notifications: data, isLoading: false });
     } catch (error) {
       console.error('Error fetching notifications:', error);
-      set({ error: (error as Error).message, isLoading: false });
+      set({ error: (error as Error).message, isLoading: false, notifications: [] });
     }
   },
 
   fetchUnreadCount: async (userId: string) => {
     try {
+      const token = localStorage.getItem('token');
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch(`http://localhost:4000/api/notifications/user/${userId}/unread-count`, {
         credentials: 'include',
+        headers,
       });
 
-      if (!response.ok) throw new Error('Failed to fetch unread count');
+      // Handle authentication errors silently
+      if (response.status === 401 || response.status === 403) {
+        set({ unreadCount: 0 });
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch unread count: ${response.statusText}`);
+      }
 
       const data = await response.json();
       set({ unreadCount: data.count });
     } catch (error) {
       console.error('Failed to fetch unread count:', error);
+      set({ unreadCount: 0 });
     }
   },
 
   markAsRead: async (notificationId: string) => {
     try {
+      const token = localStorage.getItem('token');
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch(`http://localhost:4000/api/notifications/${notificationId}/read`, {
         method: 'PATCH',
         credentials: 'include',
+        headers,
       });
 
       if (!response.ok) throw new Error('Failed to mark as read');
@@ -74,9 +121,19 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
 
   markAllAsRead: async (userId: string) => {
     try {
+      const token = localStorage.getItem('token');
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch(`http://localhost:4000/api/notifications/user/${userId}/read-all`, {
         method: 'PATCH',
         credentials: 'include',
+        headers,
       });
 
       if (!response.ok) throw new Error('Failed to mark all as read');
@@ -91,9 +148,19 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
 
   deleteNotification: async (notificationId: string) => {
     try {
+      const token = localStorage.getItem('token');
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch(`http://localhost:4000/api/notifications/${notificationId}`, {
         method: 'DELETE',
         credentials: 'include',
+        headers,
       });
 
       if (!response.ok) throw new Error('Failed to delete notification');

@@ -7,6 +7,7 @@ export function getApiClient(): AxiosInstance {
   client = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api',
     withCredentials: true,
+    timeout: 30000, // 30 seconds timeout (for email sending operations)
   });
 
   client.interceptors.request.use((config) => {
@@ -21,7 +22,21 @@ export function getApiClient(): AxiosInstance {
   client.interceptors.response.use(
     (resp) => resp,
     (error) => {
-      // Optional: global error mapping/logging
+      // Handle rate limiting and non-JSON error responses
+      if (error.response) {
+        const contentType = error.response.headers['content-type'];
+
+        // If response is not JSON (e.g., rate limit text response)
+        if (contentType && !contentType.includes('application/json')) {
+          // Try to parse the text response
+          const textError = error.response.data;
+          error.response.data = {
+            error: 'Rate Limit',
+            message: typeof textError === 'string' ? textError : 'Too many requests. Please try again later.'
+          };
+        }
+      }
+
       return Promise.reject(error);
     }
   );

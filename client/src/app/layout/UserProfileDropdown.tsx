@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   User,
   Settings,
+  Shield,
   Smartphone,
   HelpCircle,
   LogOut,
@@ -48,8 +49,8 @@ export default function UserProfileDropdown({ user }: UserProfileDropdownProps) 
     }
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Total number of menu items (4 menu items + 1 logout button = 5 total)
-      const totalItems = 5;
+      // Total number of menu items (5 menu items + 1 logout button = 6 total)
+      const totalItems = 6;
 
       if (e.key === 'Escape') {
         setIsOpen(false);
@@ -150,7 +151,7 @@ export default function UserProfileDropdown({ user }: UserProfileDropdownProps) 
       label: 'My profile',
       onClick: () => {
         setIsOpen(false);
-        navigate('/my/profile');
+        navigate('/my-profile');
       }
     },
     {
@@ -161,8 +162,30 @@ export default function UserProfileDropdown({ user }: UserProfileDropdownProps) 
         navigate('/settings');
       }
     },
-    { icon: Smartphone, label: 'Download Mobile app', onClick: () => { setIsOpen(false); } },
-    { icon: HelpCircle, label: 'Help and resources', onClick: () => { setIsOpen(false); } },
+    {
+      icon: Shield,
+      label: 'Two-Factor Authentication',
+      onClick: () => {
+        setIsOpen(false);
+        navigate('/2fa-setup');
+      }
+    },
+    {
+      icon: Smartphone,
+      label: 'Download Mobile app',
+      onClick: () => {
+        setIsOpen(false);
+        navigate('/download-mobile-app');
+      }
+    },
+    {
+      icon: HelpCircle,
+      label: 'Help and resources',
+      onClick: () => {
+        setIsOpen(false);
+        navigate('/help');
+      }
+    },
   ];
 
   return (

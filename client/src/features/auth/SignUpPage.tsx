@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { Eye, EyeOff, Info } from 'lucide-react';
 
 export default function SignUpPage() {
@@ -10,6 +11,7 @@ export default function SignUpPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [emailExists, setEmailExists] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
@@ -84,38 +86,26 @@ export default function SignUpPage() {
         body: JSON.stringify({ email, password, name }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const data = await response.json();
+        // Check if email already exists (HTTP 409)
+        if (response.status === 409 || data.message === 'Email already in use') {
+          setEmailExists(true);
+          setError('This email is already registered.');
+          setIsLoading(false);
+          return;
+        }
         throw new Error(data.message || 'Registration failed');
       }
 
-      const data = await response.json();
+      // Show success message
+      toast.success(data.message || 'Registration successful! Please check your email for verification code.');
 
-      // Registration successful, now log in
-      const loginResponse = await fetch('http://localhost:4000/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!loginResponse.ok) {
-        throw new Error('Registration successful but login failed. Please login manually.');
-      }
-
-      const loginData = await loginResponse.json();
-
-      // Store user info in localStorage
-      localStorage.setItem('user', JSON.stringify(loginData.user));
-      localStorage.setItem('token', loginData.token);
-
-      // Navigate based on role
-      if (loginData.user.role === 'ADMIN' || loginData.user.role === 'TECHNICIAN') {
-        navigate('/');
-      } else {
-        navigate('/my/tickets');
-      }
+      // Redirect to OTP verification page
+      navigate('/verify-otp', { state: { email } });
     } catch (err) {
+      setEmailExists(false);
       setError(err instanceof Error ? err.message : 'Sign up failed. Please try again.');
     } finally {
       setIsLoading(false);
@@ -123,28 +113,48 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
       <div className="max-w-md w-full">
         {/* Logo/Brand */}
         <div className="text-center mb-8">
           <div className="inline-flex w-16 h-16 bg-blue-600 rounded-full items-center justify-center mb-4">
             <span className="text-white font-bold text-2xl">AT</span>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">Create Your Account</h1>
-          <p className="text-gray-600 mt-2">Join AssetTrack Pro today</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Create Your Account</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-2">Join AssetTrack Pro today</p>
         </div>
 
         {/* Sign Up Form */}
-        <div className="bg-white rounded-lg shadow-lg p-8">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-              {error}
+            <div className={`mb-4 p-4 rounded-lg text-sm ${
+              emailExists
+                ? 'bg-orange-50 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-700 text-orange-700 dark:text-orange-300'
+                : 'bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-300'
+            }`}>
+              <div className="flex items-start gap-2">
+                <Info className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="font-medium mb-1">{error}</p>
+                  {emailExists && (
+                    <div className="mt-2">
+                      <p className="mb-2 text-sm">This email is already associated with an account. Please sign in instead or use a different email address.</p>
+                      <Link
+                        to="/login"
+                        className="inline-block w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-center font-medium"
+                      >
+                        Go to Sign In
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 
           <form onSubmit={handleSignUp} className="space-y-6">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Name
               </label>
               <input
@@ -154,33 +164,37 @@ export default function SignUpPage() {
                 onChange={(e) => setName(e.target.value)}
                 onBlur={() => handleBlur('name')}
                 placeholder="John Doe"
-                className={`w-full px-4 py-3 border ${touched.name && !name ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                className={`w-full px-4 py-3 border ${touched.name && !name ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
               />
               {touched.name && !name && (
-                <p className="mt-1 text-xs text-red-600">This field is required</p>
+                <p className="mt-1 text-xs text-red-600 dark:text-red-400">This field is required</p>
               )}
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Email
               </label>
               <input
                 id="email"
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setEmailExists(false);
+                  setError('');
+                }}
                 onBlur={() => handleBlur('email')}
                 placeholder="you@example.com"
-                className={`w-full px-4 py-3 border ${touched.email && !email ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                className={`w-full px-4 py-3 border ${touched.email && !email ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
               />
               {touched.email && !email && (
-                <p className="mt-1 text-xs text-red-600">This field is required</p>
+                <p className="mt-1 text-xs text-red-600 dark:text-red-400">This field is required</p>
               )}
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Password
               </label>
               <div className="relative">
@@ -195,40 +209,40 @@ export default function SignUpPage() {
                     setShowPasswordTooltip(false);
                   }}
                   placeholder="••••••••••••"
-                  className={`w-full px-4 py-3 pr-12 border ${touched.password && !password ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                  className={`w-full px-4 py-3 pr-12 border ${touched.password && !password ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
                 </button>
               </div>
               {touched.password && !password && (
-                <p className="mt-1 text-xs text-red-600">This field is required</p>
+                <p className="mt-1 text-xs text-red-600 dark:text-red-400">This field is required</p>
               )}
 
               {/* Password Requirements Card */}
               {showPasswordTooltip && (
-                <div className="mt-3 bg-white border border-gray-300 rounded-lg shadow-lg p-4">
-                  <p className="text-xs font-semibold text-gray-700 mb-2">Password Requirements:</p>
+                <div className="mt-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg p-4">
+                  <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Password Requirements:</p>
                   <ul className="space-y-1">
                     {(() => {
                       const reqs = getPasswordRequirements(password);
                       return (
                         <>
-                          <li className={`text-xs flex items-center gap-2 ${reqs.minLength ? 'text-green-600' : 'text-gray-600'}`}>
+                          <li className={`text-xs flex items-center gap-2 ${reqs.minLength ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'}`}>
                             <span>{reqs.minLength ? '✓' : '○'}</span> At least 12 characters
                           </li>
-                          <li className={`text-xs flex items-center gap-2 ${reqs.lowerCase ? 'text-green-600' : 'text-gray-600'}`}>
+                          <li className={`text-xs flex items-center gap-2 ${reqs.lowerCase ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'}`}>
                             <span>{reqs.lowerCase ? '✓' : '○'}</span> Lower case letters (a-z)
                           </li>
-                          <li className={`text-xs flex items-center gap-2 ${reqs.upperCase ? 'text-green-600' : 'text-gray-600'}`}>
+                          <li className={`text-xs flex items-center gap-2 ${reqs.upperCase ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'}`}>
                             <span>{reqs.upperCase ? '✓' : '○'}</span> Upper case letters (A-Z)
                           </li>
-                          <li className={`text-xs flex items-center gap-2 ${reqs.number ? 'text-green-600' : 'text-gray-600'}`}>
+                          <li className={`text-xs flex items-center gap-2 ${reqs.number ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'}`}>
                             <span>{reqs.number ? '✓' : '○'}</span> Numbers (0-9)
                           </li>
                         </>
@@ -240,7 +254,7 @@ export default function SignUpPage() {
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Confirm Password
               </label>
               <div className="relative">
@@ -251,19 +265,19 @@ export default function SignUpPage() {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   onBlur={() => handleBlur('confirmPassword')}
                   placeholder="••••••••••••"
-                  className={`w-full px-4 py-3 pr-12 border ${touched.confirmPassword && !confirmPassword ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                  className={`w-full px-4 py-3 pr-12 border ${touched.confirmPassword && !confirmPassword ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none"
                   aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                 >
                   {showConfirmPassword ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
                 </button>
               </div>
               {touched.confirmPassword && !confirmPassword && (
-                <p className="mt-1 text-xs text-red-600">This field is required</p>
+                <p className="mt-1 text-xs text-red-600 dark:text-red-400">This field is required</p>
               )}
             </div>
 
@@ -273,15 +287,15 @@ export default function SignUpPage() {
                 type="checkbox"
                 checked={agreedToTerms}
                 onChange={(e) => setAgreedToTerms(e.target.checked)}
-                className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                className="mt-1 w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
               />
-              <label htmlFor="terms" className="ml-2 text-sm text-gray-600">
+              <label htmlFor="terms" className="ml-2 text-sm text-gray-600 dark:text-gray-400">
                 I agree to the{' '}
-                <a href="#" className="text-blue-600 hover:text-blue-700 font-medium">
+                <a href="#" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium">
                   Terms of Use
                 </a>
                 {' '}and{' '}
-                <a href="#" className="text-blue-600 hover:text-blue-700 font-medium">
+                <a href="#" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium">
                   Privacy Policy
                 </a>
               </label>
@@ -297,9 +311,9 @@ export default function SignUpPage() {
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               Already have an account?{' '}
-              <Link to="/login" className="text-blue-600 hover:text-blue-700 font-medium">
+              <Link to="/login" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium">
                 Sign in
               </Link>
             </p>

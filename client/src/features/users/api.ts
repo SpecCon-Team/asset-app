@@ -7,4 +7,8 @@ export async function listUsers(): Promise<User[]> {
   return z.array(UserSchema).parse(res.data);
 }
 
+export async function deleteUser(userId: string): Promise<void> {
+  await getApiClient().delete(`/users/${userId}`);
+}
+
 

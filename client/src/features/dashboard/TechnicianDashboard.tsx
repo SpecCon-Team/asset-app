@@ -1,7 +1,7 @@
 import React, { useMemo, useEffect } from 'react';
 import { useTicketsStore } from '@/features/tickets/store';
 import { useNavigate } from 'react-router-dom';
-import { ClipboardList, CheckCircle, Clock, AlertCircle, TrendingUp } from 'lucide-react';
+import { ClipboardList, CheckCircle, Clock, AlertCircle, TrendingUp, Inbox } from 'lucide-react';
 import { formatDate } from '@/lib/dateFormatter';
 
 export default function TechnicianDashboard() {
@@ -21,13 +21,26 @@ export default function TechnicianDashboard() {
     return tickets.filter(ticket => ticket.assignedToId === currentUser.id);
   }, [tickets, currentUser.id]);
 
+  // Count unassigned tickets (available to claim)
+  const unassignedTickets = useMemo(() => {
+    return tickets.filter(ticket => ticket.assignedToId === null || ticket.assignedToId === undefined);
+  }, [tickets]);
+
   const stats = useMemo(() => {
     const openTickets = myTickets.filter(t => t.status === 'open');
     const inProgressTickets = myTickets.filter(t => t.status === 'in_progress');
-    const resolvedTickets = myTickets.filter(t => t.status === 'resolved');
+    const closedTickets = myTickets.filter(t => t.status === 'closed');
     const highPriorityTickets = myTickets.filter(t => t.priority === 'high' || t.priority === 'critical');
 
     return [
+      {
+        title: 'Unassigned Tickets',
+        value: unassignedTickets.length,
+        detail: 'Available to claim',
+        color: 'bg-purple-500',
+        icon: Inbox,
+        action: () => navigate('/tickets'),
+      },
       {
         title: 'My Open Tickets',
         value: openTickets.length,
@@ -45,15 +58,15 @@ export default function TechnicianDashboard() {
         action: () => navigate('/my-tasks?status=in_progress'),
       },
       {
-        title: 'Resolved Today',
-        value: resolvedTickets.filter(t => {
+        title: 'Completed Today',
+        value: closedTickets.filter(t => {
           const today = new Date().toDateString();
-          return new Date(t.updatedAt).toDateString() === today;
+          return new Date(t.updatedAt || t.createdAt).toDateString() === today;
         }).length,
-        detail: `${resolvedTickets.length} total resolved`,
+        detail: `${closedTickets.length} total completed`,
         color: 'bg-green-500',
         icon: CheckCircle,
-        action: () => navigate('/my-tasks?status=resolved'),
+        action: () => navigate('/my-tasks?status=closed'),
       },
       {
         title: 'High Priority',
@@ -64,12 +77,12 @@ export default function TechnicianDashboard() {
         action: () => navigate('/my-tasks?priority=high'),
       },
     ];
-  }, [myTickets, navigate]);
+  }, [myTickets, unassignedTickets, navigate]);
 
   // Recent tickets for quick access
   const recentTickets = useMemo(() => {
     return myTickets
-      .filter(t => t.status !== 'resolved' && t.status !== 'closed')
+      .filter(t => t.status !== 'closed')
       .sort((a, b) => {
         // Sort by priority first, then by date
         const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
@@ -103,10 +116,8 @@ export default function TechnicianDashboard() {
         return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
       case 'in_progress':
         return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300';
-      case 'resolved':
-        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
       case 'closed':
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
       default:
         return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
     }
@@ -121,7 +132,7 @@ export default function TechnicianDashboard() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
         {stats.map((stat, index) => {
           const Icon = stat.icon;
           return (
@@ -161,9 +172,21 @@ export default function TechnicianDashboard() {
         <div className="p-6">
           {recentTickets.length === 0 ? (
             <div className="text-center py-12">
-              <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">All caught up! 🎉</h3>
-              <p className="text-gray-600 dark:text-gray-400">You have no active tickets assigned to you.</p>
+              <Inbox className="w-16 h-16 text-purple-500 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">No active tickets assigned</h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
+                {unassignedTickets.length > 0
+                  ? `There are ${unassignedTickets.length} unassigned ticket${unassignedTickets.length === 1 ? '' : 's'} waiting to be claimed.`
+                  : 'All tickets are currently assigned or completed.'}
+              </p>
+              {unassignedTickets.length > 0 && (
+                <button
+                  onClick={() => navigate('/tickets')}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                >
+                  View Unassigned Tickets
+                </button>
+              )}
             </div>
           ) : (
             <div className="space-y-4">
@@ -221,7 +244,7 @@ export default function TechnicianDashboard() {
           </button>
 
           <button
-            onClick={() => navigate('/my/assets')}
+            onClick={() => navigate('/my-assets')}
             className="p-4 border-2 border-green-200 dark:border-green-800 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors text-left"
           >
             <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400 mb-2" />

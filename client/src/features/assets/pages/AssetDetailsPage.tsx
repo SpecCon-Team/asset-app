@@ -5,6 +5,9 @@ import { listUsers } from '@/features/users/api';
 import type { CreateAssetDto } from '../types';
 import type { User } from '@/features/users/types';
 import { formatDate } from '@/lib/dateFormatter';
+import QRCodeGenerator from '@/components/QRCodeGenerator';
+import { QrCode } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function AssetDetailsPage() {
   const navigate = useNavigate();
@@ -15,6 +18,7 @@ export default function AssetDetailsPage() {
 
   const [users, setUsers] = useState<User[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
+  const [showQRCode, setShowQRCode] = useState(false);
 
   const [formData, setFormData] = useState<CreateAssetDto>({
     name: '',
@@ -45,7 +49,7 @@ export default function AssetDetailsPage() {
     if (userStr) {
       const user = JSON.parse(userStr);
       if (user.role !== 'ADMIN') {
-        navigate('/my/assets');
+        navigate('/my-assets');
       }
     }
   }, [navigate]);
@@ -123,12 +127,15 @@ export default function AssetDetailsPage() {
     try {
       if (isEditMode && id) {
         await updateAsset(id, formData);
+        toast.success('Asset updated successfully');
       } else {
         await createAsset(formData);
+        toast.success('Asset created successfully');
       }
       navigate('/assets');
     } catch (err) {
       console.error('Failed to save asset:', err);
+      toast.error(isEditMode ? 'Failed to update asset' : 'Failed to create asset');
     }
   };
 
@@ -469,22 +476,43 @@ export default function AssetDetailsPage() {
 
         {/* Form Actions */}
         <div className="mt-8 flex gap-4 justify-end">
+          {isEditMode && currentAsset && (
+            <button
+              type="button"
+              onClick={() => setShowQRCode(true)}
+              className="px-6 py-2 bg-purple-600 dark:bg-purple-500 text-white rounded-lg hover:bg-purple-700 dark:hover:bg-purple-600 flex items-center gap-2 transition-colors"
+            >
+              <QrCode className="w-4 h-4" />
+              <span>Generate QR Code</span>
+            </button>
+          )}
           <button
             type="button"
             onClick={() => navigate('/assets')}
-            className="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-gray-300"
+            className="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-gray-300 transition-colors"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={isLoading}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
+            className="px-6 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 disabled:bg-gray-400 transition-colors"
           >
             {isLoading ? 'Saving...' : isEditMode ? 'Update Asset' : 'Create Asset'}
           </button>
         </div>
       </form>
+
+      {/* QR Code Modal */}
+      {isEditMode && currentAsset && (
+        <QRCodeGenerator
+          isOpen={showQRCode}
+          onClose={() => setShowQRCode(false)}
+          assetCode={currentAsset.asset_code || ''}
+          assetName={currentAsset.name || ''}
+          assetId={currentAsset.id || ''}
+        />
+      )}
 
       {/* Related Tickets Section - Only show in edit mode */}
       {isEditMode && currentAsset && (currentAsset as any).tickets && (

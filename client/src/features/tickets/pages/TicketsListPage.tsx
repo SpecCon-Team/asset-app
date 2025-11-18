@@ -7,6 +7,10 @@ import { getApiClient } from '@/features/assets/lib/apiClient';
 import { showThemedAlert, showSuccess, showError, showConfirmation } from '@/lib/swal-config';
 import { formatDate } from '@/lib/dateFormatter';
 import { PageLoader } from '@/components/LoadingSpinner';
+import { exportToCSV, TICKET_EXPORT_COLUMNS, generateFilename, downloadCSVTemplate, TICKET_IMPORT_TEMPLATE_COLUMNS } from '@/lib/exportUtils';
+import { Download, FileSpreadsheet, Upload } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { CSVImportModal } from '@/components';
 
 export default function TicketsListPage() {
   const navigate = useNavigate();
@@ -24,6 +28,7 @@ export default function TicketsListPage() {
   const [bulkAssignee, setBulkAssignee] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
   const { tickets, isLoading, error, fetchTickets } = useTicketsStore();
 
@@ -33,7 +38,7 @@ export default function TicketsListPage() {
     if (userStr) {
       const user = JSON.parse(userStr);
       if (user.role !== 'ADMIN' && user.role !== 'TECHNICIAN') {
-        navigate('/my/tickets');
+        navigate('/my-tickets');
       }
     }
   }, [navigate]);
@@ -219,64 +224,156 @@ export default function TicketsListPage() {
     }
   };
 
+  const handleExportCSV = () => {
+    try {
+      const dataToExport = filteredTickets.length > 0 ? filteredTickets : tickets;
+      const filename = generateFilename('tickets_export', 'csv');
+      exportToCSV(dataToExport, TICKET_EXPORT_COLUMNS, filename);
+      toast.success(`Exported ${dataToExport.length} tickets to CSV`);
+    } catch (error) {
+      console.error('Export failed:', error);
+      toast.error('Failed to export tickets');
+    }
+  };
+
+  const handleDownloadTemplate = () => {
+    try {
+      const filename = 'ticket_import_template.csv';
+      downloadCSVTemplate(TICKET_IMPORT_TEMPLATE_COLUMNS, filename);
+      toast.success('Import template downloaded successfully');
+    } catch (error) {
+      console.error('Template download failed:', error);
+      toast.error('Failed to download template');
+    }
+  };
+
+  const handleImportCSV = async (file: File) => {
+    const userStr = localStorage.getItem('user');
+    const user = userStr ? JSON.parse(userStr) : null;
+
+    if (!user || !user.id) {
+      throw new Error('User not found. Please login again.');
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('createdById', user.id);
+
+    const token = localStorage.getItem('token');
+    const headers: HeadersInit = {};
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch('http://localhost:4000/api/tickets/import-csv', {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to import CSV');
+    }
+
+    const result = await response.json();
+
+    // Refresh tickets list after import
+    await fetchTickets({ status: statusFilter, priority: priorityFilter });
+
+    return result;
+  };
+
   return (
-    <div className="h-screen overflow-hidden flex flex-col p-4 md:p-8">
-      <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 flex-shrink-0">
-        <div>
-          <h1 className="text-3xl font-bold dark:text-white">Ticket Management</h1>
-          <p className="text-gray-600 dark:text-gray-300">Manage and track support tickets</p>
+    <div className="h-screen overflow-hidden flex flex-col p-3 sm:p-4 md:p-6 lg:p-8">
+      {/* Header Section */}
+      <div className="mb-4 sm:mb-6 flex-shrink-0">
+        <div className="mb-4">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-1">Ticket Management</h1>
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">Manage and track support tickets</p>
         </div>
-        <button
-          onClick={() => navigate('/tickets/new')}
-          className="w-full sm:w-auto px-4 py-2 min-h-[44px] bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2"
-        >
-          <span>+</span> New Ticket
-        </button>
+
+        {/* Action Buttons - Responsive Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:flex lg:flex-wrap gap-2 sm:gap-3">
+          <button
+            onClick={handleDownloadTemplate}
+            className="px-3 sm:px-4 py-2 min-h-[44px] bg-purple-600 dark:bg-purple-500 text-white rounded-lg hover:bg-purple-700 dark:hover:bg-purple-600 flex items-center justify-center gap-2 transition-colors text-sm sm:text-base"
+            title="Download CSV template for bulk import"
+          >
+            <FileSpreadsheet className="w-4 h-4 flex-shrink-0" />
+            <span className="truncate">Template</span>
+          </button>
+          <button
+            onClick={() => setIsImportModalOpen(true)}
+            className="px-3 sm:px-4 py-2 min-h-[44px] bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 flex items-center justify-center gap-2 transition-colors text-sm sm:text-base"
+            title="Import tickets from CSV"
+          >
+            <Upload className="w-4 h-4 flex-shrink-0" />
+            <span className="truncate">Import CSV</span>
+          </button>
+          <button
+            onClick={handleExportCSV}
+            disabled={tickets.length === 0}
+            className="px-3 sm:px-4 py-2 min-h-[44px] bg-green-600 dark:bg-green-500 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-600 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm sm:text-base"
+            title="Export tickets to CSV"
+          >
+            <Download className="w-4 h-4 flex-shrink-0" />
+            <span className="truncate">Export CSV</span>
+          </button>
+          <button
+            onClick={() => navigate('/tickets/new')}
+            className="px-3 sm:px-4 py-2 min-h-[44px] bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 flex items-center justify-center gap-2 transition-colors text-sm sm:text-base"
+          >
+            <span>+</span> <span className="truncate">New Ticket</span>
+          </button>
+        </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8 flex-shrink-0">
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Tickets</h3>
-          <p className="text-3xl font-bold mt-2 dark:text-white">{filteredTickets.length}</p>
+      {/* Stats Cards - Responsive */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6 md:mb-8 flex-shrink-0">
+        <div className="bg-white dark:bg-gray-800 p-4 sm:p-5 md:p-6 rounded-lg shadow-sm">
+          <h3 className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">Total Tickets</h3>
+          <p className="text-2xl sm:text-3xl font-bold mt-1 sm:mt-2 text-gray-900 dark:text-white">{filteredTickets.length}</p>
         </div>
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Open</h3>
-          <p className="text-3xl font-bold mt-2 text-blue-600 dark:text-blue-400">
+        <div className="bg-white dark:bg-gray-800 p-4 sm:p-5 md:p-6 rounded-lg shadow-sm">
+          <h3 className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">Open</h3>
+          <p className="text-2xl sm:text-3xl font-bold mt-1 sm:mt-2 text-blue-600 dark:text-blue-400">
             {filteredTickets.filter((t) => t.status === 'open').length}
           </p>
         </div>
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">In Progress</h3>
-          <p className="text-3xl font-bold mt-2 text-purple-600 dark:text-purple-400">
+        <div className="bg-white dark:bg-gray-800 p-4 sm:p-5 md:p-6 rounded-lg shadow-sm">
+          <h3 className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">In Progress</h3>
+          <p className="text-2xl sm:text-3xl font-bold mt-1 sm:mt-2 text-purple-600 dark:text-purple-400">
             {filteredTickets.filter((t) => t.status === 'in_progress').length}
           </p>
         </div>
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">High Priority</h3>
-          <p className="text-3xl font-bold mt-2 text-red-600 dark:text-red-400">
+        <div className="bg-white dark:bg-gray-800 p-4 sm:p-5 md:p-6 rounded-lg shadow-sm">
+          <h3 className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">High Priority</h3>
+          <p className="text-2xl sm:text-3xl font-bold mt-1 sm:mt-2 text-red-600 dark:text-red-400">
             {filteredTickets.filter((t) => t.priority === 'high' || t.priority === 'critical').length}
           </p>
         </div>
       </div>
 
-      {/* Search Bar */}
-      <div className="mb-6 flex-shrink-0">
+      {/* Search Bar - Responsive */}
+      <div className="mb-4 sm:mb-6 flex-shrink-0" role="search">
         <input
-          type="text"
+          type="search"
           placeholder="Search tickets by title, number, or description..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:text-white text-sm sm:text-base min-h-[44px]"
+          aria-label="Search tickets by title, ticket number, or description"
         />
       </div>
 
-      {/* Filters and Bulk Actions */}
-      <div className="mb-6 flex gap-4 items-center flex-wrap flex-shrink-0">
+      {/* Filters and Bulk Actions - Responsive */}
+      <div className="mb-4 sm:mb-6 flex gap-2 sm:gap-4 items-center flex-wrap flex-shrink-0">
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+          className="min-h-[44px] px-3 sm:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-gray-200 text-sm sm:text-base flex-1 sm:flex-initial min-w-[120px]"
         >
           <option value="">All Status</option>
           <option value="open">Open</option>
@@ -287,7 +384,7 @@ export default function TicketsListPage() {
         <select
           value={priorityFilter}
           onChange={(e) => setPriorityFilter(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+          className="min-h-[44px] px-3 sm:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-gray-200 text-sm sm:text-base flex-1 sm:flex-initial min-w-[120px]"
         >
           <option value="">All Priority</option>
           <option value="low">Low</option>
@@ -299,7 +396,7 @@ export default function TicketsListPage() {
         <select
           value={assigneeFilter}
           onChange={(e) => setAssigneeFilter(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+          className="min-h-[44px] px-3 sm:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-gray-200 text-sm sm:text-base flex-1 sm:flex-initial min-w-[120px]"
         >
           <option value="">All Assignees</option>
           <option value="unassigned">Unassigned</option>
@@ -310,23 +407,28 @@ export default function TicketsListPage() {
           ))}
         </select>
 
-        {(statusFilter || priorityFilter || assigneeFilter || searchQuery) && (
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              clearFilters();
-            }}
-            className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 underline"
-          >
-            Clear Filters
-          </button>
-        )}
+        {/* Clear Filters button */}
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            clearFilters();
+          }}
+          disabled={!statusFilter && !priorityFilter && !assigneeFilter && !searchQuery}
+          className="min-h-[44px] px-3 sm:px-4 py-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors border border-gray-300 dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap"
+        >
+          Clear
+          {(statusFilter || priorityFilter || assigneeFilter || searchQuery) && (
+            <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-xs rounded-full font-semibold">
+              {[statusFilter, priorityFilter, assigneeFilter, searchQuery].filter(Boolean).length}
+            </span>
+          )}
+        </button>
 
         {selectedTickets.size > 0 && (
           <button
             onClick={() => setShowBulkActions(!showBulkActions)}
-            className="ml-auto px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+            className="ml-auto px-3 sm:px-4 py-2 min-h-[44px] bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm sm:text-base whitespace-nowrap"
           >
             Bulk Actions ({selectedTickets.size})
           </button>
@@ -487,12 +589,15 @@ export default function TicketsListPage() {
               <thead className="bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 dark:from-gray-700 dark:via-gray-700 dark:to-gray-700 sticky top-0 z-[1]">
               <tr>
                 <th className="px-6 py-3 text-left">
-                  <input
-                    type="checkbox"
-                    checked={selectedTickets.size === filteredTickets.length && filteredTickets.length > 0}
-                    onChange={handleSelectAll}
-                    className="w-4 h-4"
-                  />
+                  <label className="flex items-center justify-center min-w-[44px] min-h-[44px] cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={selectedTickets.size === filteredTickets.length && filteredTickets.length > 0}
+                      onChange={handleSelectAll}
+                      className="w-5 h-5 cursor-pointer"
+                      aria-label="Select all tickets"
+                    />
+                  </label>
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase tracking-wider">Ticket #</th>
                 <th className="px-6 py-3 text-left text-xs font-bold text-gray-900 uppercase tracking-wider">Title</th>
@@ -507,12 +612,15 @@ export default function TicketsListPage() {
               {filteredTickets.map((ticket) => (
                 <tr key={ticket.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <input
-                      type="checkbox"
-                      checked={selectedTickets.has(ticket.id!)}
-                      onChange={() => handleSelectTicket(ticket.id!)}
-                      className="w-4 h-4"
-                    />
+                    <label className="flex items-center justify-center min-w-[44px] min-h-[44px] cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={selectedTickets.has(ticket.id!)}
+                        onChange={() => handleSelectTicket(ticket.id!)}
+                        className="w-5 h-5 cursor-pointer"
+                        aria-label={`Select ticket ${ticket.number || ticket.id}`}
+                      />
+                    </label>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     {ticket.number || ticket.id}
@@ -550,6 +658,15 @@ export default function TicketsListPage() {
           </>
         )}
       </div>
+
+      {/* CSV Import Modal */}
+      <CSVImportModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onImport={handleImportCSV}
+        title="Import Tickets from CSV"
+        entityType="tickets"
+      />
     </div>
   );
 }

@@ -1,40 +1,63 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MessageCircle, CheckCircle, AlertCircle, Eye, EyeOff } from 'lucide-react';
-import Swal from 'sweetalert2';
+import toast from 'react-hot-toast';
+import axios from 'axios';
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api';
 
 export default function WhatsAppSetup() {
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [apiKey, setApiKey] = useState('');
-  const [webhookUrl, setWebhookUrl] = useState('');
+  const [testPhoneNumber, setTestPhoneNumber] = useState('');
   const [isConnected, setIsConnected] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
-  const [showApiKey, setShowApiKey] = useState(false);
+  const [isChecking, setIsChecking] = useState(true);
 
-  const handleConnect = async (e: React.FormEvent) => {
-    e.preventDefault();
-    // Implement WhatsApp Business API connection
-    await Swal.fire({
-      title: 'WhatsApp Connection',
-      text: 'WhatsApp connection feature - To be implemented with WhatsApp Business API',
-      icon: 'info',
-      confirmButtonColor: '#3B82F6',
-    });
-    setIsConnected(true);
+  useEffect(() => {
+    checkWhatsAppStatus();
+  }, []);
+
+  const checkWhatsAppStatus = async () => {
+    setIsChecking(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_BASE_URL}/whatsapp/status`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setIsConnected(response.data.configured);
+    } catch (error: any) {
+      console.error('Failed to check WhatsApp status:', error);
+      setIsConnected(false);
+    } finally {
+      setIsChecking(false);
+    }
   };
 
   const handleTestMessage = async () => {
+    if (!testPhoneNumber) {
+      toast.error('Please enter a phone number to test');
+      return;
+    }
+
     setIsTesting(true);
-    // Implement test message sending
-    setTimeout(async () => {
-      await Swal.fire({
-        title: 'Success!',
-        text: 'Test message sent successfully!',
-        icon: 'success',
-        confirmButtonColor: '#10B981',
-        timer: 2000,
-      });
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_BASE_URL}/whatsapp/test`,
+        { phoneNumber: testPhoneNumber },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (response.data.success) {
+        toast.success('Test message sent successfully! Check your WhatsApp.');
+        setIsConnected(true);
+      } else {
+        toast.error(response.data.error || 'Failed to send test message');
+      }
+    } catch (error: any) {
+      console.error('Failed to send test message:', error);
+      toast.error(error.response?.data?.error || 'Failed to send test message');
+    } finally {
       setIsTesting(false);
-    }, 1500);
+    }
   };
 
   return (
@@ -67,123 +90,98 @@ export default function WhatsAppSetup() {
         </div>
       </div>
 
-      {/* Configuration Form */}
-      <div className="bg-white rounded-lg shadow p-8">
-        <h2 className="text-xl font-semibold mb-6">WhatsApp Business API Configuration</h2>
-        
-        <form onSubmit={handleConnect} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              Business Phone Number
-            </label>
-            <input
-              type="tel"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              placeholder="+27712919486"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              required
-            />
-            <p className="text-sm text-gray-500 mt-1">Your WhatsApp Business phone number</p>
+      {/* Configuration Info */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8">
+        <h2 className="text-xl font-semibold mb-6 dark:text-white">WhatsApp Business API Configuration</h2>
+
+        <div className="space-y-6">
+          <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg p-6">
+            <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-3">Current Configuration</h3>
+            <div className="space-y-2 text-sm text-blue-800 dark:text-blue-200">
+              <p><strong>Phone Number ID:</strong> {isConnected ? '852483691285659' : 'Not configured'}</p>
+              <p><strong>Business Account ID:</strong> {isConnected ? '1554902325693975' : 'Not configured'}</p>
+              <p><strong>Status:</strong> {isChecking ? 'Checking...' : isConnected ? '✅ Connected' : '❌ Not Connected'}</p>
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              API Key / Access Token
-            </label>
-            <div className="relative">
-              <input
-                type={showApiKey ? "text" : "password"}
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                placeholder="Enter your WhatsApp Business API key"
-                className="w-full px-4 py-2 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                required
-              />
+          <div className="border-t dark:border-gray-700 pt-6">
+            <h3 className="font-semibold mb-4 dark:text-white">Test WhatsApp Connection</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              Send a test message to verify your WhatsApp Business API is working correctly.
+            </p>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2 dark:text-gray-300">
+                  Test Phone Number
+                </label>
+                <input
+                  type="tel"
+                  value={testPhoneNumber}
+                  onChange={(e) => setTestPhoneNumber(e.target.value)}
+                  placeholder="+27712919486"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  Include country code (e.g., +27 for South Africa)
+                </p>
+              </div>
+
               <button
-                type="button"
-                onClick={() => setShowApiKey(!showApiKey)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
-                aria-label={showApiKey ? "Hide API key" : "Show API key"}
+                onClick={handleTestMessage}
+                disabled={isTesting || !testPhoneNumber}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
               >
-                {showApiKey ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+                <MessageCircle className="w-5 h-5" />
+                {isTesting ? 'Sending...' : 'Send Test Message'}
               </button>
             </div>
-            <p className="text-sm text-gray-500 mt-1">Get this from WhatsApp Business API dashboard</p>
           </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              Webhook URL (Optional)
-            </label>
-            <input
-              type="url"
-              value={webhookUrl}
-              onChange={(e) => setWebhookUrl(e.target.value)}
-              placeholder="https://your-domain.com/webhook"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            />
-            <p className="text-sm text-gray-500 mt-1">URL to receive WhatsApp webhook events</p>
-          </div>
-
-          <button
-            type="submit"
-            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
-          >
-            <MessageCircle className="w-5 h-5" />
-            {isConnected ? 'Update Configuration' : 'Connect WhatsApp'}
-          </button>
-        </form>
+        </div>
       </div>
 
       {/* Notification Settings */}
       {isConnected && (
-        <div className="bg-white rounded-lg shadow p-8">
-          <h2 className="text-xl font-semibold mb-6">Notification Settings</h2>
-          
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8">
+          <h2 className="text-xl font-semibold mb-6 dark:text-white">Notification Settings</h2>
+
           <div className="space-y-4">
             <label className="flex items-center gap-3">
               <input type="checkbox" defaultChecked className="w-5 h-5" />
               <div>
-                <p className="font-medium">New Ticket Notifications</p>
-                <p className="text-sm text-gray-500">Send WhatsApp message when a new ticket is created</p>
+                <p className="font-medium dark:text-white">New Ticket Notifications</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Send WhatsApp message when a new ticket is created</p>
               </div>
             </label>
 
             <label className="flex items-center gap-3">
               <input type="checkbox" defaultChecked className="w-5 h-5" />
               <div>
-                <p className="font-medium">Ticket Assignment Notifications</p>
-                <p className="text-sm text-gray-500">Notify users when they're assigned to a ticket</p>
+                <p className="font-medium dark:text-white">Ticket Assignment Notifications</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Notify users when they're assigned to a ticket</p>
               </div>
             </label>
 
             <label className="flex items-center gap-3">
               <input type="checkbox" defaultChecked className="w-5 h-5" />
               <div>
-                <p className="font-medium">Comment Notifications</p>
-                <p className="text-sm text-gray-500">Alert users when someone comments on their ticket</p>
+                <p className="font-medium dark:text-white">Comment Notifications</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Alert users when someone comments on their ticket</p>
               </div>
             </label>
 
             <label className="flex items-center gap-3">
               <input type="checkbox" className="w-5 h-5" />
               <div>
-                <p className="font-medium">Status Change Notifications</p>
-                <p className="text-sm text-gray-500">Notify when ticket status changes</p>
+                <p className="font-medium dark:text-white">Status Change Notifications</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Notify when ticket status changes</p>
               </div>
             </label>
           </div>
 
-          <div className="mt-6 pt-6 border-t">
-            <button
-              onClick={handleTestMessage}
-              disabled={isTesting}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
-            >
-              {isTesting ? 'Sending...' : 'Send Test Message'}
-            </button>
-          </div>
+          <p className="mt-6 text-sm text-gray-500 dark:text-gray-400 italic">
+            Note: These notification settings will be functional once WhatsApp integration is fully configured in your backend.
+          </p>
         </div>
       )}
 

@@ -9,23 +9,37 @@ import { formatDate } from '@/lib/dateFormatter';
 export default function MyTasksPage() {
   const navigate = useNavigate();
   const { tickets, isLoading, error, fetchTickets } = useTicketsStore();
-  const [userEmail, setUserEmail] = useState('');
-  const [userId, setUserId] = useState('');
+
+  // Initialize user data immediately from localStorage
+  const getUserData = () => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        return JSON.parse(userStr);
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  };
+
+  const initialUser = getUserData();
+  const [userEmail, setUserEmail] = useState(initialUser?.email || '');
+  const [userId, setUserId] = useState(initialUser?.id || '');
   const [isTestingSpeed, setIsTestingSpeed] = useState(false);
   const [speedResults, setSpeedResults] = useState<any>(null);
   const [testProgress, setTestProgress] = useState(0);
   const [testStatus, setTestStatus] = useState('');
 
   useEffect(() => {
-    const userStr = localStorage.getItem('user');
-    if (userStr) {
-      const user = JSON.parse(userStr);
+    const user = getUserData();
+    if (user) {
       setUserEmail(user.email);
       setUserId(user.id);
 
       // Redirect non-technicians
       if (user.role !== 'TECHNICIAN' && user.role !== 'ADMIN') {
-        navigate('/my/tickets');
+        navigate('/my-tickets');
       }
     }
   }, [navigate]);
@@ -35,9 +49,7 @@ export default function MyTasksPage() {
   }, [fetchTickets]);
 
   // Filter tickets assigned to the current technician
-  const myTasks = tickets.filter(
-    (ticket) => ticket.assignedTo?.email === userEmail
-  );
+  const myTasks = tickets.filter((ticket) => ticket.assignedToId === userId);
 
   const openTasks = myTasks.filter((t) => t.status === 'open').length;
   const inProgressTasks = myTasks.filter((t) => t.status === 'in_progress').length;
@@ -313,12 +325,12 @@ export default function MyTasksPage() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || !userId) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading your tasks...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-300">Loading your tasks...</p>
         </div>
       </div>
     );
@@ -519,7 +531,13 @@ export default function MyTasksPage() {
 
                 <div className="flex justify-between items-center text-sm text-gray-500 dark:text-gray-400">
                   <div className="space-x-4">
-                    <span>Created by: {ticket.createdBy?.name || ticket.createdBy?.email || 'Unknown'}</span>
+                    <span>
+                      Created by: {
+                        ticket.createdBy
+                          ? (ticket.createdBy.name || ticket.createdBy.email)
+                          : 'User'
+                      }
+                    </span>
                     {ticket.createdAt && (
                       <span>Created: {formatDate(ticket.createdAt)}</span>
                     )}

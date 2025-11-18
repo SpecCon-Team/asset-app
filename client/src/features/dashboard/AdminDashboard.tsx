@@ -84,49 +84,36 @@ export default function AdminDashboard() {
     fetchUsers();
   }, [fetchAssets, fetchTickets, fetchUsers]);
 
-  // Initialize and update live chart data for ticket traffic
+  // Initialize and update live chart data for ticket traffic - REAL DATA ONLY
   useEffect(() => {
-    // Initialize with real historical ticket data
+    // Get current real ticket counts
+    const getCurrentCounts = () => ({
+      open: tickets.filter((t) => t.status === 'open').length,
+      in_progress: tickets.filter((t) => t.status === 'in_progress').length,
+      closed: tickets.filter((t) => t.status === 'closed').length,
+    });
+
+    // Initialize with real current data (repeated for history view)
     const now = new Date();
+    const currentCounts = getCurrentCounts();
     const initialData = Array.from({ length: 20 }, (_, i) => {
-      const time = new Date(now.getTime() - (19 - i) * 900000); // 15 minute intervals
-
-      // Get real ticket counts for this time period (simulated based on current data)
-      const baseOpen = tickets.filter(t => t.status === 'open').length;
-      const baseInProgress = tickets.filter(t => t.status === 'in_progress').length;
-      const baseResolved = tickets.filter(t => t.status === 'resolved').length;
-      const baseClosed = tickets.filter(t => t.status === 'closed').length;
-
-      // Add slight variations to show realistic traffic patterns
-      const variation = () => Math.floor(Math.random() * 3) - 1; // -1, 0, or 1
+      const time = new Date(now.getTime() - (19 - i) * 180000); // 3 minute intervals for 1 hour history
 
       return {
         time: time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-        open: Math.max(0, baseOpen + variation()),
-        in_progress: Math.max(0, baseInProgress + variation()),
-        resolved: Math.max(0, baseResolved + variation()),
-        closed: Math.max(0, baseClosed + variation()),
-        total: 0, // Will be calculated
+        open: currentCounts.open,
+        in_progress: currentCounts.in_progress,
+        closed: currentCounts.closed,
+        total: currentCounts.open + currentCounts.in_progress + currentCounts.closed,
       };
-    });
-
-    // Calculate totals
-    initialData.forEach(point => {
-      point.total = point.open + point.in_progress + point.resolved + point.closed;
     });
 
     setLiveData(initialData);
 
-    // Update with real ticket data every 15 minutes
+    // Update with REAL ticket data every 3 minutes for truly live monitoring
     const interval = setInterval(() => {
-      const currentTickets = {
-        open: tickets.filter((t) => t.status === 'open').length,
-        in_progress: tickets.filter((t) => t.status === 'in_progress').length,
-        resolved: tickets.filter((t) => t.status === 'resolved').length,
-        closed: tickets.filter((t) => t.status === 'closed').length,
-      };
-
-      const total = currentTickets.open + currentTickets.in_progress + currentTickets.resolved + currentTickets.closed;
+      const currentTickets = getCurrentCounts();
+      const total = currentTickets.open + currentTickets.in_progress + currentTickets.closed;
 
       setLiveData((prev) => {
         const newData = [...prev.slice(1), {
@@ -136,10 +123,13 @@ export default function AdminDashboard() {
         }];
         return newData;
       });
-    }, 900000); // 15 minutes = 900000 milliseconds
+
+      // Refresh tickets to get latest data from server
+      fetchTickets();
+    }, 180000); // 3 minutes = 180000 milliseconds
 
     return () => clearInterval(interval);
-  }, [tickets]);
+  }, [tickets, fetchTickets]);
 
   const stats = useMemo(
     () => [
@@ -263,41 +253,78 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 sm:space-y-6 md:space-y-8">
       <div>
-        <h1 className="text-3xl font-bold mb-1">Admin Dashboard</h1>
-        <p className="text-gray-600">Manage assets, tickets, and users</p>
+        <h1 className="text-2xl sm:text-3xl font-bold mb-1 text-gray-900 dark:text-white">Admin Dashboard</h1>
+        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">Manage assets, tickets, and users</p>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Stats Cards - Responsive Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
         {stats.map((s) => (
-          <div key={s.title} className="border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gradient-to-br dark:from-gray-700 dark:to-gray-750 p-4 shadow-md dark:shadow-xl hover:shadow-lg dark:hover:shadow-2xl transition-all duration-300">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">{s.title}</p>
-                <p className="text-3xl font-bold mt-2 text-gray-900 dark:text-white">{s.value}</p>
-                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{s.detail}</p>
+          <div
+            key={s.title}
+            className="group relative border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 p-4 sm:p-5 md:p-6 shadow-sm hover:shadow-md dark:hover:shadow-xl transition-all duration-300"
+            role="article"
+            aria-label={`${s.title}: ${s.value}`}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                {/* Label - Responsive */}
+                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 sm:mb-3">
+                  {s.title}
+                </p>
+
+                {/* Value - Responsive size */}
+                <p className="text-2xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-1 sm:mb-2">
+                  {s.value}
+                </p>
+
+                {/* Detail - Responsive */}
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
+                  {s.detail}
+                </p>
               </div>
-              <div className={`w-12 h-12 ${s.color} rounded-lg opacity-20 dark:opacity-30`}></div>
+
+              {/* Icon - Responsive size */}
+              <div className={`flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 ${s.color} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
+                <div className="w-5 h-5 sm:w-6 sm:h-6 bg-white dark:bg-gray-900 rounded-full opacity-80"></div>
+              </div>
             </div>
+
+            {/* Hover indicator */}
+            <div className="absolute inset-0 border-2 border-transparent group-hover:border-blue-500 dark:group-hover:border-blue-400 rounded-xl transition-colors pointer-events-none"></div>
           </div>
         ))}
       </div>
 
-      {/* Charts Row */}
-      <div className="grid md:grid-cols-2 gap-6">
+      {/* Charts Row - Responsive */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 md:gap-6">
         {/* Ticket Status Chart */}
-        <div className="border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 p-6 shadow-sm">
-          <h3 className="font-semibold mb-4 text-gray-900 dark:text-white">Tickets by Status</h3>
-          <ResponsiveContainer width="100%" height={250}>
+        <div className="border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 p-4 sm:p-5 md:p-6 shadow-sm">
+          <h3 className="font-semibold mb-3 sm:mb-4 text-base sm:text-lg text-gray-900 dark:text-white">Tickets by Status</h3>
+
+          {/* Count Summary - Responsive */}
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-3 sm:mb-4">
+            {ticketStatusData.map((item, index) => (
+              <div key={index} className="flex items-center gap-1 sm:gap-2 p-1.5 sm:p-2 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }}></div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-gray-600 dark:text-gray-400 truncate">{item.name}</p>
+                  <p className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">{item.value}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <ResponsiveContainer width="100%" height={200}>
             <PieChart>
               <Pie
                 data={ticketStatusData}
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ name, value }) => `${name}: ${value}`}
+                label={({ name, value, percent }) => `${name}: ${value} (${(percent * 100).toFixed(0)}%)`}
                 outerRadius={80}
                 fill="#8884d8"
                 dataKey="value"
@@ -307,14 +334,15 @@ export default function AdminDashboard() {
                 ))}
               </Pie>
               <Tooltip content={<CustomTooltip />} />
+              <Legend />
             </PieChart>
           </ResponsiveContainer>
         </div>
 
         {/* Ticket Priority Chart */}
-        <div className="border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 p-6 shadow-sm">
-          <h3 className="font-semibold mb-4 text-gray-900 dark:text-white">Tickets by Priority</h3>
-          <ResponsiveContainer width="100%" height={250}>
+        <div className="border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 p-4 sm:p-5 md:p-6 shadow-sm">
+          <h3 className="font-semibold mb-3 sm:mb-4 text-base sm:text-lg text-gray-900 dark:text-white">Tickets by Priority</h3>
+          <ResponsiveContainer width="100%" height={200}>
             <BarChart data={ticketPriorityData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
@@ -329,8 +357,8 @@ export default function AdminDashboard() {
           </ResponsiveContainer>
         </div>
 
-        {/* Live Ticket Traffic Monitor - BEAST MODE */}
-        <div className="relative border dark:border-gray-700 rounded-lg bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-blue-900/20 dark:to-purple-900/20 p-6 shadow-lg md:col-span-2 overflow-hidden">
+        {/* Live Ticket Traffic Monitor - BEAST MODE - Responsive */}
+        <div className="relative border dark:border-gray-700 rounded-lg bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-blue-900/20 dark:to-purple-900/20 p-4 sm:p-5 md:p-6 shadow-lg lg:col-span-2 overflow-hidden">
           {/* Animated background particles */}
           <div className="absolute inset-0 opacity-10">
             <div className="absolute top-10 left-10 w-32 h-32 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
@@ -339,23 +367,23 @@ export default function AdminDashboard() {
           </div>
 
           <div className="relative z-10">
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-3">
               <div>
-                <h3 className="font-bold text-xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                <h3 className="font-bold text-lg sm:text-xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                   🎫 Live Ticket Traffic Monitor
                 </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Real-time ticket flow • Updates every 15 minutes</p>
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">Real-time ticket flow • Updates every 3 minutes</p>
               </div>
               <div className="flex items-center gap-2">
-                <div className={`w-3 h-3 rounded-full ${isAnimating ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></div>
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <div className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full ${isAnimating ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></div>
+                <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">
                   {isAnimating ? 'LIVE' : 'PAUSED'}
                 </span>
               </div>
             </div>
 
-            {/* Legend */}
-            <div className="flex flex-wrap gap-4 mb-4">
+            {/* Legend - Responsive */}
+            <div className="flex flex-wrap gap-3 sm:gap-4 mb-3 sm:mb-4">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-gradient-to-r from-blue-400 to-cyan-500"></div>
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Open</span>
@@ -366,15 +394,11 @@ export default function AdminDashboard() {
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-gradient-to-r from-green-400 to-emerald-500"></div>
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Resolved</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-gradient-to-r from-gray-400 to-slate-500"></div>
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Closed</span>
               </div>
             </div>
 
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={250}>
               <AreaChart
                 data={liveData}
                 margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
@@ -388,13 +412,9 @@ export default function AdminDashboard() {
                     <stop offset="5%" stopColor="#F59E0B" stopOpacity={0.8}/>
                     <stop offset="95%" stopColor="#F59E0B" stopOpacity={0.1}/>
                   </linearGradient>
-                  <linearGradient id="colorResolved" x1="0" y1="0" x2="0" y2="1">
+                  <linearGradient id="colorClosed" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#10B981" stopOpacity={0.8}/>
                     <stop offset="95%" stopColor="#10B981" stopOpacity={0.1}/>
-                  </linearGradient>
-                  <linearGradient id="colorClosed" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#6B7280" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="#6B7280" stopOpacity={0.1}/>
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" strokeOpacity={0.3} />
@@ -435,24 +455,13 @@ export default function AdminDashboard() {
                 />
                 <Area
                   type="monotone"
-                  dataKey="resolved"
-                  stroke="#10B981"
-                  strokeWidth={3}
-                  fillOpacity={1}
-                  fill="url(#colorResolved)"
-                  animationDuration={1000}
-                  dot={{ fill: '#10B981', strokeWidth: 2, r: 4 }}
-                  activeDot={{ r: 6, strokeWidth: 2 }}
-                />
-                <Area
-                  type="monotone"
                   dataKey="closed"
-                  stroke="#6B7280"
+                  stroke="#10B981"
                   strokeWidth={3}
                   fillOpacity={1}
                   fill="url(#colorClosed)"
                   animationDuration={1000}
-                  dot={{ fill: '#6B7280', strokeWidth: 2, r: 4 }}
+                  dot={{ fill: '#10B981', strokeWidth: 2, r: 4 }}
                   activeDot={{ r: 6, strokeWidth: 2 }}
                 />
               </AreaChart>
@@ -461,36 +470,36 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* CSV Upload Section */}
+      {/* CSV Upload Section - Responsive */}
       <div className="border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 shadow-sm">
-        <div className="p-4 border-b dark:border-gray-700">
-          <h2 className="font-semibold text-gray-900 dark:text-white">Bulk Asset Import (CSV)</h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+        <div className="p-3 sm:p-4 border-b dark:border-gray-700">
+          <h2 className="font-semibold text-base sm:text-lg text-gray-900 dark:text-white">Bulk Asset Import (CSV)</h2>
+          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
             Asset codes are automatically generated - no need to provide them in the CSV
           </p>
         </div>
-        <div className="p-4 space-y-4">
+        <div className="p-3 sm:p-4 space-y-3 sm:space-y-4">
           {uploadStatus && (
             <div
-              className={`rounded-md border p-3 ${
+              className={`rounded-md border p-2 sm:p-3 text-sm ${
                 uploadStatus.type === 'success' ? 'bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-700 text-green-800 dark:text-green-300' : 'bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-700 text-red-800 dark:text-red-300'
               }`}
             >
               {uploadStatus.message}
             </div>
           )}
-          <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-md p-3 text-sm text-blue-800 dark:text-blue-200">
+          <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-md p-2 sm:p-3 text-xs sm:text-sm text-blue-800 dark:text-blue-200">
             <strong>Note:</strong> Asset codes will be automatically generated for all imported assets. You only need to provide the asset name and other details.
           </div>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <button onClick={downloadCSVTemplate} className="px-4 py-2 rounded-md border dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+            <button onClick={downloadCSVTemplate} className="px-3 sm:px-4 py-2 min-h-[44px] rounded-md border dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm sm:text-base text-gray-900 dark:text-gray-100">
               Download Template
             </button>
             <input ref={fileInputRef} type="file" accept=".csv" onChange={handleCSVUpload} className="hidden" />
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
-              className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-400"
+              className="px-3 sm:px-4 py-2 min-h-[44px] rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-400 text-sm sm:text-base"
             >
               {uploading ? 'Uploading...' : 'Upload CSV File'}
             </button>
@@ -498,31 +507,31 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid md:grid-cols-2 gap-4">
+      {/* Quick Actions - Responsive */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         <div className="border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 shadow-sm">
-          <div className="p-4 border-b dark:border-gray-700">
-            <h3 className="font-semibold text-gray-900 dark:text-white">Asset Management</h3>
+          <div className="p-3 sm:p-4 border-b dark:border-gray-700">
+            <h3 className="font-semibold text-base sm:text-lg text-gray-900 dark:text-white">Asset Management</h3>
           </div>
-          <div className="p-4 space-y-3">
-            <button onClick={() => navigate('/assets')} className="w-full text-left px-4 py-2 rounded-md border dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100">
+          <div className="p-3 sm:p-4 space-y-2 sm:space-y-3">
+            <button onClick={() => navigate('/assets')} className="w-full text-left px-3 sm:px-4 py-2 min-h-[44px] rounded-md border dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm sm:text-base text-gray-900 dark:text-gray-100">
               Manage All Assets ({assets.length})
             </button>
-            <button onClick={() => navigate('/assets')} className="w-full text-left px-4 py-2 rounded-md border dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100">
+            <button onClick={() => navigate('/assets')} className="w-full text-left px-3 sm:px-4 py-2 min-h-[44px] rounded-md border dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm sm:text-base text-gray-900 dark:text-gray-100">
               Assets in Maintenance ({assets.filter((a) => ['maintenance', 'repair'].includes(a.status)).length})
             </button>
           </div>
         </div>
 
         <div className="border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 shadow-sm">
-          <div className="p-4 border-b dark:border-gray-700">
-            <h3 className="font-semibold text-gray-900 dark:text-white">Ticket Management</h3>
+          <div className="p-3 sm:p-4 border-b dark:border-gray-700">
+            <h3 className="font-semibold text-base sm:text-lg text-gray-900 dark:text-white">Ticket Management</h3>
           </div>
-          <div className="p-4 space-y-3">
-            <button onClick={() => navigate('/tickets')} className="w-full text-left px-4 py-2 rounded-md border dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100">
+          <div className="p-3 sm:p-4 space-y-2 sm:space-y-3">
+            <button onClick={() => navigate('/tickets')} className="w-full text-left px-3 sm:px-4 py-2 min-h-[44px] rounded-md border dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm sm:text-base text-gray-900 dark:text-gray-100">
               Open Tickets ({tickets.filter((t) => t.status === 'open').length})
             </button>
-            <button onClick={() => navigate('/tickets')} className="w-full text-left px-4 py-2 rounded-md border dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100">
+            <button onClick={() => navigate('/tickets')} className="w-full text-left px-3 sm:px-4 py-2 min-h-[44px] rounded-md border dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm sm:text-base text-gray-900 dark:text-gray-100">
               High Priority ({tickets.filter((t) => t.priority === 'high' || t.priority === 'critical').length})
             </button>
           </div>

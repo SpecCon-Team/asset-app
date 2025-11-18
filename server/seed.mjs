@@ -5,8 +5,8 @@ const prisma = new PrismaClient();
 
 async function main() {
   try {
-    // Create admin user
-    const adminPassword = await bcrypt.hash('admin123', 10);
+    // Create admin user (12+ character password)
+    const adminPassword = await bcrypt.hash('admin123456789', 10);
     const admin = await prisma.user.upsert({
       where: { email: 'admin@example.com' },
       update: {
@@ -24,8 +24,8 @@ async function main() {
 
     console.log('✅ Created/Updated admin:', { id: admin.id, email: admin.email, role: admin.role });
 
-    // Create regular test user
-    const userPassword = await bcrypt.hash('password123', 10);
+    // Create regular test user (12+ character password)
+    const userPassword = await bcrypt.hash('password123456', 10);
     const user = await prisma.user.upsert({
       where: { email: 'test@example.com' },
       update: {
@@ -42,10 +42,33 @@ async function main() {
     });
 
     console.log('✅ Created/Updated user:', { id: user.id, email: user.email, role: user.role });
-    console.log('\n=== Demo Credentials ===');
-    console.log('Admin: admin@example.com / admin123');
-    console.log('User: test@example.com / password123');
-    console.log('\nYou can now login with these credentials!');
+
+    // Create technician user (12+ character password)
+    const techPassword = await bcrypt.hash('tech123456789', 10);
+    const technician = await prisma.user.upsert({
+      where: { email: 'tech@example.com' },
+      update: {
+        password: techPassword,
+        role: 'TECHNICIAN',
+        name: 'Technician User',
+        isAvailable: true,
+      },
+      create: {
+        email: 'tech@example.com',
+        name: 'Technician User',
+        password: techPassword,
+        role: 'TECHNICIAN',
+        isAvailable: true,
+      },
+    });
+
+    console.log('✅ Created/Updated technician:', { id: technician.id, email: technician.email, role: technician.role });
+    console.log('\n=== Demo Credentials (Updated with 12+ character passwords) ===');
+    console.log('Admin: admin@example.com / admin123456789');
+    console.log('Technician: tech@example.com / tech123456789');
+    console.log('User: test@example.com / password123456');
+    console.log('\n⚠️  IMPORTANT: Passwords now meet the 12-character minimum requirement!');
+    console.log('You can now login and change passwords in General Settings.');
   } catch (error) {
     console.error('Error seeding database:', error);
     throw error;

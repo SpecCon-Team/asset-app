@@ -19,6 +19,23 @@ model User {
   location            String?
   bio                 String?
   profilePicture      String?        @db.Text
+  resetPasswordToken  String?
+  resetPasswordExpiry DateTime?
+  emailVerified       Boolean        @default(false)
+  verificationOTP     String?
+  verificationExpiry  DateTime?
+  loginAttempts       Int            @default(0)
+  lockoutUntil        DateTime?
+
+  // Two-Factor Authentication
+  twoFactorEnabled    Boolean        @default(false)
+  twoFactorSecret     String?        // TOTP secret
+  backupCodes         String?        @db.Text // JSON array of backup codes
+
+  // WhatsApp Integration
+  isWhatsAppUser      Boolean        @default(false) // Identifies users created via WhatsApp
+  whatsAppNotifications Boolean      @default(true)  // Enable/disable WhatsApp notifications
+
   tickets             Ticket[]       @relation("UserTickets")
   assigned            Ticket[]       @relation("AssignedTickets")
   assets              Asset[]
@@ -52,7 +69,7 @@ model Asset {
   notes           String?
 
   // Relations
-  owner           User?    @relation(fields: [ownerId], references: [id])
+  owner           User?    @relation(fields: [ownerId], references: [id], onDelete: SetNull)
   ownerId         String?
   tickets         Ticket[]
 
@@ -67,9 +84,9 @@ model Ticket {
   description  String
   status       String    @default("open")
   priority     String    @default("medium")
-  createdBy    User      @relation("UserTickets", fields: [createdById], references: [id])
+  createdBy    User      @relation("UserTickets", fields: [createdById], references: [id], onDelete: Cascade)
   createdById  String
-  assignedTo   User?     @relation("AssignedTickets", fields: [assignedToId], references: [id])
+  assignedTo   User?     @relation("AssignedTickets", fields: [assignedToId], references: [id], onDelete: SetNull)
   assignedToId String?
   asset        Asset?    @relation(fields: [assetId], references: [id])
   assetId      String?
@@ -84,7 +101,7 @@ model Comment {
   content   String
   ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
   ticketId  String
-  author    User     @relation(fields: [authorId], references: [id])
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
   authorId  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -104,6 +121,27 @@ model Notification {
   assetId   String?  // Optional link to related asset
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  action      String   // 'CREATE', 'UPDATE', 'DELETE', 'LOGIN', 'LOGOUT', 'EXPORT', etc.
+  entityType  String   // 'User', 'Asset', 'Ticket', 'Comment', etc.
+  entityId    String?  // ID of the affected entity
+  userId      String?  // User who performed the action
+  userEmail   String?  // Email of user (in case user is deleted)
+  userName    String?  // Name of user (in case user is deleted)
+  ipAddress   String?  // IP address of request
+  userAgent   String?  // Browser/device info
+  changes     String?  @db.Text // JSON string of what changed (before/after)
+  metadata    String?  @db.Text // Additional context (JSON)
+  status      String   @default("success") // 'success', 'failure', 'warning'
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([entityType])
+  @@index([createdAt])
 }
 
 enum Role {

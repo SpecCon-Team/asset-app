@@ -1,22 +1,32 @@
-import React, { useEffect, useState } from 'react';
+import React, { useMemo } from 'react';
 import AdminDashboard from './AdminDashboard';
 import TechnicianDashboard from './TechnicianDashboard';
+import UserDashboard from './UserDashboard';
 
 export default function Dashboard() {
-  const [userRole, setUserRole] = useState<string>('');
-
-  useEffect(() => {
+  // Get user role immediately from localStorage to prevent multiple renders
+  const userRole = useMemo(() => {
     const userStr = localStorage.getItem('user');
     if (userStr) {
-      const user = JSON.parse(userStr);
-      setUserRole(user.role);
+      try {
+        const user = JSON.parse(userStr);
+        return user.role || 'USER';
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+        return 'USER';
+      }
     }
+    return 'USER';
   }, []);
 
-  // Show admin dashboard for admins, technician dashboard for technicians and users
+  // Show role-specific dashboards - each dashboard loads independently
   if (userRole === 'ADMIN') {
     return <AdminDashboard />;
   }
 
-  return <TechnicianDashboard />;
+  if (userRole === 'TECHNICIAN') {
+    return <TechnicianDashboard />;
+  }
+
+  return <UserDashboard />;
 }

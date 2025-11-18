@@ -10,15 +10,31 @@
     "seed": "node seed.mjs",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:deploy": "prisma migrate deploy"
+    "prisma:deploy": "prisma migrate deploy",
+    "db:sync": "node syncDatabases.mjs both-ways",
+    "db:sync:neon-to-local": "node syncDatabases.mjs neon-to-local",
+    "db:sync:local-to-neon": "node syncDatabases.mjs local-to-neon",
+    "db:test": "node testDualWrite.mjs"
   },
   "dependencies": {
     "@prisma/client": "^5.20.0",
+    "@types/qrcode": "^1.5.6",
+    "@types/speakeasy": "^2.0.10",
     "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
+    "crypto": "^1.0.1",
+    "csurf": "^1.11.0",
+    "csv-parse": "^6.1.0",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
+    "express-rate-limit": "^8.2.1",
+    "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.2",
+    "nodemailer": "^7.0.10",
+    "qrcode": "^1.5.4",
+    "speakeasy": "^2.0.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
@@ -27,5 +43,3 @@
     "typescript": "^5.6.3"
   }
 }
-
-

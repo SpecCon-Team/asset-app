@@ -15,5 +15,16 @@
     "server:generate": "npm run prisma:generate -w server",
     "lint": "npm run lint -w client",
     "test": "npm run test -w client"
+  },
+  "dependencies": {
+    "compression": "^1.8.1",
+    "cookie-parser": "^1.4.7",
+    "csurf": "^1.11.0",
+    "express-mongo-sanitize": "^2.2.0",
+    "morgan": "^1.10.1",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
+    "xss-clean": "^0.1.4",
+    "zxcvbn": "^4.4.2"
   }
 }

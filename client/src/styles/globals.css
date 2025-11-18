@@ -80,7 +80,7 @@ body {
 }
 
 .dark .text-gray-400 {
-  color: #9ca3af !important; /* gray-400 */
+  color: #d1d5db !important; /* gray-300 - Better contrast (4.5:1+) */
 }
 
 /* Dark mode for cards and panels */

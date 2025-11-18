@@ -1,38 +1,101 @@
-## Asset App (React + TypeScript)
+# AssetTrack Pro - Enterprise Asset Management System
 
-Frontend for asset and ticket management, rebuilt with React 18, TypeScript, Vite, Tailwind, React Router, react-query, and zod.
+A comprehensive, secure, and GDPR-compliant asset management system built with modern web technologies.
 
-### Getting Started
-1. Install dependencies:
-   - `npm install`
-2. Create `.env`:
-   - Copy `.env.example` to `.env` and set `VITE_API_BASE_URL`
-3. Run dev server:
-   - `npm run dev`
+## 🚀 Features
 
-### Environment
-Create `.env` with:
+### Core Functionality
+- **Asset Management** - Track hardware, software, and equipment
+- **Ticket System** - Support ticket creation and tracking
+- **User Management** - Role-based access control
+- **Real-time Notifications** - Stay updated on changes
+- **Dashboard Analytics** - Visualize key metrics
+
+### Security & Compliance
+- ✅ **Activity Audit Logs** - Complete activity tracking
+- ✅ **Two-Factor Authentication** - TOTP-based 2FA
+- ✅ **Role-Based Permissions** - Field-level access control
+- ✅ **GDPR Compliance** - Data export, anonymization, privacy tools
+
+### User Experience
+- 🌓 Dark mode support
+- 📱 Responsive design
+- ⌨️ Keyboard shortcuts
+- 🔍 Global search
+- ♿ Accessibility features
+
+## 🛠️ Tech Stack
+
+### Frontend
+- **React** with TypeScript
+- **Vite** for build tooling
+- **Tailwind CSS** for styling
+- **React Router** for navigation
+- **Zustand** for state management
+
+### Backend
+- **Node.js** with Express
+- **Prisma ORM** with PostgreSQL
+- **JWT** authentication
+- **bcrypt** password hashing
+- **Speakeasy** for 2FA
+
+## 📋 Prerequisites
+
+- Node.js 18+ and npm
+- PostgreSQL database
+- Docker (optional, for local database)
+
+## 🔧 Quick Start
+
+### 1. Install dependencies
+```bash
+npm install
+cd server && npm install
+cd ../client && npm install
 ```
-VITE_API_BASE_URL=http://localhost:3000/api
+
+### 2. Setup environment
+Create `server/.env` with your database URL and JWT secret
+
+### 3. Setup database
+```bash
+cd server
+npx prisma db push
+npm run seed
 ```
 
-### Scripts
-- `npm run dev` - start dev server
-- `npm run build` - typecheck and build
-- `npm run preview` - preview built app
-- `npm run lint` - lint
-- `npm run format` - prettier
-- `npm run test` - vitest
+### 4. Start the application
+```bash
+# Terminal 1 - Backend
+cd server && npm run dev
 
-### Structure
-- `src/app` - layout, providers, router
-- `src/features/*` - domain features (assets, tickets, users)
-- `src/lib` - api client, utils
-- `src/styles` - Tailwind styles
+# Terminal 2 - Frontend
+cd client && npm run dev
+```
 
-### Notes
-- Auth is not implemented; JWT hook-up is ready in Axios interceptors.
-- CSV import uses Papa Parse; backend should implement `POST /assets:bulk`.
-# asset-app
+Access at: `http://localhost:5174`
 
-# speccon-team# asset-app
+## 📚 Documentation
+
+- **[Security & Compliance Summary](SECURITY_COMPLIANCE_SUMMARY.md)** - Complete security overview
+- **[GDPR Compliance Guide](GDPR_COMPLIANCE.md)** - GDPR implementation details
+- **[Role-Based Visibility](ROLE_BASED_VISIBILITY.md)** - Permission system guide
+- **[Improvements Completed](IMPROVEMENTS_COMPLETED.md)** - Feature history
+
+## 🔐 Security Features
+
+- Strong password requirements & 2FA
+- Role-based access control
+- Field-level permissions
+- Complete audit logging
+- GDPR compliance tools
+- Data encryption & protection
+
+## 📄 License
+
+Proprietary and confidential.
+
+---
+
+**Built with ❤️ using React, Node.js, and PostgreSQL**

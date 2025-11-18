@@ -13,9 +13,18 @@ import MyTasksPage from '@/features/tickets/pages/MyTasksPage';
 import MyClientsPage from '@/features/users/pages/MyClientsPage';
 import MyProfilePage from '@/features/users/pages/MyProfilePage';
 import GeneralSettingsPage from '@/features/users/pages/GeneralSettingsPage';
+import TwoFactorManagementPage from '@/features/users/pages/TwoFactorManagementPage';
 import WhatsAppSetup from '@/features/whatsapp/WhatsAppSetup';
+import AuditLogsPage from '@/features/auditLogs/AuditLogsPage';
 import LoginPage from '@/features/auth/LoginPage';
 import SignUpPage from '@/features/auth/SignUpPage';
+import ForgotPasswordPage from '@/features/auth/ForgotPasswordPage';
+import ResetPasswordPage from '@/features/auth/ResetPasswordPage';
+import VerifyOTPPage from '@/features/auth/VerifyOTPPage';
+import TwoFactorSetupPage from '@/features/auth/TwoFactorSetupPage';
+import PrivacyDashboard from '@/features/privacy/PrivacyDashboard';
+import DownloadMobileApp from '@/pages/DownloadMobileApp';
+import HelpAndResources from '@/pages/HelpAndResources';
 
 export const router = createBrowserRouter([
   {
@@ -25,6 +34,18 @@ export const router = createBrowserRouter([
   {
     path: '/signup',
     element: <SignUpPage />,
+  },
+  {
+    path: '/forgot-password',
+    element: <ForgotPasswordPage />,
+  },
+  {
+    path: '/reset-password/:token',
+    element: <ResetPasswordPage />,
+  },
+  {
+    path: '/verify-otp',
+    element: <VerifyOTPPage />,
   },
   {
     path: '/',
@@ -39,11 +60,17 @@ export const router = createBrowserRouter([
       { path: 'tickets/:id', element: <TicketDetailsPage /> },
       { path: 'my-tasks', element: <MyTasksPage /> },
       { path: 'my-clients', element: <MyClientsPage /> },
-      { path: 'my/assets', element: <MyAssetsPage /> },
-      { path: 'my/tickets', element: <MyTicketsPage /> },
-      { path: 'my/profile', element: <MyProfilePage /> },
+      { path: 'my-assets', element: <MyAssetsPage /> },
+      { path: 'my-tickets', element: <MyTicketsPage /> },
+      { path: 'my-profile', element: <MyProfilePage /> },
       { path: 'settings', element: <GeneralSettingsPage /> },
+      { path: '2fa-setup', element: <TwoFactorSetupPage /> },
+      { path: '2fa-management', element: <TwoFactorManagementPage /> },
+      { path: 'privacy', element: <PrivacyDashboard /> },
+      { path: 'audit-logs', element: <AuditLogsPage /> },
       { path: 'whatsapp-setup', element: <WhatsAppSetup /> },
+      { path: 'download-mobile-app', element: <DownloadMobileApp /> },
+      { path: 'help', element: <HelpAndResources /> },
       { path: '*', element: <Navigate to="/" replace /> },
     ],
   },

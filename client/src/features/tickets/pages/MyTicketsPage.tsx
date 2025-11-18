@@ -34,18 +34,13 @@ export default function MyTicketsPage() {
     // TECHNICIAN: sees tickets assigned to them OR created by them
     if (user.role === 'TECHNICIAN') {
       return (
-        ticket.assignedTo?.id === user.id ||
-        ticket.assignedTo?.email === user.email ||
-        ticket.createdBy?.id === user.id ||
-        ticket.createdBy?.email === user.email
+        ticket.assignedToId === user.id ||
+        ticket.createdById === user.id
       );
     }
 
     // USER: sees only tickets they created
-    return (
-      ticket.createdBy?.id === user.id ||
-      ticket.createdBy?.email === user.email
-    );
+    return ticket.createdById === user.id;
   });
 
   // Calculate date 30 days ago
@@ -389,12 +384,27 @@ export default function MyTicketsPage() {
 
                 <div className="flex justify-between items-center text-sm text-gray-500 dark:text-gray-400">
                   <div className="space-x-4">
-                    <span>Assigned to: {ticket.assignedTo?.email || 'Unassigned'}</span>
+                    <span>
+                      {ticket.status === 'closed' ? (
+                        <>
+                          <span className="text-green-600 dark:text-green-400 font-medium">Closed by: </span>
+                          {ticket.assignedTo ? (ticket.assignedTo.name || ticket.assignedTo.email) : 'Technician'}
+                        </>
+                      ) : (
+                        <>
+                          Assigned to: {
+                            ticket.assignedTo
+                              ? (ticket.assignedTo.name || ticket.assignedTo.email)
+                              : <span className="text-orange-600 dark:text-orange-400 font-medium">Awaiting Assignment</span>
+                          }
+                        </>
+                      )}
+                    </span>
                     {ticket.createdAt && (
                       <span>Created: {formatDate(ticket.createdAt)}</span>
                     )}
                   </div>
-                  {ticket.resolution && (
+                  {ticket.resolution && ticket.status === 'closed' && (
                     <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
                       <AlertCircle className="w-4 h-4" />
                       <span className="text-xs font-medium">Resolved</span>

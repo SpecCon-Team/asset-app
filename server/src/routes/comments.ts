@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma';
+import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
@@ -11,8 +12,25 @@ const createCommentSchema = z.object({
 });
 
 // Get all comments for a ticket
-router.get('/ticket/:ticketId', async (req, res) => {
+router.get('/ticket/:ticketId', authenticate, async (req: AuthRequest, res) => {
   try {
+    // First check if user has access to this ticket
+    const ticket = await prisma.ticket.findUnique({
+      where: { id: req.params.ticketId },
+      select: { createdById: true, assignedToId: true },
+    });
+
+    if (!ticket) {
+      return res.status(404).json({ message: 'Ticket not found' });
+    }
+
+    // Check if user has access to this ticket's comments
+    if (req.user?.role !== 'ADMIN' && req.user?.role !== 'TECHNICIAN') {
+      if (ticket.createdById !== req.user?.id && ticket.assignedToId !== req.user?.id) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+    }
+
     const comments = await prisma.comment.findMany({
       where: { ticketId: req.params.ticketId },
       include: {
@@ -30,11 +48,27 @@ router.get('/ticket/:ticketId', async (req, res) => {
 });
 
 // Create a comment
-router.post('/', async (req, res) => {
+router.post('/', authenticate, async (req: AuthRequest, res) => {
   const parsed = createCommentSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json(parsed.error.flatten());
 
   try {
+    // Verify user has access to the ticket before allowing comment
+    const ticket = await prisma.ticket.findUnique({
+      where: { id: parsed.data.ticketId },
+      select: { createdById: true, assignedToId: true },
+    });
+
+    if (!ticket) {
+      return res.status(404).json({ message: 'Ticket not found' });
+    }
+
+    // Check if user has access to comment on this ticket
+    if (req.user?.role !== 'ADMIN' && req.user?.role !== 'TECHNICIAN') {
+      if (ticket.createdById !== req.user?.id && ticket.assignedToId !== req.user?.id) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+    }
     const comment = await prisma.comment.create({
       data: parsed.data,
       include: {
@@ -105,8 +139,23 @@ router.post('/', async (req, res) => {
 });
 
 // Delete a comment
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticate, async (req: AuthRequest, res) => {
   try {
+    // Get the comment first to check ownership
+    const comment = await prisma.comment.findUnique({
+      where: { id: req.params.id },
+      select: { authorId: true },
+    });
+
+    if (!comment) {
+      return res.status(404).json({ message: 'Comment not found' });
+    }
+
+    // Only comment author or admin can delete
+    if (req.user?.role !== 'ADMIN' && comment.authorId !== req.user?.id) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
     await prisma.comment.delete({
       where: { id: req.params.id },
     });

@@ -1,8 +1,14 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma';
+import multer from 'multer';
+import { parse } from 'csv-parse/sync';
+import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
+import { applyFieldVisibility } from '../middleware/fieldVisibility';
+import { validateFieldUpdates, Role } from '../lib/permissions';
 
 const router = Router();
+const upload = multer({ storage: multer.memoryStorage() });
 
 // Helper function to generate unique asset code
 async function generateAssetCode(): Promise<string> {
@@ -53,27 +59,32 @@ const createSchema = z.object({
 const updateSchema = createSchema.partial();
 
 // GET /api/assets - List all assets
-router.get('/', async (req, res) => {
+router.get('/', authenticate, applyFieldVisibility('asset'), async (req: AuthRequest, res) => {
   try {
     console.log('Assets GET request received');
     const search = (req.query.search as string) || undefined;
     const status = (req.query.status as string) || undefined;
     const ownerId = (req.query.ownerId as string) || undefined;
 
+    // Regular users can only see their own assets, admins/technicians see all
+    const whereClause: any = {
+      AND: [
+        search ? {
+          OR: [
+            { name: { contains: search, mode: 'insensitive' } },
+            { asset_code: { contains: search, mode: 'insensitive' } },
+            { asset_type: { contains: search, mode: 'insensitive' } },
+          ],
+        } : {},
+        status ? { status } : {},
+        ownerId ? { ownerId } : {},
+      ],
+    };
+
+    // All users can view all assets (permissions control what they can edit)
+
     const assets = await prisma.asset.findMany({
-      where: {
-        AND: [
-          search ? {
-            OR: [
-              { name: { contains: search, mode: 'insensitive' } },
-              { asset_code: { contains: search, mode: 'insensitive' } },
-              { asset_type: { contains: search, mode: 'insensitive' } },
-            ],
-          } : {},
-          status ? { status } : {},
-          ownerId ? { ownerId } : {},
-        ],
-      },
+      where: whereClause,
       include: {
         owner: {
           select: {
@@ -95,7 +106,7 @@ router.get('/', async (req, res) => {
 });
 
 // GET /api/assets/:id - Get single asset
-router.get('/:id', async (req, res) => {
+router.get('/:id', authenticate, applyFieldVisibility('asset'), async (req: AuthRequest, res) => {
   try {
     const asset = await prisma.asset.findUnique({
       where: { id: req.params.id },
@@ -103,11 +114,16 @@ router.get('/:id', async (req, res) => {
         tickets: true,
       },
     });
-    
+
     if (!asset) {
       return res.status(404).json({ message: 'Asset not found' });
     }
-    
+
+    // Check if user has access to this asset
+    if (req.user?.role !== 'ADMIN' && req.user?.role !== 'TECHNICIAN' && asset.ownerId !== req.user?.id) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
     res.json(asset);
   } catch (error) {
     console.error('GET /api/assets/:id error:', error);
@@ -115,8 +131,8 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// POST /api/assets - Create new asset
-router.post('/', async (req, res) => {
+// POST /api/assets - Create new asset (ADMIN or TECHNICIAN only)
+router.post('/', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: AuthRequest, res) => {
   try {
     console.log('POST /api/assets - Request body:', req.body);
 
@@ -147,41 +163,54 @@ router.post('/', async (req, res) => {
   }
 });
 
-// PUT /api/assets/:id - Update asset
-router.put('/:id', async (req, res) => {
+// PUT /api/assets/:id - Update asset (ADMIN or TECHNICIAN only)
+router.put('/:id', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: AuthRequest, res) => {
   try {
+    console.log('PUT /api/assets/:id - User:', req.user?.email, 'Role:', req.user?.role);
     console.log('PUT /api/assets/:id - Request body:', req.body);
-    
+
     const validatedData = updateSchema.parse(req.body);
-    
+
+    // Check field-level permissions
+    const userRole = req.user!.role as Role;
+    const permissionCheck = validateFieldUpdates(userRole, 'asset', validatedData);
+
+    if (!permissionCheck.valid) {
+      console.error('Permission denied for fields:', permissionCheck.invalidFields);
+      return res.status(403).json({
+        message: 'You do not have permission to update some fields',
+        invalidFields: permissionCheck.invalidFields
+      });
+    }
+
     const asset = await prisma.asset.update({
       where: { id: req.params.id },
       data: validatedData,
     });
-    
+
     console.log('Asset updated:', asset);
     res.json(asset);
   } catch (error) {
     console.error('PUT /api/assets/:id error:', error);
-    
+
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ 
-        message: 'Validation error', 
-        errors: error.errors 
+      return res.status(400).json({
+        message: 'Validation error',
+        errors: error.errors
       });
     }
-    
+
     res.status(500).json({ message: 'Failed to update asset', error: String(error) });
   }
 });
 
-// DELETE /api/assets/:id - Delete asset
-router.delete('/:id', async (req, res) => {
+// DELETE /api/assets/:id - Delete asset (ADMIN only)
+router.delete('/:id', authenticate, requireRole('ADMIN'), async (req: AuthRequest, res) => {
   try {
     await prisma.asset.delete({
       where: { id: req.params.id },
     });
-    
+
     console.log('Asset deleted:', req.params.id);
     res.json({ message: 'Asset deleted successfully' });
   } catch (error) {
@@ -191,7 +220,83 @@ router.delete('/:id', async (req, res) => {
 });
 
 // POST /api/assets/bulk - Bulk create assets (for CSV import)
-router.post('/bulk', async (req, res) => {
+// POST /api/assets/import-csv - Import assets from CSV (ADMIN or TECHNICIAN only)
+router.post('/import-csv', authenticate, requireRole('ADMIN', 'TECHNICIAN'), upload.single('file'), async (req: AuthRequest, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+
+    const csvContent = req.file.buffer.toString('utf-8');
+
+    // Parse CSV
+    const records = parse(csvContent, {
+      columns: true,
+      skip_empty_lines: true,
+      trim: true,
+    });
+
+    console.log(`Parsed ${records.length} records from CSV`);
+
+    // Transform CSV data to match asset schema
+    const assetsData = records.map((record: any) => ({
+      asset_code: record['Asset Code (Required)'] || record['Asset Code'] || undefined,
+      name: record['Name (Required)'] || record['Name'],
+      asset_type: record['Asset Type'] || null,
+      serial_number: record['Serial Number'] || null,
+      manufacturer: record['Manufacturer'] || null,
+      model_number: record['Model Number'] || null,
+      status: record['Status (available/assigned/maintenance/repair/retired)'] || record['Status'] || 'available',
+      condition: record['Condition (new/good/fair/poor)'] || record['Condition'] || null,
+      purchase_date: record['Purchase Date (YYYY-MM-DD)'] || record['Purchase Date'] || null,
+      purchase_price: record['Purchase Price'] || null,
+      warranty_expiry: record['Warranty Expiry (YYYY-MM-DD)'] || record['Warranty Expiry'] || null,
+      office_location: record['Office Location'] || null,
+      department: record['Department'] || null,
+      notes: record['Notes'] || null,
+    }));
+
+    // Validate the data
+    const validatedData = z.array(createSchema).parse(assetsData);
+
+    // Auto-generate asset codes for any missing ones
+    const assetsWithCodes = await Promise.all(
+      validatedData.map(async (asset) => ({
+        ...asset,
+        asset_code: asset.asset_code || await generateAssetCode(),
+      }))
+    );
+
+    // Create assets
+    const result = await prisma.asset.createMany({
+      data: assetsWithCodes as any,
+      skipDuplicates: true,
+    });
+
+    console.log(`Successfully imported ${result.count} assets from CSV`);
+    res.status(201).json({
+      count: result.count,
+      message: `Successfully imported ${result.count} assets`,
+      total: records.length,
+    });
+  } catch (error) {
+    console.error('POST /api/assets/import-csv error:', error);
+
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        message: 'Validation error in CSV data',
+        errors: error.errors
+      });
+    }
+
+    res.status(500).json({
+      message: 'Failed to import assets from CSV',
+      error: error instanceof Error ? error.message : String(error)
+    });
+  }
+});
+
+router.post('/bulk', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: AuthRequest, res) => {
   try {
     console.log('POST /api/assets/bulk - Request body:', req.body);
 

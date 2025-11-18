@@ -6,6 +6,8 @@ const UserSchema = z.object({
   email: z.string(),
   name: z.string().nullable().optional(),
   role: z.string().optional(),
+  phone: z.string().nullable().optional(),
+  isWhatsAppUser: z.boolean().optional(),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
 });

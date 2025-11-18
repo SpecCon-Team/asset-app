@@ -1,4 +1,5 @@
 import React from 'react';
+import { Loader2 } from 'lucide-react';
 
 interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg';
@@ -15,9 +16,9 @@ interface LoadingSpinnerProps {
  */
 export function LoadingSpinner({ size = 'md', message = 'Loading...', className = '' }: LoadingSpinnerProps) {
   const sizeClasses = {
-    sm: 'w-4 h-4 border-2',
-    md: 'w-6 h-6 border-2',
-    lg: 'w-8 h-8 border-3',
+    sm: 'w-4 h-4',
+    md: 'w-6 h-6',
+    lg: 'w-8 h-8',
   };
 
   return (
@@ -27,7 +28,7 @@ export function LoadingSpinner({ size = 'md', message = 'Loading...', className 
       aria-busy="true"
       className={`flex items-center justify-center ${className}`}
     >
-      <div className={`${sizeClasses[size]} border-blue-600 border-t-transparent rounded-full animate-spin`} />
+      <Loader2 className={`${sizeClasses[size]} text-blue-600 animate-spin`} />
       <span className="sr-only">{message}</span>
     </div>
   );
@@ -46,9 +47,28 @@ export function LoadingOverlay({ message = 'Loading...' }: { message?: string })
     >
       <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+          <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
           <p className="text-gray-900 dark:text-gray-100 font-medium">{message}</p>
         </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Full page loading component for page transitions
+ */
+export function PageLoader({ message = 'Loading...' }: { message?: string }) {
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+      className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900"
+    >
+      <div className="text-center">
+        <Loader2 className="w-12 h-12 text-blue-600 mx-auto animate-spin" />
+        <p className="mt-4 text-gray-600 dark:text-gray-300">{message}</p>
       </div>
     </div>
   );

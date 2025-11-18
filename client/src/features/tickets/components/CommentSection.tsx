@@ -74,8 +74,18 @@ export default function CommentSection({ ticketId }: CommentSectionProps) {
 
   const fetchComments = async () => {
     try {
+      const token = localStorage.getItem('token');
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch(`http://localhost:4000/api/comments/ticket/${ticketId}`, {
         credentials: 'include',
+        headers,
       });
 
       if (!response.ok) {
@@ -83,7 +93,6 @@ export default function CommentSection({ ticketId }: CommentSectionProps) {
       }
 
       const data = await response.json();
-      console.log('Fetched comments:', data); // Debug log
       setComments(data);
     } catch (error) {
       console.error('Error fetching comments:', error);
@@ -94,6 +103,11 @@ export default function CommentSection({ ticketId }: CommentSectionProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Prevent duplicate submissions
+    if (isLoading) {
+      return;
+    }
 
     // For regular users, use their own ID; for admins, use selected user
     const authorId = userIsAdmin ? selectedUserId : currentUserId;
@@ -120,9 +134,18 @@ export default function CommentSection({ ticketId }: CommentSectionProps) {
 
     setIsLoading(true);
     try {
+      const token = localStorage.getItem('token');
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch('http://localhost:4000/api/comments', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         credentials: 'include',
         body: JSON.stringify({
           content: newComment,
@@ -173,9 +196,19 @@ export default function CommentSection({ ticketId }: CommentSectionProps) {
     if (!result.isConfirmed) return;
 
     try {
+      const token = localStorage.getItem('token');
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch(`http://localhost:4000/api/comments/${commentId}`, {
         method: 'DELETE',
         credentials: 'include',
+        headers,
       });
 
       if (!response.ok) throw new Error('Failed to delete comment');
@@ -207,10 +240,10 @@ export default function CommentSection({ ticketId }: CommentSectionProps) {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Comments ({comments.length})</h3>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Comments ({comments.length})</h3>
         <button
           onClick={fetchComments}
-          className="text-sm text-blue-600 hover:text-blue-800"
+          className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
           title="Refresh to see new comments"
         >
           🔄 Refresh
@@ -219,61 +252,77 @@ export default function CommentSection({ ticketId }: CommentSectionProps) {
 
       <div className="space-y-3">
         {comments.length === 0 ? (
-          <p className="text-gray-500 text-sm">No comments yet. Be the first to comment!</p>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">No comments yet. Be the first to comment!</p>
         ) : (
           comments.map((comment) => {
-            // Check if the comment is from admin/technician
-            const isAdminComment = comment.author.role === 'ADMIN' || comment.author.role === 'TECHNICIAN';
+            // Determine role-specific styling
+            const role = comment.author.role;
+            let bgColor, borderColor, badgeColor, badgeText;
+
+            if (role === 'ADMIN') {
+              bgColor = 'bg-purple-50 dark:bg-purple-900/30';
+              borderColor = 'border-purple-300 dark:border-purple-700';
+              badgeColor = 'bg-purple-600 dark:bg-purple-500';
+              badgeText = 'Admin';
+            } else if (role === 'TECHNICIAN') {
+              bgColor = 'bg-blue-50 dark:bg-blue-900/30';
+              borderColor = 'border-blue-300 dark:border-blue-700';
+              badgeColor = 'bg-blue-600 dark:bg-blue-500';
+              badgeText = 'Technician';
+            } else {
+              bgColor = 'bg-green-50 dark:bg-green-900/30';
+              borderColor = 'border-green-300 dark:border-green-700';
+              badgeColor = 'bg-green-600 dark:bg-green-500';
+              badgeText = 'User';
+            }
 
             return (
               <div
                 key={comment.id}
-                className={`rounded-lg p-4 border ${isAdminComment ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200'}`}
+                className={`rounded-lg p-4 border ${bgColor} ${borderColor}`}
               >
                 <div className="flex justify-between items-start mb-2">
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold text-sm">
+                    <span className="font-semibold text-sm text-gray-900 dark:text-white">
                       {comment.author.name || comment.author.email}
                     </span>
-                    {isAdminComment && (
-                      <span className="px-2 py-0.5 text-xs bg-blue-600 text-white rounded-full">
-                        {comment.author.role === 'TECHNICIAN' ? 'Technician' : 'Admin'}
-                      </span>
-                    )}
-                    <span className="text-gray-500 text-xs">
+                    <span className={`px-2 py-0.5 text-xs ${badgeColor} text-white rounded-full font-medium`}>
+                      {badgeText}
+                    </span>
+                    <span className="text-gray-500 dark:text-gray-400 text-xs">
                       {formatDateTime(comment.createdAt)}
                     </span>
                   </div>
                   {canModifyTicket && (
                     <button
                       onClick={() => handleDelete(comment.id)}
-                      className="text-red-600 hover:text-red-800 text-sm"
+                      className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 text-sm"
                     >
                       Delete
                     </button>
                   )}
                 </div>
-                <p className="text-gray-900 whitespace-pre-wrap">{comment.content}</p>
+                <p className="text-gray-900 dark:text-gray-100 whitespace-pre-wrap">{comment.content}</p>
               </div>
             );
           })
         )}
       </div>
 
-      <form onSubmit={handleSubmit} className="border-t pt-4">
-        <h4 className="font-semibold mb-3">Add a Comment</h4>
+      <form onSubmit={handleSubmit} className="border-t border-gray-200 dark:border-gray-700 pt-4">
+        <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Add a Comment</h4>
 
         {/* Only show user selector for admins */}
         {userIsAdmin && (
           <div className="mb-3">
-            <label htmlFor="commentUser" className="block text-sm font-medium mb-2">
+            <label htmlFor="commentUser" className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
               Comment as:
             </label>
             <select
               id="commentUser"
               value={selectedUserId}
               onChange={(e) => setSelectedUserId(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
               required
             >
               <option value="">Select a user</option>
@@ -291,13 +340,13 @@ export default function CommentSection({ ticketId }: CommentSectionProps) {
           onChange={(e) => setNewComment(e.target.value)}
           placeholder="Write your comment here..."
           rows={4}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500"
           required
         />
         <button
           type="submit"
           disabled={isLoading || (!userIsAdmin && !currentUserId)}
-          className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
+          className="mt-2 px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 disabled:bg-gray-400 dark:disabled:bg-gray-600 transition-colors"
         >
           {isLoading ? 'Adding...' : 'Add Comment'}
         </button>

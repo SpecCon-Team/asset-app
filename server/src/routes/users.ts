@@ -1,7 +1,11 @@
 import { Router } from 'express';
 import { Role } from '@prisma/client';
 import { z } from 'zod';
+import bcrypt from 'bcryptjs';
 import { prisma } from '../lib/prisma';
+import { authenticate, requireRole, requireSelfOrAdmin, AuthRequest } from '../middleware/auth';
+import { applyFieldVisibility } from '../middleware/fieldVisibility';
+import { filterFieldsByPermission, Role as PermRole } from '../lib/permissions';
 
 const router = Router();
 
@@ -27,15 +31,40 @@ const updatePasswordSchema = z.object({
   newPassword: z.string().min(12),
 });
 
-router.get('/', async (_req, res) => {
+// Get all users - requires authentication, admins see all fields
+router.get('/', authenticate, applyFieldVisibility('user'), async (req: AuthRequest, res) => {
+  const { type } = req.query;
+
+  let whereClause: any = {};
+
+  // Filter by user type if specified
+  if (type === 'whatsapp') {
+    whereClause.isWhatsAppUser = true;
+  } else if (type === 'regular') {
+    whereClause.isWhatsAppUser = false;
+  }
+
   const users = await prisma.user.findMany({
-    select: { id: true, email: true, name: true, role: true, isAvailable: true, profilePicture: true, createdAt: true },
+    where: whereClause,
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      role: true,
+      isAvailable: true,
+      profilePicture: true,
+      phone: true,
+      isWhatsAppUser: true,
+      whatsAppNotifications: true,
+      createdAt: true
+    },
     orderBy: { createdAt: 'desc' }
   });
   res.json(users);
 });
 
-router.patch('/:id/role', async (req, res) => {
+// Assign role - ADMIN only
+router.patch('/:id/role', authenticate, requireRole('ADMIN'), async (req, res) => {
   const parsed = assignRoleSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json(parsed.error.flatten());
   const user = await prisma.user.update({
@@ -46,7 +75,8 @@ router.patch('/:id/role', async (req, res) => {
   res.json(user);
 });
 
-router.patch('/:id/availability', async (req, res) => {
+// Update availability - self or ADMIN
+router.patch('/:id/availability', authenticate, requireSelfOrAdmin, async (req, res) => {
   const parsed = updateAvailabilitySchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json(parsed.error.flatten());
   const user = await prisma.user.update({
@@ -57,7 +87,8 @@ router.patch('/:id/availability', async (req, res) => {
   res.json(user);
 });
 
-router.patch('/:id/profile', async (req, res) => {
+// Update profile - self or ADMIN
+router.patch('/:id/profile', authenticate, requireSelfOrAdmin, async (req, res) => {
   const parsed = updateProfileSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json(parsed.error.flatten());
 
@@ -80,9 +111,15 @@ router.patch('/:id/profile', async (req, res) => {
   res.json(user);
 });
 
-router.patch('/:id/password', async (req, res) => {
+// Update password - self only (not even admin can change others' passwords)
+router.patch('/:id/password', authenticate, requireSelfOrAdmin, async (req, res) => {
+  console.log('Password change request received for user:', req.params.id);
+
   const parsed = updatePasswordSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json(parsed.error.flatten());
+  if (!parsed.success) {
+    console.log('Validation failed:', parsed.error.flatten());
+    return res.status(400).json({ message: 'Invalid request data', errors: parsed.error.flatten() });
+  }
 
   try {
     // Get user with password
@@ -91,19 +128,26 @@ router.patch('/:id/password', async (req, res) => {
     });
 
     if (!user) {
+      console.log('User not found:', req.params.id);
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Verify current password (you'll need to import bcrypt)
-    const bcrypt = require('bcryptjs');
+    console.log('User found, verifying current password...');
+
+    // Verify current password
     const isValid = await bcrypt.compare(parsed.data.currentPassword, user.password);
 
     if (!isValid) {
+      console.log('Current password is incorrect');
       return res.status(401).json({ message: 'Current password is incorrect' });
     }
 
+    console.log('Current password verified, hashing new password...');
+
     // Hash new password
     const hashedPassword = await bcrypt.hash(parsed.data.newPassword, 10);
+
+    console.log('Updating password in database...');
 
     // Update password
     await prisma.user.update({
@@ -111,17 +155,53 @@ router.patch('/:id/password', async (req, res) => {
       data: { password: hashedPassword },
     });
 
+    console.log('Password updated successfully for user:', req.params.id);
     res.json({ message: 'Password updated successfully' });
   } catch (error) {
     console.error('Password update error:', error);
-    res.status(500).json({ message: 'Failed to update password' });
+    res.status(500).json({ message: 'Failed to update password', error: String(error) });
   }
 });
 
-router.patch('/:id/settings', async (req, res) => {
+// Update settings - self only
+router.patch('/:id/settings', authenticate, requireSelfOrAdmin, async (req, res) => {
   // Settings are stored client-side for now (localStorage)
   // You can extend this to store in database if needed
   res.json({ message: 'Settings updated successfully' });
+});
+
+// Delete user - ADMIN only
+router.delete('/:id', authenticate, requireRole('ADMIN'), async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    // Check if user exists
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Delete user and all related data
+    await prisma.user.delete({
+      where: { id: userId },
+    });
+
+    res.json({ message: 'User deleted successfully' });
+  } catch (error) {
+    console.error('User deletion error:', error);
+
+    // Check if it's a foreign key constraint error
+    if ((error as any).code === 'P2003') {
+      return res.status(400).json({
+        message: 'Cannot delete user because they have associated records (assets, tickets, etc.). Please remove or reassign these first.'
+      });
+    }
+
+    res.status(500).json({ message: 'Failed to delete user' });
+  }
 });
 
 export default router;

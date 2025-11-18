@@ -281,9 +281,23 @@ export default function TicketDetailsPage() {
               <div>
                 <span className="text-gray-500 dark:text-gray-400">Created by:</span>
                 <p className="font-medium mt-1 dark:text-white">
-                  {(currentTicket as any).createdBy
-                    ? `${(currentTicket as any).createdBy.name || (currentTicket as any).createdBy.email}`
-                    : currentTicket.createdById || '-'}
+                  {(currentTicket as any).createdBy ? (
+                    <>
+                      {(currentTicket as any).createdBy.name || (currentTicket as any).createdBy.email}
+                      {(currentTicket as any).createdBy.isWhatsAppUser && (
+                        <span className="ml-2 inline-flex items-center px-2 py-0.5 text-xs rounded-full bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
+                          📱 WhatsApp
+                        </span>
+                      )}
+                      {(currentTicket as any).createdBy.phone && (
+                        <span className="block text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          {(currentTicket as any).createdBy.phone}
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    'Unknown User'
+                  )}
                 </p>
               </div>
               <div>

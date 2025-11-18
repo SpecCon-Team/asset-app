@@ -5,10 +5,10 @@ const prisma = new PrismaClient();
 
 async function main() {
   // Create admin user
-  const adminPassword = await bcrypt.hash('admin123', 10);
+  const adminPassword = await bcrypt.hash('admin123456789', 10);
   const admin = await prisma.user.upsert({
     where: { email: 'admin@example.com' },
-    update: {},
+    update: { password: adminPassword },
     create: {
       email: 'admin@example.com',
       name: 'Admin User',
@@ -20,10 +20,10 @@ async function main() {
   console.log('Created/Updated admin:', admin);
 
   // Create regular test user
-  const userPassword = await bcrypt.hash('password123', 10);
+  const userPassword = await bcrypt.hash('password123456', 10);
   const user = await prisma.user.upsert({
     where: { email: 'test@example.com' },
-    update: {},
+    update: { password: userPassword },
     create: {
       email: 'test@example.com',
       name: 'Test User',
@@ -33,9 +33,9 @@ async function main() {
   });
 
   console.log('Created/Updated user:', user);
-  console.log('\n=== Demo Credentials ===');
-  console.log('Admin: admin@example.com / admin123');
-  console.log('User: test@example.com / password123');
+  console.log('\n=== Demo Credentials (Updated with 12+ character passwords) ===');
+  console.log('Admin: admin@example.com / admin123456789');
+  console.log('User: test@example.com / password123456');
 }
 
 main()
