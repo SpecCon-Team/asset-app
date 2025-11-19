@@ -19,18 +19,20 @@ export default function AIChatWidget() {
   const [hasShownWelcome, setHasShownWelcome] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const userId = getCurrentUserId();
 
-  // Generate user-specific localStorage keys
-  const getChatHistoryKey = () => `aiChatHistory_${userId || 'guest'}`;
-  const getWelcomeShownKey = () => `aiChatWelcomeShown_${userId || 'guest'}`;
+  // Use useMemo to prevent re-calling getCurrentUserId on every render
+  const userId = useRef(getCurrentUserId()).current;
+
+  // Generate user-specific localStorage keys (memoized)
+  const chatHistoryKey = `aiChatHistory_${userId || 'guest'}`;
+  const welcomeShownKey = `aiChatWelcomeShown_${userId || 'guest'}`;
 
   // Load chat history from localStorage when component mounts or user changes
   useEffect(() => {
     if (!userId) return;
 
-    const savedMessages = localStorage.getItem(getChatHistoryKey());
-    const welcomeShown = localStorage.getItem(getWelcomeShownKey());
+    const savedMessages = localStorage.getItem(chatHistoryKey);
+    const welcomeShown = localStorage.getItem(welcomeShownKey);
 
     if (savedMessages) {
       const parsed = JSON.parse(savedMessages);
@@ -48,16 +50,16 @@ export default function AIChatWidget() {
     } else {
       setHasShownWelcome(false);
     }
-  }, [userId]);
+  }, []); // Only run once on mount
 
   // Save chat history to localStorage (user-specific)
   useEffect(() => {
     if (!userId) return;
 
     if (messages.length > 0) {
-      localStorage.setItem(getChatHistoryKey(), JSON.stringify(messages));
+      localStorage.setItem(chatHistoryKey, JSON.stringify(messages));
     }
-  }, [messages, userId]);
+  }, [messages, userId, chatHistoryKey]); // Add chatHistoryKey to deps
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -75,9 +77,9 @@ export default function AIChatWidget() {
       };
       setMessages([welcomeMessage]);
       setHasShownWelcome(true);
-      localStorage.setItem(getWelcomeShownKey(), 'true');
+      localStorage.setItem(welcomeShownKey, 'true');
     }
-  }, [isOpen, hasShownWelcome, messages.length, userId]);
+  }, [isOpen, hasShownWelcome, messages.length, userId, welcomeShownKey]);
 
   // Focus input when chat opens
   useEffect(() => {

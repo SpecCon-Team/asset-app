@@ -33,7 +33,7 @@ const updatePasswordSchema = z.object({
 
 // Get all users - requires authentication, admins see all fields
 router.get('/', authenticate, applyFieldVisibility('user'), async (req: AuthRequest, res) => {
-  const { type } = req.query;
+  const { type, page = '1', limit = '100' } = req.query;
 
   let whereClause: any = {};
 
@@ -43,6 +43,14 @@ router.get('/', authenticate, applyFieldVisibility('user'), async (req: AuthRequ
   } else if (type === 'regular') {
     whereClause.isWhatsAppUser = false;
   }
+
+  // Parse pagination parameters
+  const pageNum = parseInt(page as string, 10);
+  const limitNum = parseInt(limit as string, 10);
+  const skip = (pageNum - 1) * limitNum;
+
+  // Get total count for pagination metadata
+  const totalCount = await prisma.user.count({ where: whereClause });
 
   const users = await prisma.user.findMany({
     where: whereClause,
@@ -58,9 +66,21 @@ router.get('/', authenticate, applyFieldVisibility('user'), async (req: AuthRequ
       whatsAppNotifications: true,
       createdAt: true
     },
-    orderBy: { createdAt: 'desc' }
+    orderBy: { createdAt: 'desc' },
+    skip: limitNum === -1 ? undefined : skip,  // -1 means no pagination
+    take: limitNum === -1 ? undefined : limitNum
   });
-  res.json(users);
+
+  // Return with pagination metadata
+  res.json({
+    data: users,
+    pagination: limitNum === -1 ? null : {
+      page: pageNum,
+      limit: limitNum,
+      total: totalCount,
+      totalPages: Math.ceil(totalCount / limitNum)
+    }
+  });
 });
 
 // Assign role - ADMIN only

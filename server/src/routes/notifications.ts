@@ -23,6 +23,11 @@ router.get('/user/:userId', authenticate, async (req: AuthRequest, res) => {
       return res.status(403).json({ message: 'Access denied' });
     }
 
+    // Add pagination support (default limit 50 for better performance)
+    const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 50;
+    const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
+    const skip = (page - 1) * limit;
+
     const notifications = await prisma.notification.findMany({
       where: { userId: req.params.userId },
       include: {
@@ -37,34 +42,45 @@ router.get('/user/:userId', authenticate, async (req: AuthRequest, res) => {
         },
       },
       orderBy: { createdAt: 'desc' },
+      take: limit === -1 ? undefined : limit,
+      skip: limit === -1 ? undefined : skip,
     });
 
-    // For each notification with a ticketId, fetch the ticket number
-    const enrichedNotifications = await Promise.all(
-      notifications.map(async (notification) => {
-        if (notification.ticketId) {
-          const ticket = await prisma.ticket.findUnique({
-            where: { id: notification.ticketId },
-            select: { number: true },
-          });
-          return {
-            ...notification,
-            ticketNumber: ticket?.number || null,
-          };
-        }
-        if (notification.assetId) {
-          const asset = await prisma.asset.findUnique({
-            where: { id: notification.assetId },
-            select: { asset_code: true },
-          });
-          return {
-            ...notification,
-            assetCode: asset?.asset_code || null,
-          };
-        }
-        return notification;
-      })
-    );
+    // Optimized: Batch fetch all tickets and assets in 2 queries instead of N queries
+    const ticketIds = notifications
+      .filter((n) => n.ticketId)
+      .map((n) => n.ticketId as string);
+
+    const assetIds = notifications
+      .filter((n) => n.assetId)
+      .map((n) => n.assetId as string);
+
+    // Fetch all tickets in a single query
+    const tickets = ticketIds.length > 0
+      ? await prisma.ticket.findMany({
+          where: { id: { in: ticketIds } },
+          select: { id: true, number: true },
+        })
+      : [];
+
+    // Fetch all assets in a single query
+    const assets = assetIds.length > 0
+      ? await prisma.asset.findMany({
+          where: { id: { in: assetIds } },
+          select: { id: true, asset_code: true },
+        })
+      : [];
+
+    // Create lookup maps for O(1) access
+    const ticketMap = new Map(tickets.map((t) => [t.id, t.number]));
+    const assetMap = new Map(assets.map((a) => [a.id, a.asset_code]));
+
+    // Enrich notifications with ticket numbers and asset codes
+    const enrichedNotifications = notifications.map((notification) => ({
+      ...notification,
+      ticketNumber: notification.ticketId ? ticketMap.get(notification.ticketId) || null : null,
+      assetCode: notification.assetId ? assetMap.get(notification.assetId) || null : null,
+    }));
 
     res.json(enrichedNotifications);
   } catch (error) {

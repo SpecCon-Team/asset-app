@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { Package, Ticket, Home, FolderOpen, ClipboardList, Settings, Users, CheckSquare, Menu, X, Keyboard, Search, Shield, Lock, ChevronLeft, ChevronRight, Bell, HelpCircle, Download } from 'lucide-react';
+import { Package, Ticket, Home, FolderOpen, ClipboardList, Settings, Users, CheckSquare, Menu, X, Keyboard, Search, Shield, Lock, ChevronLeft, ChevronRight, Bell, HelpCircle, Download, ShieldCheck, UserCog } from 'lucide-react';
 import NotificationBell from '@/features/notifications/NotificationBell';
 import UserProfileDropdown from './UserProfileDropdown';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
@@ -148,8 +148,8 @@ export default function AppLayout() {
       label: 'Security & Privacy',
       links: [
         { to: '/audit-logs', label: 'Audit Logs', icon: Shield, roles: ['ADMIN'] },
-        { to: '/2fa-management', label: '2FA Management', icon: Lock, roles: ['ADMIN'] },
-        { to: '/privacy', label: 'Privacy & Data', icon: Lock, roles: ['USER', 'ADMIN', 'TECHNICIAN'] },
+        { to: '/2fa-management', label: '2FA Management', icon: ShieldCheck, roles: ['ADMIN'] },
+        { to: '/privacy', label: 'Privacy & Data', icon: UserCog, roles: ['USER', 'ADMIN', 'TECHNICIAN'] },
       ]
     },
     {

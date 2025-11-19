@@ -16,6 +16,10 @@ export default function MyAssetsPage() {
   });
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
   // Fetch assets based on role
   useEffect(() => {
     if (!user) return;
@@ -23,6 +27,19 @@ export default function MyAssetsPage() {
     // All roles can see all assets (read-only for users)
     fetchAssets({});
   }, [user, fetchAssets]);
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
+  if (isLoading) {
+    return <PageLoader message="Loading your assets..." />;
+  }
+
+  if (error) {
+    return <div className="p-8 text-red-600 dark:text-red-400 bg-gray-50 dark:bg-gray-900 min-h-screen">Error: {error}</div>;
+  }
 
   // All users can see all assets
   const myAssets = assets;
@@ -34,13 +51,11 @@ export default function MyAssetsPage() {
     asset.department?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (isLoading) {
-    return <PageLoader message="Loading your assets..." />;
-  }
-
-  if (error) {
-    return <div className="p-8 text-red-600 dark:text-red-400 bg-gray-50 dark:bg-gray-900 min-h-screen">Error: {error}</div>;
-  }
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredAssets.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedAssets = filteredAssets.slice(startIndex, endIndex);
 
   // Calculate stats based on user's assets
   const goodConditionCount = myAssets.filter(
@@ -52,8 +67,8 @@ export default function MyAssetsPage() {
   ).length;
 
   return (
-    <div className="h-screen overflow-hidden bg-gray-50 dark:bg-gray-900">
-      <div className="max-w-7xl mx-auto p-4 md:p-8 h-full flex flex-col">
+    <div className="bg-gray-50 dark:bg-gray-900">
+      <div className="max-w-7xl mx-auto p-4 md:p-8 flex flex-col">
         {/* Header */}
         <div className="mb-8 flex-shrink-0">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
@@ -120,7 +135,7 @@ export default function MyAssetsPage() {
         </div>
 
         {/* Assets List */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1">
           {filteredAssets.length === 0 ? (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-12 text-center">
             <Package className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
@@ -155,7 +170,7 @@ export default function MyAssetsPage() {
           <>
             {/* Mobile Card View */}
             <div className="md:hidden space-y-4 pb-4">
-              {filteredAssets.map((asset) => (
+              {paginatedAssets.map((asset) => (
                 <div
                   key={asset.id}
                   className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-700"
@@ -208,10 +223,10 @@ export default function MyAssetsPage() {
             </div>
 
             {/* Desktop Table View */}
-            <div className="hidden md:block bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-              <div className="overflow-x-auto">
+            <div className="hidden md:block bg-white dark:bg-gray-800 rounded-lg shadow">
+              <div>
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead className="bg-gray-50 dark:bg-gray-700 sticky top-0 z-[1]">
+              <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Asset
@@ -231,7 +246,7 @@ export default function MyAssetsPage() {
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {filteredAssets.map((asset) => (
+                {paginatedAssets.map((asset) => (
                   <tr key={asset.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-col">
@@ -267,6 +282,46 @@ export default function MyAssetsPage() {
             </table>
               </div>
             </div>
+
+            {/* Pagination Controls */}
+            {filteredAssets.length > 0 && (
+              <div className="mt-6 flex items-center justify-between bg-white dark:bg-gray-800 px-4 py-3 rounded-lg shadow border-t border-gray-200 dark:border-gray-700">
+                <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                  <span>
+                    Showing <span className="font-semibold">{startIndex + 1}</span> to{' '}
+                    <span className="font-semibold">{Math.min(endIndex, filteredAssets.length)}</span> of{' '}
+                    <span className="font-semibold">{filteredAssets.length}</span> assets
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                    className="px-4 py-2 min-h-[44px] bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:from-gray-400 disabled:to-gray-400 transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    Previous
+                  </button>
+                  <div className="px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                      Page {currentPage} of {totalPages}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages}
+                    className="px-4 py-2 min-h-[44px] bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:from-gray-400 disabled:to-gray-400 transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+                  >
+                    Next
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            )}
           </>
         )}
         </div>

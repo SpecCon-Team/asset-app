@@ -86,7 +86,7 @@ export default function AdminDashboard() {
 
   // Initialize and update live chart data for ticket traffic - REAL DATA ONLY
   useEffect(() => {
-    // Get current real ticket counts
+    // Get current real ticket counts (memoized to avoid recalculation)
     const getCurrentCounts = () => ({
       open: tickets.filter((t) => t.status === 'open').length,
       in_progress: tickets.filter((t) => t.status === 'in_progress').length,
@@ -110,25 +110,55 @@ export default function AdminDashboard() {
 
     setLiveData(initialData);
 
-    // Update with REAL ticket data every 3 minutes for truly live monitoring
-    const interval = setInterval(() => {
-      const currentTickets = getCurrentCounts();
-      const total = currentTickets.open + currentTickets.in_progress + currentTickets.closed;
+    // Update with REAL ticket data every 5 minutes (reduced from 3 minutes)
+    // Only refresh when tab is visible to reduce server load
+    let interval: NodeJS.Timeout | null = null;
 
-      setLiveData((prev) => {
-        const newData = [...prev.slice(1), {
-          time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-          ...currentTickets,
-          total,
-        }];
-        return newData;
-      });
+    const startInterval = () => {
+      if (!document.hidden && !interval) {
+        interval = setInterval(() => {
+          if (!document.hidden) {
+            const currentTickets = getCurrentCounts();
+            const total = currentTickets.open + currentTickets.in_progress + currentTickets.closed;
 
-      // Refresh tickets to get latest data from server
-      fetchTickets();
-    }, 180000); // 3 minutes = 180000 milliseconds
+            setLiveData((prev) => {
+              const newData = [...prev.slice(1), {
+                time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+                ...currentTickets,
+                total,
+              }];
+              return newData;
+            });
 
-    return () => clearInterval(interval);
+            // Refresh tickets to get latest data from server
+            fetchTickets();
+          }
+        }, 300000); // 5 minutes = 300000 milliseconds (increased from 3 minutes)
+      }
+    };
+
+    const stopInterval = () => {
+      if (interval) {
+        clearInterval(interval);
+        interval = null;
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        stopInterval();
+      } else {
+        startInterval();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    startInterval();
+
+    return () => {
+      stopInterval();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [tickets, fetchTickets]);
 
   const stats = useMemo(

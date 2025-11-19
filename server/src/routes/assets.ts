@@ -65,6 +65,8 @@ router.get('/', authenticate, applyFieldVisibility('asset'), async (req: AuthReq
     const search = (req.query.search as string) || undefined;
     const status = (req.query.status as string) || undefined;
     const ownerId = (req.query.ownerId as string) || undefined;
+    const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
+    const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : -1;
 
     // Regular users can only see their own assets, admins/technicians see all
     const whereClause: any = {
@@ -83,6 +85,13 @@ router.get('/', authenticate, applyFieldVisibility('asset'), async (req: AuthReq
 
     // All users can view all assets (permissions control what they can edit)
 
+    // Calculate pagination
+    const skip = limit === -1 ? undefined : (page - 1) * limit;
+    const take = limit === -1 ? undefined : limit;
+
+    // Get total count for pagination metadata
+    const totalCount = await prisma.asset.count({ where: whereClause });
+
     const assets = await prisma.asset.findMany({
       where: whereClause,
       include: {
@@ -95,10 +104,22 @@ router.get('/', authenticate, applyFieldVisibility('asset'), async (req: AuthReq
         },
       },
       orderBy: { createdAt: 'desc' },
+      skip,
+      take,
     });
 
-    console.log(`Found ${assets.length} assets`);
-    res.json(assets);
+    console.log(`Found ${assets.length} assets (total: ${totalCount})`);
+
+    // Return with pagination metadata
+    res.json({
+      data: assets,
+      pagination: limit === -1 ? null : {
+        page,
+        limit,
+        total: totalCount,
+        totalPages: Math.ceil(totalCount / limit)
+      }
+    });
   } catch (error) {
     console.error('GET /api/assets error:', error);
     res.status(500).json({ message: 'Failed to fetch assets', error: String(error) });

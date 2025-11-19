@@ -83,7 +83,12 @@ export function createDualWriteProxy(primaryClient: PrismaClient, backupClient: 
                         await (backupClient as any)[prop][modelProp](...args);
                         console.log(`✅ Synced to backup: ${String(prop)}.${String(modelProp)}`);
                       } catch (error: any) {
-                        console.error(`⚠️  Backup sync failed: ${error.message}`);
+                        // Check if it's a unique constraint error
+                        if (error.code === 'P2002' || error.message?.includes('Unique constraint')) {
+                          console.warn(`⚠️  Backup sync failed for ${String(prop)}.${String(modelProp)}: Record already exists (${error.meta?.target || 'unique field'})`);
+                        } else {
+                          console.error(`⚠️  Backup sync failed for ${String(prop)}.${String(modelProp)}: ${error.message}`);
+                        }
                         // Don't fail the operation if backup fails
                       }
                     });

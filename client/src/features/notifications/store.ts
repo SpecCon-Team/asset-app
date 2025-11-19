@@ -21,7 +21,7 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
   isLoading: false,
   error: null,
 
-  fetchNotifications: async (userId: string) => {
+  fetchNotifications: async (userId: string, limit: number = 50) => {
     set({ isLoading: true, error: null });
     try {
       const token = localStorage.getItem('token');
@@ -33,7 +33,10 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const response = await fetch(`http://localhost:4000/api/notifications/user/${userId}`, {
+      // Add limit parameter to control notification count (default 50 for performance)
+      const url = `http://localhost:4000/api/notifications/user/${userId}?limit=${limit}`;
+
+      const response = await fetch(url, {
         credentials: 'include',
         headers,
       });

@@ -94,9 +94,11 @@ export default function NotificationBell() {
   }, [isOpen, notifications.length]);
 
   const handleNotificationClick = async (notification: any) => {
-    // Mark as read
+    // Mark as read asynchronously (fire-and-forget for better UX)
     if (!notification.read) {
-      await markAsRead(notification.id);
+      markAsRead(notification.id).catch(err => {
+        console.error('Failed to mark notification as read:', err);
+      });
     }
 
     // Check if it's a speed test notification
@@ -123,17 +125,18 @@ export default function NotificationBell() {
       return;
     }
 
+    // Close dropdown immediately for instant feedback
+    setIsOpen(false);
+
     // Navigate to related resource
     if (notification.ticketId) {
       // Use ticketNumber if available, otherwise fall back to ticketId
       const ticketIdentifier = (notification as any).ticketNumber || notification.ticketId;
       navigate(`/tickets/${ticketIdentifier}`);
-      setIsOpen(false);
     } else if (notification.assetId) {
       // Use assetCode if available, otherwise fall back to assetId
       const assetIdentifier = (notification as any).assetCode || notification.assetId;
       navigate(`/assets/${assetIdentifier}`);
-      setIsOpen(false);
     }
   };
 

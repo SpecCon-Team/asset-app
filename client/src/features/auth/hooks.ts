@@ -44,7 +44,6 @@ export function getCurrentUserId(): string | null {
     const userStr = localStorage.getItem('user');
     if (userStr) {
       const user = JSON.parse(userStr);
-      console.log('getCurrentUserId - User from localStorage:', user);
       return user.id || null;
     }
   } catch (error) {

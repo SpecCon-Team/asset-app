@@ -57,12 +57,15 @@ if (ENABLE_DUAL_WRITE && neonUrl && localUrl) {
   }
 }
 
+// Store original methods to avoid infinite recursion
+const originalMethods = new Map<string, any>();
+
 // Dual write wrapper: writes to both databases
-function createDualWriteOperation(operation: string, model: string) {
+function createDualWriteOperation(operation: string, model: string, originalMethod: any) {
   return async (...args: any[]) => {
     try {
-      // Execute on primary (Neon - always online)
-      const result = await (prisma as any)[model][operation](...args);
+      // Execute on primary using ORIGINAL method (not the wrapped one)
+      const result = await originalMethod.apply((prisma as any)[model], args);
 
       // Sync to backup (Local) asynchronously - don't wait
       if (backupClient && ENABLE_DUAL_WRITE) {
@@ -107,7 +110,12 @@ if (ENABLE_DUAL_WRITE && backupClient) {
     writeOperations.forEach(op => {
       const original = (prisma as any)[model][op];
       if (original) {
-        (prisma as any)[model][op] = createDualWriteOperation(op, model);
+        // Store original method
+        const key = `${model}.${op}`;
+        originalMethods.set(key, original);
+
+        // Replace with wrapped version that uses the stored original
+        (prisma as any)[model][op] = createDualWriteOperation(op, model, original);
       }
     });
   });

@@ -10,10 +10,13 @@ import {
 } from './types';
 
 const PaginatedAssetsSchema = z.object({
-  items: z.array(AssetSchema),
-  total: z.number().optional(),
-  page: z.number().optional(),
-  pageSize: z.number().optional(),
+  data: z.array(AssetSchema),
+  pagination: z.object({
+    total: z.number(),
+    page: z.number(),
+    limit: z.number(),
+    totalPages: z.number(),
+  }).nullable(),
 });
 
 export type ListAssetsParams = {
@@ -21,18 +24,27 @@ export type ListAssetsParams = {
   status?: string;
   ownerId?: string;
   page?: number;
-  pageSize?: number;
+  limit?: number;
 };
 
 export async function listAssets(params: ListAssetsParams = {}): Promise<Asset[]> {
   const client = getApiClient();
-  const res = await client.get('/assets', { params });
-  // Accept either array or paginated object
+
+  // Convert params to query string, defaulting to limit=-1 (no pagination)
+  const queryParams: any = { ...params };
+  if (queryParams.limit === undefined) {
+    queryParams.limit = -1;
+  }
+
+  const res = await client.get('/assets', { params: queryParams });
+
+  // Accept either array (old format) or paginated object (new format)
   if (Array.isArray(res.data)) {
     return z.array(AssetSchema).parse(res.data);
   }
+
   const parsed = PaginatedAssetsSchema.parse(res.data);
-  return parsed.items;
+  return parsed.data;
 }
 
 export async function getAsset(id: string): Promise<Asset> {

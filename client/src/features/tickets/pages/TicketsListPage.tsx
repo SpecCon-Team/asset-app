@@ -30,6 +30,10 @@ export default function TicketsListPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
   const { tickets, isLoading, error, fetchTickets } = useTicketsStore();
 
   // Redirect non-admin users to My Tickets
@@ -58,6 +62,11 @@ export default function TicketsListPage() {
   useEffect(() => {
     fetchTickets({ status: statusFilter, priority: priorityFilter });
   }, [statusFilter, priorityFilter, fetchTickets]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter, priorityFilter, assigneeFilter, searchQuery]);
 
   if (isLoading) {
     return <PageLoader message="Loading tickets..." />;
@@ -96,19 +105,25 @@ export default function TicketsListPage() {
   };
 
   const filteredTickets = tickets.filter((ticket) => {
-    const matchesSearch = 
+    const matchesSearch =
       searchQuery === '' ||
       ticket.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       ticket.number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       ticket.description?.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesAssignee = 
+    const matchesAssignee =
       assigneeFilter === '' ||
       (assigneeFilter === 'unassigned' && !ticket.assignedToId) ||
       ticket.assignedToId === assigneeFilter;
 
     return matchesSearch && matchesAssignee;
   });
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredTickets.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedTickets = filteredTickets.slice(startIndex, endIndex);
 
   const clearFilters = () => {
     setStatusFilter('');
@@ -286,7 +301,7 @@ export default function TicketsListPage() {
   };
 
   return (
-    <div className="h-screen overflow-hidden flex flex-col p-3 sm:p-4 md:p-6 lg:p-8">
+    <div className="flex flex-col p-3 sm:p-4 md:p-6 lg:p-8">
       {/* Header Section */}
       <div className="mb-4 sm:mb-6 flex-shrink-0">
         <div className="mb-4">
@@ -501,7 +516,7 @@ export default function TicketsListPage() {
       )}
 
       {/* Tickets Table */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 flex flex-col">
         {filteredTickets.length === 0 ? (
           <div className="bg-white dark:bg-gray-800 p-12 rounded-lg shadow text-center">
             <p className="text-gray-500 dark:text-gray-400">No tickets found</p>
@@ -521,8 +536,8 @@ export default function TicketsListPage() {
         ) : (
           <>
             {/* Mobile Card View */}
-            <div className="md:hidden space-y-4 overflow-auto h-full pb-4">
-              {filteredTickets.map((ticket) => (
+            <div className="md:hidden space-y-4 pb-4 flex-1">
+              {paginatedTickets.map((ticket) => (
                 <div
                   key={ticket.id}
                   className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-700"
@@ -584,15 +599,15 @@ export default function TicketsListPage() {
             </div>
 
             {/* Desktop Table View */}
-            <div className="hidden md:block bg-white dark:bg-gray-800 rounded-lg shadow h-full overflow-auto">
+            <div className="hidden md:block bg-white dark:bg-gray-800 rounded-lg shadow flex-1">
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead className="bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 dark:from-gray-700 dark:via-gray-700 dark:to-gray-700 sticky top-0 z-[1]">
+              <thead className="bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 dark:from-gray-700 dark:via-gray-700 dark:to-gray-700">
               <tr>
                 <th className="px-6 py-3 text-left">
                   <label className="flex items-center justify-center min-w-[44px] min-h-[44px] cursor-pointer">
                     <input
                       type="checkbox"
-                      checked={selectedTickets.size === filteredTickets.length && filteredTickets.length > 0}
+                      checked={selectedTickets.size === paginatedTickets.length && paginatedTickets.length > 0}
                       onChange={handleSelectAll}
                       className="w-5 h-5 cursor-pointer"
                       aria-label="Select all tickets"
@@ -609,7 +624,7 @@ export default function TicketsListPage() {
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              {filteredTickets.map((ticket) => (
+              {paginatedTickets.map((ticket) => (
                 <tr key={ticket.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <label className="flex items-center justify-center min-w-[44px] min-h-[44px] cursor-pointer">
@@ -655,6 +670,46 @@ export default function TicketsListPage() {
             </tbody>
           </table>
             </div>
+
+            {/* Pagination Controls */}
+            {filteredTickets.length > 0 && (
+              <div className="mt-6 flex items-center justify-between bg-white dark:bg-gray-800 px-4 py-3 rounded-lg shadow border-t border-gray-200 dark:border-gray-700">
+                <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                  <span>
+                    Showing <span className="font-semibold">{startIndex + 1}</span> to{' '}
+                    <span className="font-semibold">{Math.min(endIndex, filteredTickets.length)}</span> of{' '}
+                    <span className="font-semibold">{filteredTickets.length}</span> tickets
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                    className="px-4 py-2 min-h-[44px] bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:from-gray-400 disabled:to-gray-400 transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    Previous
+                  </button>
+                  <div className="px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                      Page {currentPage} of {totalPages}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages}
+                    className="px-4 py-2 min-h-[44px] bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:from-gray-400 disabled:to-gray-400 transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+                  >
+                    Next
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>

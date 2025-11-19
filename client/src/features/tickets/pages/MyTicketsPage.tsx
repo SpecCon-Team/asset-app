@@ -18,9 +18,18 @@ export default function MyTicketsPage() {
   const [filterStatus, setFilterStatus] = useState<'all' | 'open' | 'in_progress' | 'closed'>('all');
   const [showArchived, setShowArchived] = useState(false);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
   useEffect(() => {
     fetchTickets();
   }, [fetchTickets]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterStatus, showArchived]);
 
   // Role-based ticket filtering
   const myTickets = tickets.filter((ticket) => {
@@ -83,6 +92,12 @@ export default function MyTicketsPage() {
     return ticket.status === filterStatus;
   });
 
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredTickets.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedTickets = filteredTickets.slice(startIndex, endIndex);
+
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'critical':
@@ -112,8 +127,8 @@ export default function MyTicketsPage() {
   };
 
   return (
-    <div className="h-screen overflow-hidden bg-gray-50 dark:bg-gray-900">
-      <div className="max-w-7xl mx-auto p-8 h-full flex flex-col">
+    <div className="bg-gray-50 dark:bg-gray-900">
+      <div className="max-w-7xl mx-auto p-8 flex flex-col">
         {/* Header */}
         <div className="mb-8 flex justify-between items-start flex-shrink-0">
           <div>
@@ -290,7 +305,7 @@ export default function MyTicketsPage() {
         </div>
 
         {/* Tickets List */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1">
           {myTickets.length === 0 ? (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-12 text-center">
             <Ticket className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
@@ -354,8 +369,9 @@ export default function MyTicketsPage() {
             </button>
           </div>
         ) : (
+          <>
           <div className="space-y-4">
-            {filteredTickets.map((ticket) => (
+            {paginatedTickets.map((ticket) => (
               <div
                 key={ticket.id}
                 className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer"
@@ -414,6 +430,47 @@ export default function MyTicketsPage() {
               </div>
             ))}
           </div>
+
+          {/* Pagination Controls */}
+          {filteredTickets.length > 0 && (
+            <div className="mt-6 flex items-center justify-between bg-white dark:bg-gray-800 px-4 py-3 rounded-lg shadow border-t border-gray-200 dark:border-gray-700">
+              <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                <span>
+                  Showing <span className="font-semibold">{startIndex + 1}</span> to{' '}
+                  <span className="font-semibold">{Math.min(endIndex, filteredTickets.length)}</span> of{' '}
+                  <span className="font-semibold">{filteredTickets.length}</span> tickets
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 min-h-[44px] bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:from-gray-400 disabled:to-gray-400 transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  Previous
+                </button>
+                <div className="px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                  <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                </div>
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 min-h-[44px] bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:from-gray-400 disabled:to-gray-400 transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+                >
+                  Next
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          )}
+          </>
         )}
         </div>
       </div>

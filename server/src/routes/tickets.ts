@@ -22,12 +22,22 @@ const createSchema = z.object({
 
 router.get('/', authenticate, applyFieldVisibility('ticket'), async (req: AuthRequest, res) => {
   try {
+    const { page = '1', limit = '100' } = req.query;
+
     // Users see their own tickets, admins/technicians see all tickets
     const whereClause: any = {};
 
     if (req.user?.role !== 'ADMIN' && req.user?.role !== 'TECHNICIAN') {
       whereClause.createdById = req.user?.id;
     }
+
+    // Parse pagination parameters
+    const pageNum = parseInt(page as string, 10);
+    const limitNum = parseInt(limit as string, 10);
+    const skip = (pageNum - 1) * limitNum;
+
+    // Get total count for pagination metadata
+    const totalCount = await prisma.ticket.count({ where: whereClause });
 
     const tickets = await prisma.ticket.findMany({
       where: whereClause,
@@ -37,8 +47,20 @@ router.get('/', authenticate, applyFieldVisibility('ticket'), async (req: AuthRe
         asset: true,
       },
       orderBy: { createdAt: 'desc' },
+      skip: limitNum === -1 ? undefined : skip,  // -1 means no pagination
+      take: limitNum === -1 ? undefined : limitNum
     });
-    res.json(tickets);
+
+    // Return with pagination metadata
+    res.json({
+      data: tickets,
+      pagination: limitNum === -1 ? null : {
+        page: pageNum,
+        limit: limitNum,
+        total: totalCount,
+        totalPages: Math.ceil(totalCount / limitNum)
+      }
+    });
   } catch (error) {
     console.error('Failed to fetch tickets:', error);
     res.status(500).json({ message: 'Failed to fetch tickets' });
@@ -84,8 +106,10 @@ router.post('/', authenticate, async (req: AuthRequest, res) => {
   if (!parsed.success) return res.status(400).json(parsed.error.flatten());
 
   try {
-    const seq = Math.floor(Date.now() / 1000);
-    const number = `TKT-${seq}`;
+    // Generate a unique ticket number with milliseconds and random suffix
+    const timestamp = Date.now();
+    const randomSuffix = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    const number = `TKT-${timestamp}-${randomSuffix}`;
 
     // Create the ticket
     const ticket = await prisma.ticket.create({

@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 
 async function testTicketCreation() {
   try {
-    console.log('🧪 Testing Ticket Creation\n');
+    console.log('🧪 Testing Rapid Ticket Creation (Unique Number Generation)\n');
 
     // Find a test user
     const user = await prisma.user.findFirst({
@@ -19,27 +19,56 @@ async function testTicketCreation() {
       return;
     }
 
-    console.log(`✅ Found user: ${user.name} (${user.email})`);
+    console.log(`✅ Found user: ${user.name} (${user.email})\n`);
 
-    // Try to create a ticket
-    const ticketCount = await prisma.ticket.count();
-    const ticketNumber = `TKT-${String(ticketCount + 1).padStart(5, '0')}`;
+    // Test: Create 5 tickets rapidly to ensure no duplicate numbers
+    console.log('Creating 5 tickets in rapid succession...\n');
 
-    console.log(`\nCreating ticket: ${ticketNumber}`);
+    const tickets = [];
+    const ticketNumbers = new Set();
 
-    const ticket = await prisma.ticket.create({
-      data: {
-        number: ticketNumber,
-        title: 'Test ticket from script',
-        description: 'My printer is not working',
-        priority: 'medium',
-        status: 'open',
-        createdById: user.id,
-      },
+    for (let i = 1; i <= 5; i++) {
+      // Generate unique ticket number with milliseconds and random suffix
+      const timestamp = Date.now();
+      const randomSuffix = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+      const ticketNumber = `TKT-${timestamp}-${randomSuffix}`;
+
+      console.log(`${i}. Creating ticket: ${ticketNumber}`);
+
+      const ticket = await prisma.ticket.create({
+        data: {
+          number: ticketNumber,
+          title: `Test ticket ${i} - Rapid creation test`,
+          description: `Testing unique ticket number generation - Ticket ${i}`,
+          priority: 'medium',
+          status: 'open',
+          createdById: user.id,
+        },
+      });
+
+      tickets.push(ticket);
+      ticketNumbers.add(ticket.number);
+
+      console.log(`   ✅ Created: ${ticket.number}\n`);
+
+      // Small delay to simulate real-world usage
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+
+    console.log('\n📊 Test Results:');
+    console.log(`   Total tickets created: ${tickets.length}`);
+    console.log(`   Unique ticket numbers: ${ticketNumbers.size}`);
+
+    if (tickets.length === ticketNumbers.size) {
+      console.log('   ✅ SUCCESS: All ticket numbers are unique!\n');
+    } else {
+      console.log('   ❌ FAILURE: Duplicate ticket numbers detected!\n');
+    }
+
+    console.log('Created ticket numbers:');
+    tickets.forEach((t, i) => {
+      console.log(`   ${i + 1}. ${t.number}`);
     });
-
-    console.log(`✅ Ticket created successfully!`);
-    console.log(JSON.stringify(ticket, null, 2));
 
   } catch (error) {
     console.error('❌ Error:', error.message);

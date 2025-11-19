@@ -304,7 +304,14 @@ const conversationState = new Map<string, {
 }>();
 
 /**
+ * Store processed message IDs to prevent duplicate processing
+ * Meta may send the same webhook multiple times
+ */
+const processedMessageIds = new Set<string>();
+
+/**
  * Clean up old conversation states (older than 30 minutes)
+ * and old processed message IDs (older than 1 hour)
  */
 setInterval(() => {
   const now = new Date();
@@ -314,6 +321,12 @@ setInterval(() => {
       conversationState.delete(phone);
     }
   }
+
+  // Clear processed message IDs after 1 hour (Meta's retry window)
+  if (processedMessageIds.size > 100) {
+    console.log(`🧹 Clearing ${processedMessageIds.size} processed message IDs`);
+    processedMessageIds.clear();
+  }
 }, 5 * 60 * 1000); // Check every 5 minutes
 
 /**
@@ -322,10 +335,22 @@ setInterval(() => {
 export async function processIncomingWhatsAppMessage(message: any, value: any) {
   try {
     const from = message.from; // Sender's phone number
+    const messageId = message.id; // Unique message ID from Meta
     const messageType = message.type;
 
     console.log(`\n📱 Processing message from: ${from}`);
+    console.log(`Message ID: ${messageId}`);
     console.log(`Message type: ${messageType}`);
+
+    // Check if we've already processed this message
+    if (processedMessageIds.has(messageId)) {
+      console.log(`⚠️  Duplicate message detected (ID: ${messageId}), skipping...`);
+      return; // Skip duplicate processing
+    }
+
+    // Mark message as processed
+    processedMessageIds.add(messageId);
+    console.log(`✅ Message ID ${messageId} marked as processed`);
 
     // Only process text messages for now
     if (messageType !== 'text') {
@@ -659,7 +684,7 @@ async function createTicketFromMessage(
           type: 'TICKET_CREATED',
           title: `New Ticket: ${ticket.number}`,
           message: `New ticket ${ticket.number} created via WhatsApp by ${user.name}`,
-          ticketId: ticket.number,
+          ticketId: ticket.id,  // Fixed: Use ticket.id instead of ticket.number
         },
       });
     }
