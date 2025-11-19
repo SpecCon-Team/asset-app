@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma';
 import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
+import { logAudit } from '../lib/auditLog';
 
 const router = Router();
 
@@ -131,6 +132,12 @@ router.post('/', authenticate, async (req: AuthRequest, res) => {
       console.log(`✅ Created comment notifications for ${adminsAndTechs.length} admins/technicians`);
     }
 
+    // Log audit trail
+    await logAudit(req, 'CREATE', 'Comment', comment.id, undefined, {
+      ticketId: comment.ticketId,
+      contentPreview: comment.content.substring(0, 100),
+    });
+
     res.json(comment);
   } catch (error) {
     console.error('Failed to create comment:', error);
@@ -144,7 +151,11 @@ router.delete('/:id', authenticate, async (req: AuthRequest, res) => {
     // Get the comment first to check ownership
     const comment = await prisma.comment.findUnique({
       where: { id: req.params.id },
-      select: { authorId: true },
+      select: {
+        authorId: true,
+        ticketId: true,
+        content: true
+      },
     });
 
     if (!comment) {
@@ -159,6 +170,13 @@ router.delete('/:id', authenticate, async (req: AuthRequest, res) => {
     await prisma.comment.delete({
       where: { id: req.params.id },
     });
+
+    // Log audit trail
+    await logAudit(req, 'DELETE', 'Comment', req.params.id, undefined, {
+      ticketId: comment.ticketId,
+      contentPreview: comment.content.substring(0, 100),
+    });
+
     res.json({ message: 'Comment deleted successfully' });
   } catch (error) {
     res.status(404).json({ message: 'Comment not found' });

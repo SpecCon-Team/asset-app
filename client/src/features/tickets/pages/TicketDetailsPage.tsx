@@ -21,6 +21,7 @@ export default function TicketDetailsPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -53,8 +54,13 @@ export default function TicketDetailsPage() {
 
   const handleUpdate = async () => {
     if (id) {
-      const hasChanges = 
-        status !== currentTicket?.status || 
+      // Prevent duplicate submissions
+      if (isUpdating) {
+        return;
+      }
+
+      const hasChanges =
+        status !== currentTicket?.status ||
         priority !== currentTicket?.priority ||
         assignedToId !== (currentTicket?.assignedToId || '');
 
@@ -62,6 +68,7 @@ export default function TicketDetailsPage() {
         return;
       }
 
+      setIsUpdating(true);
       try {
         await updateTicket(id, {
           status,
@@ -73,6 +80,8 @@ export default function TicketDetailsPage() {
       } catch (error) {
         await showError('Error', 'Failed to update ticket');
         console.error('Update error:', error);
+      } finally {
+        setIsUpdating(false);
       }
     }
   };
@@ -237,10 +246,16 @@ export default function TicketDetailsPage() {
                 <div className="col-span-3">
                   <button
                     onClick={handleUpdate}
-                    disabled={!hasChanges}
-                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    disabled={!hasChanges || isUpdating}
+                    className="px-6 py-2 min-h-[44px] bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
                   >
-                    Update Ticket
+                    {isUpdating && (
+                      <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    )}
+                    {isUpdating ? 'Updating...' : 'Update Ticket'}
                   </button>
                 </div>
               </div>

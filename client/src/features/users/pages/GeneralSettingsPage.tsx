@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { getApiClient } from '@/features/assets/lib/apiClient';
 import toast from 'react-hot-toast';
+import PushNotificationSettings from '@/components/PushNotificationSettings';
 
 export default function GeneralSettingsPage() {
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -286,6 +287,22 @@ export default function GeneralSettingsPage() {
             </div>
           </div>
         </div>
+
+        {/* Browser Push Notifications */}
+        {settings.pushNotifications && (
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-indigo-100 dark:bg-indigo-900 rounded-lg">
+                <Bell className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Browser Push Notifications</h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Enable real-time browser notifications</p>
+              </div>
+            </div>
+            <PushNotificationSettings />
+          </div>
+        )}
 
         {/* Privacy Settings */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">

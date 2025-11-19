@@ -4,5 +4,7 @@
       "name": "PATH",
       "value": "C:\\Program Files\\Git\\bin;C:\\Program Files\\Git\\cmd;${env:PATH}"
     }
-  ]
+  ],
+  "files.autoSave": "afterDelay",
+  "files.autoSaveDelay": 1000
 }

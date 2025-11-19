@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Bell, X, Check, CheckCheck } from 'lucide-react';
+import { Bell, X, Check, CheckCheck, Trash2 } from 'lucide-react';
 import { useNotificationsStore } from './store';
 import { useCurrentUser } from '@/features/auth/hooks';
 import { useNavigate } from 'react-router-dom';
@@ -15,7 +15,7 @@ export default function NotificationBell() {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const notificationRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  const { notifications, unreadCount, fetchNotifications, fetchUnreadCount, markAsRead, markAllAsRead, deleteNotification } = useNotificationsStore();
+  const { notifications, unreadCount, fetchNotifications, fetchUnreadCount, markAsRead, markAllAsRead, deleteNotification, dismissAllNotifications } = useNotificationsStore();
 
   useEffect(() => {
     // Only fetch notifications if user is logged in and has a valid ID
@@ -146,6 +146,12 @@ export default function NotificationBell() {
     }
   };
 
+  const handleDismissAll = async () => {
+    if (currentUser?.id) {
+      await dismissAllNotifications(currentUser.id);
+    }
+  };
+
   const getNotificationIcon = (type: string, title: string) => {
     // Check title for more specific icons
     if (title.includes('Network Speed Test')) return '📶';
@@ -218,13 +224,13 @@ export default function NotificationBell() {
             className="absolute right-0 mt-2 w-96 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-[9999] max-h-[600px] flex flex-col"
           >
             {/* Header */}
-            <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-              <h3 className="font-semibold text-lg text-gray-900 dark:text-white">Notifications</h3>
-              <div className="flex gap-2">
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="font-semibold text-lg text-gray-900 dark:text-white">Notifications</h3>
                 {unreadCount > 0 && (
                   <button
                     onClick={handleMarkAllAsRead}
-                    className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex items-center gap-1"
+                    className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
                     title="Mark all as read"
                     aria-label="Mark all notifications as read"
                   >
@@ -233,6 +239,17 @@ export default function NotificationBell() {
                   </button>
                 )}
               </div>
+              {notifications.length > 0 && (
+                <button
+                  onClick={handleDismissAll}
+                  className="w-full px-4 py-2 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
+                  title="Dismiss all notifications"
+                  aria-label="Dismiss all notifications"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Dismiss All
+                </button>
+              )}
             </div>
 
             {/* Notifications List */}

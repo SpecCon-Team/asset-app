@@ -13,6 +13,7 @@ interface NotificationsState {
   markAsRead: (notificationId: string) => Promise<void>;
   markAllAsRead: (userId: string) => Promise<void>;
   deleteNotification: (notificationId: string) => Promise<void>;
+  dismissAllNotifications: (userId: string) => Promise<void>;
 }
 
 export const useNotificationsStore = create<NotificationsState>((set, get) => ({
@@ -173,6 +174,32 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
       set({ notifications, unreadCount: notifications.filter((n) => !n.read).length });
     } catch (error) {
       console.error('Failed to delete notification:', error);
+    }
+  },
+
+  dismissAllNotifications: async (userId: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(`http://localhost:4000/api/notifications/user/${userId}/dismiss-all`, {
+        method: 'DELETE',
+        credentials: 'include',
+        headers,
+      });
+
+      if (!response.ok) throw new Error('Failed to dismiss all notifications');
+
+      // Clear all notifications from local state
+      set({ notifications: [], unreadCount: 0 });
+    } catch (error) {
+      console.error('Failed to dismiss all notifications:', error);
     }
   },
 }));

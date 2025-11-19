@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { Package, Ticket, Home, FolderOpen, ClipboardList, Settings, Users, CheckSquare, Menu, X, Keyboard, Search, Shield, Lock, ChevronLeft, ChevronRight, Bell, HelpCircle, Download, ShieldCheck, UserCog } from 'lucide-react';
+import { Package, Ticket, Home, FolderOpen, ClipboardList, Settings, Users, CheckSquare, Menu, X, Keyboard, Search, Shield, Lock, ChevronLeft, ChevronRight, Bell, HelpCircle, Download, ShieldCheck, UserCog, BarChart3, FileText, Plane } from 'lucide-react';
 import NotificationBell from '@/features/notifications/NotificationBell';
 import UserProfileDropdown from './UserProfileDropdown';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
@@ -133,6 +133,7 @@ export default function AppLayout() {
       links: [
         { to: '/assets', label: 'All Assets', icon: Package, roles: ['ADMIN'] },
         { to: '/tickets', label: 'All Tickets', icon: Ticket, roles: ['ADMIN', 'TECHNICIAN'] },
+        { to: '/analytics', label: 'Analytics & Reports', icon: BarChart3, roles: ['ADMIN', 'TECHNICIAN'] },
         { to: '/my-clients', label: 'User Management', icon: Users, roles: ['ADMIN'] },
       ]
     },
@@ -142,6 +143,8 @@ export default function AppLayout() {
         { to: '/my-tasks', label: 'My Tasks', icon: CheckSquare, roles: ['TECHNICIAN', 'ADMIN'] },
         { to: '/my-tickets', label: 'My Tickets', icon: ClipboardList, roles: ['USER', 'ADMIN', 'TECHNICIAN'] },
         { to: '/my-assets', label: 'My Assets', icon: FolderOpen, roles: ['USER', 'ADMIN', 'TECHNICIAN'] },
+        { to: '/my-peg', label: 'My PEG', icon: FileText, roles: ['USER', 'ADMIN', 'TECHNICIAN'] },
+        { to: '/travel-plan', label: 'Travel Plan', icon: Plane, roles: ['USER', 'ADMIN', 'TECHNICIAN'] },
       ]
     },
     {

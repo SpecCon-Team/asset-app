@@ -347,7 +347,7 @@ export default function AdminDashboard() {
             ))}
           </div>
 
-          <ResponsiveContainer width="100%" height={200}>
+          <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
                 data={ticketStatusData}
@@ -355,7 +355,7 @@ export default function AdminDashboard() {
                 cy="50%"
                 labelLine={false}
                 label={({ name, value, percent }) => `${name}: ${value} (${(percent * 100).toFixed(0)}%)`}
-                outerRadius={80}
+                outerRadius={100}
                 fill="#8884d8"
                 dataKey="value"
               >
@@ -372,7 +372,7 @@ export default function AdminDashboard() {
         {/* Ticket Priority Chart */}
         <div className="border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 p-4 sm:p-5 md:p-6 shadow-sm">
           <h3 className="font-semibold mb-3 sm:mb-4 text-base sm:text-lg text-gray-900 dark:text-white">Tickets by Priority</h3>
-          <ResponsiveContainer width="100%" height={200}>
+          <ResponsiveContainer width="100%" height={300}>
             <BarChart data={ticketPriorityData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />

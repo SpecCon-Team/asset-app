@@ -226,6 +226,28 @@ router.delete('/user/:userId/read', authenticate, async (req: AuthRequest, res) 
   }
 });
 
+// Dismiss all notifications for a user
+router.delete('/user/:userId/dismiss-all', authenticate, async (req: AuthRequest, res) => {
+  try {
+    // Users can only delete their own notifications
+    if (req.user?.id !== req.params.userId && req.user?.role !== 'ADMIN') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const result = await prisma.notification.deleteMany({
+      where: {
+        userId: req.params.userId,
+      },
+    });
+
+    console.log(`✅ Dismissed ${result.count} notifications for user ${req.params.userId}`);
+    res.json({ message: 'All notifications dismissed successfully', count: result.count });
+  } catch (error) {
+    console.error('Failed to dismiss all notifications:', error);
+    res.status(500).json({ message: 'Failed to dismiss all notifications' });
+  }
+});
+
 // Speed test notification endpoint (TECHNICIAN or ADMIN only)
 router.post('/speed-test', authenticate, requireRole('TECHNICIAN', 'ADMIN'), async (req: AuthRequest, res) => {
   const schema = z.object({

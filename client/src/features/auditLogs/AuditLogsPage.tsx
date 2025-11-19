@@ -208,60 +208,75 @@ export default function AuditLogsPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search logs..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-            />
+          <div>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Search</label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search logs..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              />
+            </div>
           </div>
 
           {/* Action Filter */}
-          <select
-            value={actionFilter}
-            onChange={(e) => setActionFilter(e.target.value)}
-            className="px-4 py-2 border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
-          >
-            <option value="">All Actions</option>
-            <option value="CREATE">CREATE</option>
-            <option value="UPDATE">UPDATE</option>
-            <option value="DELETE">DELETE</option>
-            <option value="LOGIN">LOGIN</option>
-            <option value="LOGOUT">LOGOUT</option>
-            <option value="EXPORT">EXPORT</option>
-          </select>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Action</label>
+            <select
+              value={actionFilter}
+              onChange={(e) => setActionFilter(e.target.value)}
+              className="w-full px-4 py-2 border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
+            >
+              <option value="">All Actions</option>
+              <option value="CREATE">CREATE</option>
+              <option value="UPDATE">UPDATE</option>
+              <option value="DELETE">DELETE</option>
+              <option value="LOGIN">LOGIN</option>
+              <option value="LOGOUT">LOGOUT</option>
+              <option value="EXPORT">EXPORT</option>
+            </select>
+          </div>
 
           {/* Entity Filter */}
-          <select
-            value={entityFilter}
-            onChange={(e) => setEntityFilter(e.target.value)}
-            className="px-4 py-2 border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
-          >
-            <option value="">All Entities</option>
-            <option value="User">User</option>
-            <option value="Asset">Asset</option>
-            <option value="Ticket">Ticket</option>
-            <option value="Comment">Comment</option>
-          </select>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Entity Type</label>
+            <select
+              value={entityFilter}
+              onChange={(e) => setEntityFilter(e.target.value)}
+              className="w-full px-4 py-2 border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
+            >
+              <option value="">All Entities</option>
+              <option value="User">User</option>
+              <option value="Asset">Asset</option>
+              <option value="Ticket">Ticket</option>
+              <option value="Comment">Comment</option>
+            </select>
+          </div>
 
           {/* Start Date */}
-          <input
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            className="px-4 py-2 border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
-          />
+          <div>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Start Date</label>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="w-full px-4 py-2 border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
+            />
+          </div>
 
           {/* End Date */}
-          <input
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            className="px-4 py-2 border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
-          />
+          <div>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">End Date</label>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="w-full px-4 py-2 border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
+            />
+          </div>
         </div>
       </div>
 

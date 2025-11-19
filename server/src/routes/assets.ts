@@ -6,6 +6,7 @@ import { parse } from 'csv-parse/sync';
 import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
 import { applyFieldVisibility } from '../middleware/fieldVisibility';
 import { validateFieldUpdates, Role } from '../lib/permissions';
+import { logAudit } from '../lib/auditLog';
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -168,6 +169,12 @@ router.post('/', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: A
       data: validatedData as any,
     });
 
+    // Log audit trail
+    await logAudit(req, 'CREATE', 'Asset', asset.id, undefined, {
+      assetCode: asset.asset_code,
+      name: asset.name,
+    });
+
     console.log('Asset created:', asset);
     res.status(201).json(asset);
   } catch (error) {
@@ -204,9 +211,21 @@ router.put('/:id', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req:
       });
     }
 
+    // Get old asset data for audit trail
+    const oldAsset = await prisma.asset.findUnique({
+      where: { id: req.params.id },
+    });
+
     const asset = await prisma.asset.update({
       where: { id: req.params.id },
       data: validatedData,
+    });
+
+    // Log audit trail
+    await logAudit(req, 'UPDATE', 'Asset', asset.id, validatedData, {
+      assetCode: asset.asset_code,
+      name: asset.name,
+      oldData: oldAsset,
     });
 
     console.log('Asset updated:', asset);
@@ -228,9 +247,22 @@ router.put('/:id', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req:
 // DELETE /api/assets/:id - Delete asset (ADMIN only)
 router.delete('/:id', authenticate, requireRole('ADMIN'), async (req: AuthRequest, res) => {
   try {
+    // Get asset data before deletion for audit trail
+    const asset = await prisma.asset.findUnique({
+      where: { id: req.params.id },
+    });
+
     await prisma.asset.delete({
       where: { id: req.params.id },
     });
+
+    // Log audit trail
+    if (asset) {
+      await logAudit(req, 'DELETE', 'Asset', asset.id, undefined, {
+        assetCode: asset.asset_code,
+        name: asset.name,
+      });
+    }
 
     console.log('Asset deleted:', req.params.id);
     res.json({ message: 'Asset deleted successfully' });
