@@ -38,6 +38,10 @@ const VerifyOTPPage = lazy(() => import('@/features/auth/VerifyOTPPage'));
 const TwoFactorSetupPage = lazy(() => import('@/features/auth/TwoFactorSetupPage'));
 const PrivacyDashboard = lazy(() => import('@/features/privacy/PrivacyDashboard'));
 const AnalyticsPage = lazy(() => import('@/features/reports/AnalyticsPage'));
+const WorkflowsPage = lazy(() => import('@/features/workflows/pages/WorkflowsPage'));
+const SLAPoliciesPage = lazy(() => import('@/features/workflows/pages/SLAPoliciesPage'));
+const AssignmentRulesPage = lazy(() => import('@/features/workflows/pages/AssignmentRulesPage'));
+const WorkflowHistoryPage = lazy(() => import('@/features/workflows/pages/WorkflowHistoryPage'));
 const DownloadMobileApp = lazy(() => import('@/pages/DownloadMobileApp'));
 const HelpAndResources = lazy(() => import('@/pages/HelpAndResources'));
 
@@ -91,6 +95,10 @@ export const router = createBrowserRouter([
       { path: 'privacy', element: <LazyPage><PrivacyDashboard /></LazyPage> },
       { path: 'analytics', element: <LazyPage><AnalyticsPage /></LazyPage> },
       { path: 'audit-logs', element: <LazyPage><AuditLogsPage /></LazyPage> },
+      { path: 'workflows', element: <LazyPage><WorkflowsPage /></LazyPage> },
+      { path: 'sla-policies', element: <LazyPage><SLAPoliciesPage /></LazyPage> },
+      { path: 'assignment-rules', element: <LazyPage><AssignmentRulesPage /></LazyPage> },
+      { path: 'workflow-history', element: <LazyPage><WorkflowHistoryPage /></LazyPage> },
       { path: 'whatsapp-setup', element: <LazyPage><WhatsAppSetup /></LazyPage> },
       { path: 'download-mobile-app', element: <LazyPage><DownloadMobileApp /></LazyPage> },
       { path: 'help', element: <LazyPage><HelpAndResources /></LazyPage> },

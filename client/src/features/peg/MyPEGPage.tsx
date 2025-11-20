@@ -192,12 +192,9 @@ export default function MyPEGPage() {
     }
   };
 
-  const getProvinceClients = (provinceId: string) => {
-    return clients.filter((c) => c.provinceId === provinceId);
-  };
-
-  // Filter clients based on search query
+  // Filter clients based on search query FIRST
   const filteredClients = clients.filter((client) => {
+    if (!searchQuery) return true; // Show all if no search query
     const query = searchQuery.toLowerCase();
     return (
       client.name.toLowerCase().includes(query) ||
@@ -207,6 +204,10 @@ export default function MyPEGPage() {
       client.email?.toLowerCase().includes(query)
     );
   });
+
+  const getProvinceClients = (provinceId: string) => {
+    return filteredClients.filter((c) => c.provinceId === provinceId);
+  };
 
   // Export to CSV function
   const exportToCSV = () => {
@@ -239,7 +240,7 @@ export default function MyPEGPage() {
     document.body.removeChild(link);
   };
 
-  const totalClients = clients.length;
+  const totalClients = filteredClients.length;
 
   const selectedProvinceData = provinces.find((p) => p.id === selectedProvince);
   const provinceClients = selectedProvince ? getProvinceClients(selectedProvince) : [];
@@ -347,19 +348,20 @@ export default function MyPEGPage() {
         </div>
 
         {/* Search Bar */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+        <div className="relative z-10">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
           <input
             type="text"
             placeholder="Search clients by name, location, contact person, phone, or email..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white text-sm sm:text-base"
+            className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none dark:bg-gray-800 dark:text-white text-sm sm:text-base"
+            autoComplete="off"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 z-20"
             >
               <X className="w-5 h-5" />
             </button>
@@ -647,9 +649,13 @@ export default function MyPEGPage() {
                   }}
                   title={`${clientCount} client${clientCount === 1 ? '' : 's'} in ${province.name}`}
                 >
-                  <span className={`text-white font-semibold ${getFontSize()}`} style={{
-                    textShadow: '0 1px 3px rgba(0, 0, 0, 0.5)'
-                  }}>
+                  <span
+                    className={`font-semibold text-gray-900 dark:text-white ${getFontSize()}`}
+                    style={{
+                      color: province.color,
+                      textShadow: 'none',
+                    }}
+                  >
                     {clientCount}
                   </span>
                 </div>

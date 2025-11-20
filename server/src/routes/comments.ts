@@ -3,8 +3,27 @@ import { z } from 'zod';
 import { prisma } from '../lib/prisma';
 import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
 import { logAudit } from '../lib/auditLog';
+import { createNotificationIfNotExists } from '../lib/notificationHelper';
+import { slaEngine } from '../lib/slaEngine';
+import crypto from 'crypto';
 
 const router = Router();
+
+// In-memory lock to prevent concurrent duplicate comment creation
+const commentCreationLocks = new Map<string, Promise<any>>();
+
+// Track recently processed request IDs to prevent duplicates
+const processedRequests = new Map<string, { timestamp: number; commentId: string }>();
+
+// Clean up old processed requests every minute
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, value] of processedRequests.entries()) {
+    if (now - value.timestamp > 60000) { // 1 minute
+      processedRequests.delete(key);
+    }
+  }
+}, 60000);
 
 const createCommentSchema = z.object({
   content: z.string().min(1),
@@ -50,10 +69,50 @@ router.get('/ticket/:ticketId', authenticate, async (req: AuthRequest, res) => {
 
 // Create a comment
 router.post('/', authenticate, async (req: AuthRequest, res) => {
+  // LOG EVERY INCOMING REQUEST IMMEDIATELY
+  const requestId = req.headers['x-request-id'] as string;
+  const timestamp = new Date().toISOString();
+  console.log(`\n========================================`);
+  console.log(`[INCOMING] 🔵 POST /api/comments at ${timestamp}`);
+  console.log(`[INCOMING] Request ID: ${requestId || 'none'}`);
+  console.log(`[INCOMING] Content: "${req.body.content}"`);
+  console.log(`[INCOMING] Author ID: ${req.body.authorId}`);
+  console.log(`[INCOMING] Ticket ID: ${req.body.ticketId}`);
+  console.log(`========================================\n`);
+
   const parsed = createCommentSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json(parsed.error.flatten());
 
   try {
+    // Get request ID from header (sent by frontend)
+
+    // Check if this exact request was already processed
+    if (requestId && processedRequests.has(requestId)) {
+      const processed = processedRequests.get(requestId)!;
+      console.log(`[DUPLICATE PREVENTED] ❌ Request ID ${requestId} already processed - returning cached result`);
+
+      // Return the previously created comment
+      const existingComment = await prisma.comment.findUnique({
+        where: { id: processed.commentId },
+        include: {
+          author: {
+            select: { id: true, email: true, name: true, role: true },
+          },
+          ticket: {
+            include: {
+              createdBy: true,
+            },
+          },
+        },
+      });
+
+      if (existingComment) {
+        return res.status(200).json(existingComment);
+      }
+    }
+
+    console.log(`[REQUEST] Processing new comment request - ID: ${requestId || 'none'}`);
+
     // Verify user has access to the ticket before allowing comment
     const ticket = await prisma.ticket.findUnique({
       where: { id: parsed.data.ticketId },
@@ -70,8 +129,28 @@ router.post('/', authenticate, async (req: AuthRequest, res) => {
         return res.status(403).json({ message: 'Access denied' });
       }
     }
-    const comment = await prisma.comment.create({
-      data: parsed.data,
+
+    // Create content hash for duplicate detection
+    const contentHash = crypto
+      .createHash('md5')
+      .update(parsed.data.content + parsed.data.ticketId + parsed.data.authorId)
+      .digest('hex');
+
+    console.log(`[HASH] Content hash: ${contentHash}`);
+
+    // FIRST: Check database for recent duplicates (within last 30 seconds)
+    const recentTime = new Date(Date.now() - 30000);
+    console.log(`[DB CHECK] Checking for duplicates since ${recentTime.toISOString()}...`);
+
+    const existingComment = await prisma.comment.findFirst({
+      where: {
+        content: parsed.data.content,
+        ticketId: parsed.data.ticketId,
+        authorId: parsed.data.authorId,
+        createdAt: {
+          gte: recentTime,
+        },
+      },
       include: {
         author: {
           select: { id: true, email: true, name: true, role: true },
@@ -84,6 +163,117 @@ router.post('/', authenticate, async (req: AuthRequest, res) => {
       },
     });
 
+    // If duplicate found in DB, return it immediately
+    if (existingComment) {
+      console.log(`[DUPLICATE PREVENTED] ❌ Identical comment found in DB within 30s (ID: ${existingComment.id})`);
+
+      // Cache this request ID
+      if (requestId) {
+        processedRequests.set(requestId, {
+          timestamp: Date.now(),
+          commentId: existingComment.id,
+        });
+      }
+
+      return res.status(200).json(existingComment);
+    }
+
+    console.log(`[DB CHECK] ✅ No duplicate found in DB - proceeding to lock check`);
+
+    // Create a unique lock key using hash
+    const lockKey = contentHash;
+
+    // ATOMIC LOCK CHECK-AND-SET
+    // We must check for lock AND set it in the same synchronous tick
+    // to prevent race conditions where two requests both see no lock
+    console.log(`[LOCK CHECK] Checking if lock exists for hash: ${lockKey}`);
+
+    let creationPromise = commentCreationLocks.get(lockKey);
+
+    if (creationPromise) {
+      // Lock already exists - wait for the existing creation to complete
+      console.log(`[DUPLICATE PREVENTED] ❌ Request already in progress - waiting for completion`);
+      try {
+        const comment = await creationPromise;
+
+        // Cache this request ID
+        if (requestId) {
+          processedRequests.set(requestId, {
+            timestamp: Date.now(),
+            commentId: comment.id,
+          });
+        }
+
+        return res.status(200).json(comment);
+      } catch (error) {
+        console.error('[LOCK ERROR] Failed to get existing comment:', error);
+        return res.status(409).json({ message: 'Duplicate request in progress' });
+      }
+    }
+
+    // No lock exists - create one IMMEDIATELY (same synchronous execution)
+    console.log(`[LOCK CHECK] ✅ No lock found - setting lock NOW`);
+
+    let resolveCreation: (value: any) => void;
+    let rejectCreation: (reason: any) => void;
+
+    creationPromise = new Promise<any>((resolve, reject) => {
+      resolveCreation = resolve;
+      rejectCreation = reject;
+    });
+
+    // SET LOCK IMMEDIATELY in the same synchronous execution as the check above
+    commentCreationLocks.set(lockKey, creationPromise);
+    console.log(`[LOCK] 🔒 Lock set for hash: ${lockKey}`);
+
+    // Now do the actual comment creation
+    try {
+      console.log(`[CREATE] Creating new comment...`);
+
+      const comment = await prisma.comment.create({
+        data: parsed.data,
+        include: {
+          author: {
+            select: { id: true, email: true, name: true, role: true },
+          },
+          ticket: {
+            include: {
+              createdBy: true,
+            },
+          },
+        },
+      });
+
+      console.log(`[SUCCESS] ✅ Comment created - ID: ${comment.id}, Author: ${comment.author.name || comment.author.email}`);
+
+      // Cache this request ID
+      if (requestId) {
+        processedRequests.set(requestId, {
+          timestamp: Date.now(),
+          commentId: comment.id,
+        });
+        console.log(`[CACHE] Stored request ID: ${requestId}`);
+      }
+
+      // Resolve the promise so any waiting requests get the comment
+      resolveCreation!(comment);
+
+      // Keep lock for 30 seconds to prevent immediate duplicates
+      setTimeout(() => {
+        commentCreationLocks.delete(lockKey);
+        console.log(`[LOCK] Released lock after 30s: ${lockKey}`);
+      }, 30000);
+    } catch (error) {
+      console.error(`[CREATE ERROR] Failed to create comment:`, error);
+      // Reject the promise and remove lock immediately
+      rejectCreation!(error);
+      commentCreationLocks.delete(lockKey);
+      console.log(`[LOCK] Released lock due to error: ${lockKey}`);
+      throw error;
+    }
+
+    const comment = await creationPromise;
+
     // Determine if comment is from admin/technician or regular user
     const isAdminComment = comment.author.role === 'ADMIN' || comment.author.role === 'TECHNICIAN';
     const isUserComment = comment.author.role === 'USER';
@@ -92,15 +282,13 @@ router.post('/', authenticate, async (req: AuthRequest, res) => {
 
     // If admin/tech comments → notify ticket creator (user)
     if (isAdminComment && isNotSelfComment) {
-      await prisma.notification.create({
-        data: {
-          type: 'comment',
-          title: 'New comment on your ticket',
-          message: `${comment.author.name || comment.author.email} commented: "${comment.content.substring(0, 100)}${comment.content.length > 100 ? '...' : ''}"`,
-          userId: ticketCreatorId,
-          senderId: comment.authorId,
-          ticketId: comment.ticketId,
-        },
+      await createNotificationIfNotExists({
+        type: 'comment',
+        title: 'New comment on your ticket',
+        message: `${comment.author.name || comment.author.email} commented: "${comment.content.substring(0, 100)}${comment.content.length > 100 ? '...' : ''}"`,
+        userId: ticketCreatorId,
+        senderId: comment.authorId,
+        ticketId: comment.ticketId,
       });
     }
 
@@ -116,15 +304,13 @@ router.post('/', authenticate, async (req: AuthRequest, res) => {
       });
 
       const notificationPromises = adminsAndTechs.map(admin =>
-        prisma.notification.create({
-          data: {
-            type: 'comment',
-            title: 'User replied to ticket',
-            message: `${comment.author.name || comment.author.email} commented: "${comment.content.substring(0, 100)}${comment.content.length > 100 ? '...' : ''}"`,
-            userId: admin.id,
-            senderId: comment.authorId,
-            ticketId: comment.ticketId,
-          },
+        createNotificationIfNotExists({
+          type: 'comment',
+          title: 'User replied to ticket',
+          message: `${comment.author.name || comment.author.email} commented: "${comment.content.substring(0, 100)}${comment.content.length > 100 ? '...' : ''}"`,
+          userId: admin.id,
+          senderId: comment.authorId,
+          ticketId: comment.ticketId,
         })
       );
 
@@ -137,6 +323,13 @@ router.post('/', authenticate, async (req: AuthRequest, res) => {
       ticketId: comment.ticketId,
       contentPreview: comment.content.substring(0, 100),
     });
+
+    // Record first response for SLA if comment is from admin/technician
+    if (isAdminComment) {
+      slaEngine.recordFirstResponse(comment.ticketId).catch(err => {
+        console.error('SLA first response recording error:', err);
+      });
+    }
 
     res.json(comment);
   } catch (error) {

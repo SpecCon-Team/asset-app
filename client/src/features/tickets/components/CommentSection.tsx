@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { listUsers } from '@/features/users/api';
 import type { User } from '@/features/users/types';
 import { getCurrentUserEmail, isAdmin, isTechnician } from '@/features/auth/hooks';
@@ -23,6 +23,10 @@ interface CommentSectionProps {
   ticketId: string;
 }
 
+// Global request queue to prevent concurrent submissions
+let isGloballySubmitting = false;
+const requestQueue: Array<() => Promise<void>> = [];
+
 export default function CommentSection({ ticketId }: CommentSectionProps) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
@@ -31,8 +35,12 @@ export default function CommentSection({ ticketId }: CommentSectionProps) {
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingComments, setIsLoadingComments] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false); // Prevent any form submission
   const userIsAdmin = isAdmin();
   const canModifyTicket = isTechnician(); // Admin or Technician can delete comments
+  const lastSubmitTimeRef = useRef<number>(0); // Track last submission time to prevent double-clicks
+  const submitCountRef = useRef<number>(0); // Track submit attempts
+  const isProcessingRef = useRef<boolean>(false); // Track if this component is processing
 
   useEffect(() => {
     fetchComments();
@@ -101,16 +109,87 @@ export default function CommentSection({ ticketId }: CommentSectionProps) {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
 
-    // Prevent duplicate submissions
-    if (isLoading) {
+    console.log('[SUBMIT START] Checking locks...');
+    console.log('  - isGloballySubmitting:', isGloballySubmitting);
+    console.log('  - isProcessingRef.current:', isProcessingRef.current);
+    console.log('  - isSubmitting:', isSubmitting);
+    console.log('  - isLoading:', isLoading);
+
+    // GLOBAL LOCK - only one comment submission at a time across entire app
+    if (isGloballySubmitting) {
+      console.log('[BLOCKED] ❌ Global submission in progress - ignoring request');
       return;
     }
 
+    // COMPONENT LOCK - prevent this specific component from submitting
+    if (isProcessingRef.current) {
+      console.log('[BLOCKED] ❌ Component already processing - ignoring request');
+      return;
+    }
+
+    // ABSOLUTE BLOCK - if already submitting, do nothing
+    if (isSubmitting || isLoading) {
+      console.log('[BLOCKED] ❌ Already submitting, ignoring request');
+      return;
+    }
+
+    console.log('[SUBMIT] ✅ All checks passed - proceeding with submission');
+
+    // Set processing flag immediately
+    isProcessingRef.current = true;
+
     // For regular users, use their own ID; for admins, use selected user
     const authorId = userIsAdmin ? selectedUserId : currentUserId;
+
+    // Check localStorage for recent identical comment (last 30 seconds)
+    const localStorageKey = `lastComment_${authorId}_${ticketId}`;
+    const lastCommentData = localStorage.getItem(localStorageKey);
+
+    if (lastCommentData) {
+      try {
+        const { content, timestamp } = JSON.parse(lastCommentData);
+        const timeSinceLastComment = Date.now() - timestamp;
+
+        // If same content within 30 seconds, block it
+        if (content === newComment.trim() && timeSinceLastComment < 30000) {
+          console.log('[BLOCKED] Identical comment in localStorage - preventing duplicate');
+          await Swal.fire({
+            title: 'Duplicate Comment',
+            text: 'You already submitted this exact comment. Please wait 30 seconds to submit it again.',
+            icon: 'warning',
+            confirmButtonColor: '#3B82F6',
+          });
+          return;
+        }
+      } catch (error) {
+        console.error('Error reading localStorage:', error);
+      }
+    }
+
+    // Count submit attempts
+    submitCountRef.current += 1;
+    console.log(`[SUBMIT] Attempt #${submitCountRef.current}`);
+
+    // Prevent rapid double-clicks (5 seconds debounce)
+    const now = Date.now();
+    if (now - lastSubmitTimeRef.current < 5000) {
+      console.log('[BLOCKED] Too soon - must wait 5 seconds between comments');
+      await Swal.fire({
+        title: 'Please Wait',
+        text: 'Please wait 5 seconds between comments',
+        icon: 'warning',
+        confirmButtonColor: '#3B82F6',
+        timer: 2000,
+      });
+      return;
+    }
+    lastSubmitTimeRef.current = now;
 
     if (!newComment.trim()) {
       await Swal.fire({
@@ -132,7 +211,13 @@ export default function CommentSection({ ticketId }: CommentSectionProps) {
       return;
     }
 
+    // Set GLOBAL lock first
+    isGloballySubmitting = true;
+
+    // Set BOTH flags to block any new submissions
+    setIsSubmitting(true);
     setIsLoading(true);
+
     try {
       const token = localStorage.getItem('token');
       const headers: HeadersInit = {
@@ -143,9 +228,17 @@ export default function CommentSection({ ticketId }: CommentSectionProps) {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
+      // Generate unique request ID to help backend detect duplicates
+      const requestId = `${authorId}-${ticketId}-${Date.now()}`;
+
+      console.log('[API] Sending comment to server...');
+
       const response = await fetch('http://localhost:4000/api/comments', {
         method: 'POST',
-        headers,
+        headers: {
+          ...headers,
+          'X-Request-ID': requestId,
+        },
         credentials: 'include',
         body: JSON.stringify({
           content: newComment,
@@ -157,8 +250,40 @@ export default function CommentSection({ ticketId }: CommentSectionProps) {
       if (!response.ok) throw new Error('Failed to create comment');
 
       const newCommentData = await response.json();
-      setComments([...comments, newCommentData]);
+      console.log('[API] Comment created successfully:', newCommentData.id);
+
+      // Store in localStorage to prevent duplicates
+      const localStorageKey = `lastComment_${authorId}_${ticketId}`;
+      localStorage.setItem(localStorageKey, JSON.stringify({
+        content: newComment.trim(),
+        timestamp: Date.now(),
+        commentId: newCommentData.id
+      }));
+
+      // Clear old localStorage entries (older than 1 minute)
+      setTimeout(() => {
+        try {
+          const data = localStorage.getItem(localStorageKey);
+          if (data) {
+            const { timestamp } = JSON.parse(data);
+            if (Date.now() - timestamp > 60000) {
+              localStorage.removeItem(localStorageKey);
+            }
+          }
+        } catch (error) {
+          console.error('Error cleaning localStorage:', error);
+        }
+      }, 60000);
+
+      // Clear form immediately
       setNewComment('');
+
+      // Wait 1 second before refreshing to let DB sync
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Refresh comments from server
+      await fetchComments();
+
       await Swal.fire({
         title: 'Success!',
         text: 'Comment added successfully!',
@@ -167,7 +292,6 @@ export default function CommentSection({ ticketId }: CommentSectionProps) {
         timer: 1500,
         showConfirmButton: false,
       });
-      fetchComments(); // Refresh to get updated comments
     } catch (error) {
       await Swal.fire({
         title: 'Error',
@@ -178,6 +302,10 @@ export default function CommentSection({ ticketId }: CommentSectionProps) {
       console.error('Error creating comment:', error);
     } finally {
       setIsLoading(false);
+      setIsSubmitting(false);
+      isProcessingRef.current = false;
+      isGloballySubmitting = false;
+      console.log('[UNLOCKED] All locks released');
     }
   };
 
@@ -309,7 +437,7 @@ export default function CommentSection({ ticketId }: CommentSectionProps) {
         )}
       </div>
 
-      <form onSubmit={handleSubmit} className="border-t border-gray-200 dark:border-gray-700 pt-4">
+      <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
         <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Add a Comment</h4>
 
         {/* Only show user selector for admins */}
@@ -344,9 +472,15 @@ export default function CommentSection({ ticketId }: CommentSectionProps) {
           required
         />
         <button
-          type="submit"
-          disabled={isLoading || (!userIsAdmin && !currentUserId)}
-          className="mt-2 px-4 py-2 min-h-[44px] bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            handleSubmit(e as any);
+          }}
+          disabled={isSubmitting || isLoading || (!userIsAdmin && !currentUserId) || !newComment.trim()}
+          className={`mt-2 px-4 py-2 min-h-[44px] bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 ${(isSubmitting || isLoading) ? 'pointer-events-none opacity-50' : ''}`}
+          style={{ pointerEvents: (isSubmitting || isLoading) ? 'none' : 'auto' }}
         >
           {isLoading && (
             <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -354,9 +488,9 @@ export default function CommentSection({ ticketId }: CommentSectionProps) {
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
           )}
-          {isLoading ? 'Submitting...' : 'Add Comment'}
+          {isSubmitting || isLoading ? 'Submitting...' : 'Add Comment'}
         </button>
-      </form>
+      </div>
     </div>
   );
 }

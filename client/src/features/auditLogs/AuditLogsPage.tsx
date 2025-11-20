@@ -86,7 +86,8 @@ export default function AuditLogsPage() {
       link.remove();
     } catch (error) {
       console.error('Failed to export logs:', error);
-      alert('Failed to export audit logs');
+      const { showError } = await import('@/lib/sweetalert');
+      showError('Failed to export audit logs. Please try again.');
     }
   };
 

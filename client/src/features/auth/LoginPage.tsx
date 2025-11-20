@@ -151,7 +151,10 @@ export default function LoginPage() {
       <div className="max-w-md w-full">
         {/* Logo/Brand */}
         <div className="text-center mb-8">
-          <div className="inline-flex w-16 h-16 bg-blue-600 rounded-full items-center justify-center mb-4">
+          <div
+            className="inline-flex w-16 h-16 rounded-full items-center justify-center mb-4"
+            style={{ backgroundColor: 'var(--color-primary)' }}
+          >
             <span className="text-white font-bold text-2xl">AT</span>
           </div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Welcome to AssetTrack Pro</h1>
@@ -189,7 +192,8 @@ export default function LoginPage() {
                   onChange={(e) => setTwoFactorCode(e.target.value.replace(/[^0-9A-Fa-f]/g, '').toUpperCase())}
                   placeholder="000000 or backup code"
                   maxLength={8}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-center text-2xl font-mono tracking-widest focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-center text-2xl font-mono tracking-widest focus:ring-2 focus:border-transparent"
+                  style={{ '--tw-ring-color': 'var(--color-primary)' } as React.CSSProperties}
                   autoFocus
                 />
               </div>
@@ -209,7 +213,8 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={isLoading || (twoFactorCode.length !== 6 && twoFactorCode.length !== 8)}
-                  className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
+                  className="flex-1 text-white py-3 rounded-lg font-medium disabled:bg-gray-400 transition-opacity hover:opacity-90"
+                  style={{ backgroundColor: isLoading || (twoFactorCode.length !== 6 && twoFactorCode.length !== 8) ? undefined : 'var(--color-primary)' }}
                 >
                   {isLoading ? 'Verifying...' : 'Verify'}
                 </button>
@@ -230,7 +235,8 @@ export default function LoginPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     onBlur={() => handleBlur('email')}
                     placeholder="you@example.com"
-                    className={`w-full px-4 py-3 border ${touched.email && !email ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                    className={`w-full px-4 py-3 border ${touched.email && !email ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:border-transparent`}
+                    style={{ '--tw-ring-color': 'var(--color-primary)' } as React.CSSProperties}
                   />
                   {touched.email && !email && (
                     <p className="mt-1 text-xs text-red-600 dark:text-red-400">This field is required</p>
@@ -249,7 +255,8 @@ export default function LoginPage() {
                       onChange={(e) => setPassword(e.target.value)}
                       onBlur={() => handleBlur('password')}
                       placeholder="••••••••••••"
-                      className={`w-full px-4 py-3 pr-12 border ${touched.password && !password ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                      className={`w-full px-4 py-3 pr-12 border ${touched.password && !password ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:border-transparent`}
+                      style={{ '--tw-ring-color': 'var(--color-primary)' } as React.CSSProperties}
                     />
                     <button
                       type="button"
@@ -268,7 +275,8 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
+                  className="w-full text-white py-3 rounded-lg font-medium disabled:bg-gray-400 transition-opacity hover:opacity-90"
+                  style={{ backgroundColor: isLoading ? undefined : 'var(--color-primary)' }}
                 >
                   {isLoading ? 'Signing in...' : 'Sign in'}
                 </button>
@@ -277,13 +285,18 @@ export default function LoginPage() {
               <div className="mt-6 text-center space-y-3">
                 <Link
                   to="/forgot-password"
-                  className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 block"
+                  className="text-sm block transition-opacity hover:opacity-80"
+                  style={{ color: 'var(--color-primary)' }}
                 >
                   Forgot password?
                 </Link>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   Don't have an account?{' '}
-                  <Link to="/signup" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium">
+                  <Link
+                    to="/signup"
+                    className="font-medium transition-opacity hover:opacity-80"
+                    style={{ color: 'var(--color-primary)' }}
+                  >
                     Sign up
                   </Link>
                 </p>

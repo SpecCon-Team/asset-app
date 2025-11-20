@@ -120,7 +120,7 @@ export default function VerifyOTPPage() {
       <div className="max-w-md w-full">
         {/* Logo/Brand */}
         <div className="text-center mb-8">
-          <div className="inline-flex w-16 h-16 bg-blue-600 rounded-full items-center justify-center mb-4">
+          <div className="inline-flex w-16 h-16 rounded-full" style={{ backgroundColor: 'var(--color-primary)' }} items-center justify-center mb-4">
             <Mail className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Verify Your Email</h1>

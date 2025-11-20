@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { router } from '@/app/router';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 import '@/styles/globals.css';
 
 // Initialize theme on app load using user-specific settings
@@ -41,7 +42,7 @@ const initializeTheme = () => {
 initializeTheme();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
+  <ThemeProvider>
     <RouterProvider
       router={router}
       future={{
@@ -95,5 +96,5 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         },
       }}
     />
-  </React.StrictMode>
+  </ThemeProvider>
 ); 

@@ -21,6 +21,8 @@ import wooalertsRouter from './routes/wooalerts';
 import aiChatRouter from './routes/aiChat';
 import pegRouter from './routes/peg';
 import attachmentsRouter from './routes/attachments';
+import travelRouter from './routes/travel';
+import workflowsRouter from './routes/workflows';
 import path from 'path';
 import {
   securityLogger,
@@ -271,6 +273,8 @@ app.use('/api/whatsapp', whatsappRouter);
 app.use('/api/ai-chat', aiChatRouter);
 app.use('/api/peg', pegRouter);
 app.use('/api/attachments', attachmentsRouter);
+app.use('/api/travel', travelRouter);
+app.use('/api/workflows', workflowsRouter);
 app.use('/api', wooalertsRouter); // WooAlerts webhook at /api/wooalerts-webhook
 
 app.get('/api', (_req, res) => {

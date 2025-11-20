@@ -32,7 +32,7 @@ export default function UserDashboard() {
         title: 'My Open Tickets',
         value: openTickets.length,
         detail: 'Waiting for response',
-        color: 'bg-blue-500',
+        color: 'theme-primary',
         icon: ClipboardList,
         action: () => navigate('/my-tickets?status=open'),
       },
@@ -97,7 +97,7 @@ export default function UserDashboard() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'open':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
+        return 'theme-status-open'; // Will use theme color
       case 'in_progress':
         return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300';
       case 'closed':
@@ -107,12 +107,27 @@ export default function UserDashboard() {
     }
   };
 
+  const getStatusStyle = (status: string) => {
+    if (status === 'open') {
+      return {
+        backgroundColor: 'rgba(var(--color-primary-rgb), 0.1)',
+        color: 'var(--color-primary)',
+      };
+    }
+    return undefined;
+  };
+
   return (
     <div className="space-y-8">
       {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-green-500 to-blue-600 rounded-lg shadow-lg p-6 text-white">
+      <div
+        className="rounded-lg shadow-lg p-6 text-white"
+        style={{
+          background: 'linear-gradient(to right, var(--color-primary), var(--color-primary-dark))',
+        }}
+      >
         <h1 className="text-3xl font-bold mb-2">Welcome back, {currentUser.name || 'User'}!</h1>
-        <p className="text-green-100">Here's an overview of your tickets and assets</p>
+        <p className="text-white/90">Here's an overview of your tickets and assets</p>
       </div>
 
       {/* Stats Grid */}
@@ -126,7 +141,10 @@ export default function UserDashboard() {
               className="bg-white dark:bg-gradient-to-br dark:from-gray-700 dark:to-gray-750 border border-gray-200 dark:border-gray-600 rounded-lg shadow-md dark:shadow-xl p-6 hover:shadow-lg dark:hover:shadow-2xl transition-all duration-300 cursor-pointer"
             >
               <div className="flex items-center justify-between mb-4">
-                <div className={`${stat.color} p-3 rounded-lg`}>
+                <div
+                  className={`p-3 rounded-lg ${stat.color === 'theme-primary' ? '' : stat.color}`}
+                  style={stat.color === 'theme-primary' ? { backgroundColor: 'var(--color-primary)' } : undefined}
+                >
                   <Icon className="w-6 h-6 text-white" />
                 </div>
                 <TrendingUp className="w-5 h-5 text-gray-400 dark:text-gray-500" />
@@ -146,7 +164,8 @@ export default function UserDashboard() {
             <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">My Active Tickets</h2>
             <button
               onClick={() => navigate('/my-tickets')}
-              className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium"
+              className="text-sm font-medium transition-opacity hover:opacity-80"
+              style={{ color: 'var(--color-primary)' }}
             >
               View All →
             </button>
@@ -161,7 +180,8 @@ export default function UserDashboard() {
               <p className="text-gray-600 dark:text-gray-400 mb-4">You have no active tickets at the moment.</p>
               <button
                 onClick={() => navigate('/tickets/new')}
-                className="px-6 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors"
+                className="px-6 py-2 text-white rounded-lg transition-opacity hover:opacity-90"
+                style={{ backgroundColor: 'var(--color-primary)' }}
               >
                 Create New Ticket
               </button>
@@ -181,7 +201,10 @@ export default function UserDashboard() {
                         <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getPriorityColor(ticket.priority)}`}>
                           {ticket.priority.toUpperCase()}
                         </span>
-                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(ticket.status)}`}>
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(ticket.status)}`}
+                          style={getStatusStyle(ticket.status)}
+                        >
                           {ticket.status.replace('_', ' ').toUpperCase()}
                         </span>
                       </div>

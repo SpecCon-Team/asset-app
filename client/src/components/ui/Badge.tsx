@@ -48,6 +48,7 @@ export const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
       dot = false,
       children,
       className = '',
+      style,
       ...props
     },
     ref
@@ -69,9 +70,7 @@ export const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
         'bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-300 ' +
         'border-red-200 dark:border-red-700',
 
-      info:
-        'bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-300 ' +
-        'border-blue-200 dark:border-blue-700',
+      info: '', // Will use inline styles for theme color
 
       purple:
         'bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-300 ' +
@@ -102,8 +101,18 @@ export const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
     // Combine all styles
     const combinedClassName = `${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${roundedStyles} ${className}`.trim();
 
+    // Theme-aware inline styles for 'info' variant
+    const inlineStyles = variant === 'info'
+      ? {
+          backgroundColor: 'rgba(var(--color-primary-rgb), 0.1)',
+          color: 'var(--color-primary)',
+          borderColor: 'rgba(var(--color-primary-rgb), 0.2)',
+          ...style,
+        }
+      : style;
+
     return (
-      <span ref={ref} className={combinedClassName} {...props}>
+      <span ref={ref} className={combinedClassName} style={inlineStyles} {...props}>
         {dot && (
           <span
             className={`${dotSize[size]} rounded-full bg-current opacity-75`}

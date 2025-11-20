@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, X, Package, Ticket, User, Clock, TrendingUp } from 'lucide-react';
+import { Search, X, Package, Ticket, User, Clock, TrendingUp, Plane } from 'lucide-react';
 import { getApiClient } from '@/features/assets/lib/apiClient';
 
 interface SearchResult {
   id: string;
-  type: 'asset' | 'ticket' | 'user';
+  type: 'asset' | 'ticket' | 'user' | 'trip';
   title: string;
   subtitle: string;
   link: string;
@@ -72,9 +72,13 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
         // Search users
         const usersResponse = await getApiClient().get('/users');
 
+        // Search trips
+        const tripsResponse = await getApiClient().get('/travel');
+
         const assets = assetsResponse.data || [];
         const tickets = ticketsResponse.data || [];
         const users = usersResponse.data || [];
+        const trips = tripsResponse.data || [];
 
         // Filter users by query
         const filteredUsers = users.filter((user: any) =>
@@ -82,9 +86,16 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
           user.email?.toLowerCase().includes(query.toLowerCase())
         );
 
+        // Filter trips by query
+        const filteredTrips = trips.filter((trip: any) =>
+          trip.destination?.toLowerCase().includes(query.toLowerCase()) ||
+          trip.country?.toLowerCase().includes(query.toLowerCase()) ||
+          trip.category?.toLowerCase().includes(query.toLowerCase())
+        );
+
         const searchResults: SearchResult[] = [
           // Assets
-          ...assets.slice(0, 5).map((asset: any) => ({
+          ...assets.slice(0, 4).map((asset: any) => ({
             id: asset.id,
             type: 'asset' as const,
             title: asset.name,
@@ -93,7 +104,7 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
             icon: Package,
           })),
           // Tickets
-          ...tickets.slice(0, 5).map((ticket: any) => ({
+          ...tickets.slice(0, 4).map((ticket: any) => ({
             id: ticket.id,
             type: 'ticket' as const,
             title: ticket.title,
@@ -101,8 +112,17 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
             link: `/tickets/${ticket.id}`,
             icon: Ticket,
           })),
+          // Trips
+          ...filteredTrips.slice(0, 3).map((trip: any) => ({
+            id: trip.id,
+            type: 'trip' as const,
+            title: trip.destination,
+            subtitle: `${trip.country} • ${trip.category} • ${trip.status}`,
+            link: `/travel-plan`,
+            icon: Plane,
+          })),
           // Users
-          ...filteredUsers.slice(0, 3).map((user: any) => ({
+          ...filteredUsers.slice(0, 2).map((user: any) => ({
             id: user.id,
             type: 'user' as const,
             title: user.name || user.email,
@@ -205,7 +225,7 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search assets, tickets, users..."
+            placeholder="Search assets, tickets, trips, users..."
             className="flex-1 bg-transparent text-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none"
           />
           {query && (
@@ -243,26 +263,41 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
                   <button
                     key={`${result.type}-${result.id}`}
                     onClick={() => handleSelectResult(result)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left ${
+                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
+                    style={
                       index === selectedIndex
-                        ? 'bg-blue-50 dark:bg-blue-900/30'
-                        : ''
-                    }`}
+                        ? {
+                            backgroundColor: 'rgba(var(--color-primary-rgb), 0.1)',
+                          }
+                        : undefined
+                    }
                   >
-                    <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${
-                      result.type === 'asset'
-                        ? 'bg-green-100 dark:bg-green-900/30'
-                        : result.type === 'ticket'
-                        ? 'bg-blue-100 dark:bg-blue-900/30'
-                        : 'bg-purple-100 dark:bg-purple-900/30'
-                    }`}>
-                      <Icon className={`w-5 h-5 ${
-                        result.type === 'asset'
-                          ? 'text-green-600 dark:text-green-400'
-                          : result.type === 'ticket'
-                          ? 'text-blue-600 dark:text-blue-400'
-                          : 'text-purple-600 dark:text-purple-400'
-                      }`} />
+                    <div
+                      className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center"
+                      style={{
+                        backgroundColor:
+                          result.type === 'asset'
+                            ? 'rgba(34, 197, 94, 0.1)'
+                            : result.type === 'ticket'
+                            ? 'rgba(var(--color-primary-rgb), 0.1)'
+                            : result.type === 'trip'
+                            ? 'rgba(249, 115, 22, 0.1)'
+                            : 'rgba(168, 85, 247, 0.1)',
+                      }}
+                    >
+                      <Icon
+                        className="w-5 h-5"
+                        style={{
+                          color:
+                            result.type === 'asset'
+                              ? '#22c55e'
+                              : result.type === 'ticket'
+                              ? 'var(--color-primary)'
+                              : result.type === 'trip'
+                              ? '#f97316'
+                              : '#a855f7',
+                        }}
+                      />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="font-medium text-gray-900 dark:text-white truncate">
@@ -273,13 +308,27 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
                       </div>
                     </div>
                     <div className="flex-shrink-0">
-                      <span className={`px-2 py-1 text-xs font-medium rounded ${
-                        result.type === 'asset'
-                          ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
-                          : result.type === 'ticket'
-                          ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-                          : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
-                      }`}>
+                      <span
+                        className="px-2 py-1 text-xs font-medium rounded"
+                        style={{
+                          backgroundColor:
+                            result.type === 'asset'
+                              ? 'rgba(34, 197, 94, 0.1)'
+                              : result.type === 'ticket'
+                              ? 'rgba(var(--color-primary-rgb), 0.1)'
+                              : result.type === 'trip'
+                              ? 'rgba(249, 115, 22, 0.1)'
+                              : 'rgba(168, 85, 247, 0.1)',
+                          color:
+                            result.type === 'asset'
+                              ? '#22c55e'
+                              : result.type === 'ticket'
+                              ? 'var(--color-primary)'
+                              : result.type === 'trip'
+                              ? '#f97316'
+                              : '#a855f7',
+                        }}
+                      >
                         {result.type}
                       </span>
                     </div>
@@ -319,7 +368,7 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
           {!query && recentSearches.length === 0 && (
             <div className="p-8 text-center text-gray-500 dark:text-gray-400">
               <Search className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p>Start typing to search across assets, tickets, and users</p>
+              <p>Start typing to search across assets, tickets, trips, and users</p>
             </div>
           )}
         </div>

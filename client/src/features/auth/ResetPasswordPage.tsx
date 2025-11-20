@@ -81,7 +81,7 @@ export default function ResetPasswordPage() {
       <div className="max-w-md w-full">
         {/* Logo/Brand */}
         <div className="text-center mb-8">
-          <div className="inline-flex w-16 h-16 bg-blue-600 rounded-full items-center justify-center mb-4">
+          <div className="inline-flex w-16 h-16 rounded-full" style={{ backgroundColor: 'var(--color-primary)' }} items-center justify-center mb-4">
             <span className="text-white font-bold text-2xl">AT</span>
           </div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Set New Password</h1>

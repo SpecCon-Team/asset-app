@@ -230,7 +230,11 @@ export default function NotificationBell() {
                 {unreadCount > 0 && (
                   <button
                     onClick={handleMarkAllAsRead}
-                    className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
+                    className="text-xs sm:text-sm flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-lg transition-colors"
+                    style={{
+                      color: 'var(--color-primary)',
+                      backgroundColor: 'rgba(var(--color-primary-rgb), 0.1)',
+                    }}
                     title="Mark all as read"
                     aria-label="Mark all notifications as read"
                   >
@@ -268,9 +272,15 @@ export default function NotificationBell() {
                       ref={(el) => (notificationRefs.current[index] = el)}
                       role="menuitem"
                       tabIndex={0}
-                      className={`p-3 sm:p-4 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset ${
-                        !notification.read ? 'bg-blue-50 dark:bg-blue-900/20' : ''
-                      }`}
+                      className="p-3 sm:p-4 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-inset"
+                      style={
+                        !notification.read
+                          ? {
+                              backgroundColor: 'rgba(var(--color-primary-rgb), 0.1)',
+                              borderLeft: '3px solid var(--color-primary)',
+                            }
+                          : undefined
+                      }
                       onClick={() => handleNotificationClick(notification)}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {

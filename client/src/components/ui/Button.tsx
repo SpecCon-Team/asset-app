@@ -79,9 +79,9 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     // Variant styles
     const variantStyles: Record<ButtonVariant, string> = {
       primary:
-        'bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white shadow-sm ' +
-        'dark:bg-blue-500 dark:hover:bg-blue-600 dark:active:bg-blue-700 ' +
-        'focus-visible:ring-blue-500',
+        'text-white shadow-sm ' +
+        'focus-visible:ring-2 ' +
+        'theme-primary-button',
 
       secondary:
         'bg-gray-200 hover:bg-gray-300 active:bg-gray-400 text-gray-900 shadow-sm ' +

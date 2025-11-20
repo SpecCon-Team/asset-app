@@ -53,7 +53,10 @@
       "Bash(export DATABASE_URL=\"postgresql://neondb_owner:npg_Ift9wmXVQeG7@ep-flat-bread-af4w3ign-pooler.c-2.us-west-2.aws.neon.tech/neondb?sslmode=require\")",
       "Bash(chmod:*)",
       "WebFetch(domain:www.touropia.com)",
-      "Bash(code --list-extensions:*)"
+      "Bash(code --list-extensions:*)",
+      "Bash(xargs ls:*)",
+      "Bash(./check-sweetalert.sh:*)",
+      "Bash(bash:*)"
     ],
     "deny": [],
     "ask": []
