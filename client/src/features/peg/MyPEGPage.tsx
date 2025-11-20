@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Plus, X, Users, Edit2, Trash2 } from 'lucide-react';
+import { MapPin, Plus, X, Users, Edit2, Trash2, Search, Download, BarChart3, List, Map as MapIcon, Phone, Mail, Navigation } from 'lucide-react';
 import Swal from 'sweetalert2';
+import { getApiClient } from '@/features/assets/lib/apiClient';
 
 // South African Provinces
 const provinces = [
@@ -19,10 +20,13 @@ interface Client {
   id: string;
   name: string;
   location: string;
-  contactPerson: string;
-  phone: string;
-  email: string;
+  contactPerson: string | null;
+  phone: string | null;
+  email: string | null;
   provinceId: string;
+  userId?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export default function MyPEGPage() {
@@ -30,26 +34,41 @@ export default function MyPEGPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [clients, setClients] = useState<Client[]>([]);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
+  const [showStats, setShowStats] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     location: '',
     contactPerson: '',
     phone: '',
     email: '',
+    tags: '',
   });
 
-  // Load clients from localStorage
+  // Load clients from API
   useEffect(() => {
-    const savedClients = localStorage.getItem('peg_clients');
-    if (savedClients) {
-      setClients(JSON.parse(savedClients));
-    }
+    loadClients();
   }, []);
 
-  // Save clients to localStorage
-  const saveClients = (updatedClients: Client[]) => {
-    setClients(updatedClients);
-    localStorage.setItem('peg_clients', JSON.stringify(updatedClients));
+  const loadClients = async () => {
+    try {
+      setLoading(true);
+      const api = getApiClient();
+      const response = await api.get('/peg');
+      setClients(response.data);
+    } catch (error) {
+      console.error('Error loading PEG clients:', error);
+      Swal.fire({
+        title: 'Error',
+        text: 'Failed to load clients',
+        icon: 'error',
+        confirmButtonColor: '#3b82f6',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleProvinceClick = (provinceId: string) => {
@@ -74,6 +93,7 @@ export default function MyPEGPage() {
       contactPerson: '',
       phone: '',
       email: '',
+      tags: '',
     });
   };
 
@@ -82,16 +102,28 @@ export default function MyPEGPage() {
     setFormData({
       name: client.name,
       location: client.location,
-      contactPerson: client.contactPerson,
-      phone: client.phone,
-      email: client.email,
+      contactPerson: client.contactPerson || '',
+      phone: client.phone || '',
+      email: client.email || '',
+      tags: '',
     });
     setShowAddModal(true);
   };
 
-  const handleDeleteClient = (clientId: string) => {
-    const updatedClients = clients.filter((c) => c.id !== clientId);
-    saveClients(updatedClients);
+  const handleDeleteClient = async (clientId: string) => {
+    try {
+      const api = getApiClient();
+      await api.delete(`/peg/${clientId}`);
+      await loadClients();
+    } catch (error) {
+      console.error('Error deleting client:', error);
+      Swal.fire({
+        title: 'Error',
+        text: 'Failed to delete client',
+        icon: 'error',
+        confirmButtonColor: '#3b82f6',
+      });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -107,50 +139,107 @@ export default function MyPEGPage() {
       return;
     }
 
-    if (editingClient) {
-      // Update existing client
-      const updatedClients = clients.map((c) =>
-        c.id === editingClient.id ? { ...c, ...formData } : c,
-      );
-      saveClients(updatedClients);
-      await Swal.fire({
-        title: 'Updated!',
-        text: 'Client updated successfully',
-        icon: 'success',
-        timer: 1500,
-        showConfirmButton: false,
-      });
-    } else {
-      // Add new client
-      const newClient: Client = {
-        id: Date.now().toString(),
+    try {
+      const api = getApiClient();
+      const payload = {
         ...formData,
-        provinceId: selectedProvince!,
+        provinceId: editingClient ? editingClient.provinceId : selectedProvince!,
       };
-      saveClients([...clients, newClient]);
-      await Swal.fire({
-        title: 'Added!',
-        text: 'Client added successfully',
-        icon: 'success',
-        timer: 1500,
-        showConfirmButton: false,
+
+      if (editingClient) {
+        // Update existing client
+        await api.put(`/peg/${editingClient.id}`, payload);
+
+        await Swal.fire({
+          title: 'Updated!',
+          text: 'Client updated successfully',
+          icon: 'success',
+          timer: 1500,
+          showConfirmButton: false,
+        });
+      } else {
+        // Add new client
+        await api.post('/peg', payload);
+
+        await Swal.fire({
+          title: 'Added!',
+          text: 'Client added successfully',
+          icon: 'success',
+          timer: 1500,
+          showConfirmButton: false,
+        });
+      }
+
+      await loadClients();
+      setShowAddModal(false);
+      setShowProvinceModal(true);
+      setFormData({
+        name: '',
+        location: '',
+        contactPerson: '',
+        phone: '',
+        email: '',
+        tags: '',
+      });
+    } catch (error) {
+      console.error('Error saving client:', error);
+      Swal.fire({
+        title: 'Error',
+        text: editingClient ? 'Failed to update client' : 'Failed to create client',
+        icon: 'error',
+        confirmButtonColor: '#3b82f6',
       });
     }
-
-    setShowAddModal(false);
-    setShowProvinceModal(true);
-    setFormData({
-      name: '',
-      location: '',
-      contactPerson: '',
-      phone: '',
-      email: '',
-    });
   };
 
   const getProvinceClients = (provinceId: string) => {
     return clients.filter((c) => c.provinceId === provinceId);
   };
+
+  // Filter clients based on search query
+  const filteredClients = clients.filter((client) => {
+    const query = searchQuery.toLowerCase();
+    return (
+      client.name.toLowerCase().includes(query) ||
+      client.location.toLowerCase().includes(query) ||
+      client.contactPerson?.toLowerCase().includes(query) ||
+      client.phone?.toLowerCase().includes(query) ||
+      client.email?.toLowerCase().includes(query)
+    );
+  });
+
+  // Export to CSV function
+  const exportToCSV = () => {
+    const headers = ['Client Name', 'Province', 'Location', 'Contact Person', 'Phone', 'Email'];
+    const csvData = clients.map((client) => {
+      const province = provinces.find((p) => p.id === client.provinceId);
+      return [
+        client.name,
+        province?.name || '',
+        client.location,
+        client.contactPerson || '',
+        client.phone || '',
+        client.email || '',
+      ];
+    });
+
+    const csvContent = [
+      headers.join(','),
+      ...csvData.map((row) => row.map((cell) => `"${cell}"`).join(',')),
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `peg-clients-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const totalClients = clients.length;
 
   const selectedProvinceData = provinces.find((p) => p.id === selectedProvince);
   const provinceClients = selectedProvince ? getProvinceClients(selectedProvince) : [];
@@ -159,28 +248,6 @@ export default function MyPEGPage() {
   const handleProvinceClickNew = (provinceId: string) => {
     setSelectedProvince(provinceId);
     setShowProvinceModal(true);
-  };
-
-  const loadSampleData = async () => {
-    try {
-      const response = await fetch('/sample-peg-data.json');
-      const sampleClients = await response.json();
-      saveClients(sampleClients);
-      Swal.fire({
-        title: 'Success!',
-        text: 'Sample data loaded successfully!',
-        icon: 'success',
-        timer: 2000,
-        showConfirmButton: false,
-      });
-    } catch (error) {
-      Swal.fire({
-        title: 'Error',
-        text: 'Failed to load sample data',
-        icon: 'error',
-        confirmButtonColor: '#3b82f6',
-      });
-    }
   };
 
   const clearAllData = async () => {
@@ -196,320 +263,403 @@ export default function MyPEGPage() {
     });
 
     if (result.isConfirmed) {
-      saveClients([]);
-      Swal.fire({
-        title: 'Cleared!',
-        text: 'All data has been cleared.',
-        icon: 'success',
-        timer: 2000,
-        showConfirmButton: false,
-      });
+      try {
+        const api = getApiClient();
+        await api.delete('/peg');
+        await loadClients();
+        Swal.fire({
+          title: 'Cleared!',
+          text: 'All data has been cleared.',
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false,
+        });
+      } catch (error) {
+        console.error('Error clearing data:', error);
+        Swal.fire({
+          title: 'Error',
+          text: 'Failed to clear data',
+          icon: 'error',
+          confirmButtonColor: '#3b82f6',
+        });
+      }
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Loading PEG clients...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="p-8 max-w-7xl mx-auto">
+    <div className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-3">
-            <MapPin className="w-8 h-8 text-blue-600 dark:text-blue-400" />
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">My PEG</h1>
+      <div className="mb-6 sm:mb-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <MapPin className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 dark:text-blue-400" />
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">My PEG</h1>
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                Total: <span className="font-semibold text-blue-600 dark:text-blue-400">{totalClients}</span> clients across {provinces.filter(p => getProvinceClients(p.id).length > 0).length} provinces
+              </p>
+            </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 w-full sm:w-auto flex-wrap">
             <button
-              onClick={loadSampleData}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+              onClick={() => setViewMode(viewMode === 'map' ? 'list' : 'map')}
+              className="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs sm:text-sm font-medium flex items-center gap-2"
+              title={`Switch to ${viewMode === 'map' ? 'list' : 'map'} view`}
             >
-              Load Sample Data
+              {viewMode === 'map' ? <List className="w-4 h-4" /> : <MapIcon className="w-4 h-4" />}
+              {viewMode === 'map' ? 'List' : 'Map'}
+            </button>
+            <button
+              onClick={() => setShowStats(!showStats)}
+              className="px-3 sm:px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-xs sm:text-sm font-medium flex items-center gap-2"
+              title="Toggle statistics"
+            >
+              <BarChart3 className="w-4 h-4" />
+              Stats
+            </button>
+            <button
+              onClick={exportToCSV}
+              className="px-3 sm:px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xs sm:text-sm font-medium flex items-center gap-2"
+              title="Export to CSV"
+            >
+              <Download className="w-4 h-4" />
+              Export
             </button>
             <button
               onClick={clearAllData}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
+              className="px-3 sm:px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-xs sm:text-sm font-medium"
+              title="Clear all data"
             >
-              Clear All Data
+              Clear All
             </button>
           </div>
         </div>
-        <p className="text-gray-600 dark:text-gray-400">
-          Manage your regional clients across South African provinces
-        </p>
+
+        {/* Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search clients by name, location, contact person, phone, or email..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white text-sm sm:text-base"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
+        </div>
       </div>
+
+      {/* Statistics Panel */}
+      {showStats && (
+        <div className="mb-6 p-4 sm:p-6 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-700 rounded-xl shadow-lg border border-blue-200 dark:border-gray-600">
+          <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            <BarChart3 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            Client Distribution
+          </h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+            {provinces.map((province) => {
+              const count = getProvinceClients(province.id).length;
+              const percentage = totalClients > 0 ? ((count / totalClients) * 100).toFixed(1) : '0';
+              return (
+                <div
+                  key={province.id}
+                  className="p-3 bg-white dark:bg-gray-800 rounded-lg border-2 shadow-sm"
+                  style={{ borderColor: province.color }}
+                >
+                  <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{province.name}</div>
+                  <div className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white" style={{ color: province.color }}>
+                    {count}
+                  </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">{percentage}%</div>
+                  <div className="mt-2 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                    <div
+                      className="h-2 rounded-full transition-all duration-500"
+                      style={{ width: `${percentage}%`, backgroundColor: province.color }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* List View */}
+      {viewMode === 'list' && (
+        <div className="mb-6">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+            All Clients {searchQuery && `(${filteredClients.length} results)`}
+          </h2>
+          {filteredClients.length === 0 ? (
+            <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <Users className="w-16 h-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+              <p className="text-gray-600 dark:text-gray-400">
+                {searchQuery ? 'No clients found matching your search' : 'No clients yet'}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {filteredClients.map((client) => {
+                const province = provinces.find((p) => p.id === client.provinceId);
+                return (
+                  <div
+                    key={client.id}
+                    className="p-4 bg-white dark:bg-gray-800 rounded-lg border-2 hover:shadow-lg transition-all"
+                    style={{ borderColor: province?.color }}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <MapPin className="w-5 h-5" style={{ color: province?.color }} />
+                          <h3 className="font-bold text-lg text-gray-900 dark:text-white">{client.name}</h3>
+                          <span
+                            className="px-2 py-0.5 rounded-full text-xs font-medium text-white"
+                            style={{ backgroundColor: province?.color }}
+                          >
+                            {province?.name}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm ml-7">
+                          <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                            <MapPin className="w-4 h-4" />
+                            <span>{client.location}</span>
+                          </div>
+                          {client.contactPerson && (
+                            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                              <Users className="w-4 h-4" />
+                              <span>{client.contactPerson}</span>
+                            </div>
+                          )}
+                          {client.phone && (
+                            <div className="flex items-center gap-2">
+                              <Phone className="w-4 h-4 text-green-600" />
+                              <a
+                                href={`tel:${client.phone}`}
+                                className="text-blue-600 dark:text-blue-400 hover:underline"
+                              >
+                                {client.phone}
+                              </a>
+                            </div>
+                          )}
+                          {client.email && (
+                            <div className="flex items-center gap-2">
+                              <Mail className="w-4 h-4 text-blue-600" />
+                              <a
+                                href={`mailto:${client.email}`}
+                                className="text-blue-600 dark:text-blue-400 hover:underline"
+                              >
+                                {client.email}
+                              </a>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex gap-2 ml-4">
+                        {client.phone && (
+                          <a
+                            href={`tel:${client.phone}`}
+                            className="p-2 text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/30 rounded-lg transition-colors"
+                            title="Call"
+                          >
+                            <Phone className="w-5 h-5" />
+                          </a>
+                        )}
+                        {client.email && (
+                          <a
+                            href={`mailto:${client.email}`}
+                            className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
+                            title="Email"
+                          >
+                            <Mail className="w-5 h-5" />
+                          </a>
+                        )}
+                        {client.location && (
+                          <a
+                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(client.location)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-2 text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-lg transition-colors"
+                            title="View on Map"
+                          >
+                            <Navigation className="w-5 h-5" />
+                          </a>
+                        )}
+                        <button
+                          onClick={() => handleEditClient(client)}
+                          className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
+                          title="Edit"
+                        >
+                          <Edit2 className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={async () => {
+                            const result = await Swal.fire({
+                              title: 'Are you sure?',
+                              text: `Do you want to delete ${client.name}?`,
+                              icon: 'warning',
+                              showCancelButton: true,
+                              confirmButtonColor: '#dc2626',
+                              cancelButtonColor: '#6b7280',
+                              confirmButtonText: 'Yes, delete!',
+                              cancelButtonText: 'Cancel',
+                            });
+
+                            if (result.isConfirmed) {
+                              await handleDeleteClient(client.id);
+                              await loadClients();
+                              Swal.fire({
+                                title: 'Deleted!',
+                                text: `${client.name} has been deleted.`,
+                                icon: 'success',
+                                timer: 2000,
+                                showConfirmButton: false,
+                              });
+                            }
+                          }}
+                          className="p-2 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+                          title="Delete"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Province Selection Cards - Alternative to map */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
-        {provinces.map((province) => {
-          const clientCount = getProvinceClients(province.id).length;
-          return (
-            <button
-              key={province.id}
-              onClick={() => handleProvinceClickNew(province.id)}
-              className="p-6 rounded-lg border-2 transition-all hover:scale-105 hover:shadow-lg"
-              style={{
-                backgroundColor: selectedProvince === province.id ? province.color : 'transparent',
-                borderColor: province.color,
-                color: selectedProvince === province.id ? 'white' : undefined,
-              }}
-            >
-              <div className="text-center">
-                <div
-                  className="text-lg font-bold mb-2"
-                  style={{ color: selectedProvince === province.id ? 'white' : province.color }}
-                >
-                  {province.name}
+      {viewMode === 'map' && (
+      <>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 mb-6 sm:mb-8">
+          {provinces.map((province) => {
+            const clientCount = getProvinceClients(province.id).length;
+            return (
+              <button
+                key={province.id}
+                onClick={() => handleProvinceClickNew(province.id)}
+                className="p-3 sm:p-4 md:p-6 rounded-lg border-2 transition-all hover:scale-105 hover:shadow-lg bg-white dark:bg-gray-800"
+                style={{
+                  borderColor: province.color,
+                }}
+              >
+                <div className="text-center">
+                  <div
+                    className="text-sm sm:text-base md:text-lg font-bold mb-1 sm:mb-2"
+                    style={{ color: province.color }}
+                  >
+                    {province.name}
+                  </div>
+                  <div className="text-xl sm:text-2xl font-bold mb-1 text-gray-900 dark:text-white">{clientCount}</div>
+                  <div className="text-xs sm:text-sm opacity-90 text-gray-600 dark:text-gray-400">{clientCount === 1 ? 'Client' : 'Clients'}</div>
                 </div>
-                <div className="text-2xl font-bold mb-1">{clientCount}</div>
-                <div className="text-sm opacity-90">{clientCount === 1 ? 'Client' : 'Clients'}</div>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="w-full">
+          {/* Map Section */}
+          <div>
+            {/* Enhanced Header with Icon and Gradient */}
+            <div className="text-center mb-4 sm:mb-6">
+              <div className="inline-flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-blue-500 to-purple-600 dark:from-blue-600 dark:to-purple-700 rounded-full shadow-lg mb-2">
+                <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-white">South Africa - Provinces</h2>
               </div>
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="w-full">
-        {/* Map Section */}
-        <div>
-          {/* Enhanced Header with Icon and Gradient */}
-          <div className="text-center mb-6">
-            <div className="inline-flex items-center justify-center gap-3 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 dark:from-blue-600 dark:to-purple-700 rounded-full shadow-lg mb-2">
-              <MapPin className="w-6 h-6 text-white" />
-              <h2 className="text-2xl font-bold text-white">South Africa - Provinces</h2>
-              <MapPin className="w-6 h-6 text-white" />
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-2 px-4">
+                Click on any province card to view and manage clients
+              </p>
             </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-              Click on any province to view and manage clients
-            </p>
-          </div>
 
-          {/* Image Map with Clickable Overlays */}
-          <div className="relative w-full bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 rounded-xl shadow-xl p-6 overflow-hidden border-2 border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-2xl">
-            <img
-              src="/south-africa-provinces-map2.png"
-              alt="South Africa Provinces Map"
-              className="w-full h-auto rounded-lg shadow-md"
-            />
+            {/* Image Map with Clickable Overlays */}
+            <div className="relative w-full bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 rounded-xl shadow-xl p-3 sm:p-4 md:p-6 overflow-hidden border-2 border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-2xl">
+              <img
+                src="/south-africa-provinces-map2.png"
+                alt="South Africa Provinces Map"
+                className="w-full h-auto rounded-lg shadow-md"
+              />
 
-            {/* Clickable overlay areas positioned over provinces */}
-            {/* Adjust the percentages based on where provinces are in your image */}
-
-            {/* Limpopo - Top North - Green */}
-            <button
-              onClick={() => handleProvinceClickNew('LP')}
-              className="absolute transition-all border-2 border-transparent rounded"
-              style={{
-                top: '5%',
-                left: '57%',
-                width: '35%',
-                height: '25%',
-                backgroundColor: 'rgba(139, 195, 74, 0.3)',
-              }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.backgroundColor = 'rgba(139, 195, 74, 0.5)')
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.backgroundColor = 'rgba(139, 195, 74, 0.3)')
-              }
-              title="Limpopo"
-            />
-
-            {/* Mpumalanga - Top Right - Dark Blue */}
-            <button
-              onClick={() => handleProvinceClickNew('MP')}
-              className="absolute transition-all border-2 border-transparent rounded"
-              style={{
-                top: '18%',
-                left: '78%',
-                width: '20%',
-                height: '28%',
-                backgroundColor: 'rgba(63, 81, 181, 0.3)',
-              }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.backgroundColor = 'rgba(63, 81, 181, 0.5)')
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.backgroundColor = 'rgba(63, 81, 181, 0.3)')
-              }
-              title="Mpumalanga"
-            />
-
-            {/* Gauteng - Center (small) - Light Blue */}
-            <button
-              onClick={() => handleProvinceClickNew('GP')}
-              className="absolute transition-all border-2 border-transparent rounded"
-              style={{
-                top: '28%',
-                left: '64%',
-                width: '10%',
-                height: '10%',
-                backgroundColor: 'rgba(100, 181, 246, 0.3)',
-              }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.backgroundColor = 'rgba(100, 181, 246, 0.5)')
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.backgroundColor = 'rgba(100, 181, 246, 0.3)')
-              }
-              title="Gauteng"
-            />
-
-            {/* North West - Left Center - Gray */}
-            <button
-              onClick={() => handleProvinceClickNew('NW')}
-              className="absolute transition-all border-2 border-transparent rounded"
-              style={{
-                top: '20%',
-                left: '33%',
-                width: '28%',
-                height: '25%',
-                backgroundColor: 'rgba(158, 158, 158, 0.3)',
-              }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.backgroundColor = 'rgba(158, 158, 158, 0.5)')
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.backgroundColor = 'rgba(158, 158, 158, 0.3)')
-              }
-              title="North West"
-            />
-
-            {/* Free State - Center - Yellow/Gold */}
-            <button
-              onClick={() => handleProvinceClickNew('FS')}
-              className="absolute transition-all border-2 border-transparent rounded"
-              style={{
-                top: '40%',
-                left: '52%',
-                width: '24%',
-                height: '28%',
-                backgroundColor: 'rgba(255, 193, 7, 0.3)',
-              }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.backgroundColor = 'rgba(255, 193, 7, 0.5)')
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.backgroundColor = 'rgba(255, 193, 7, 0.3)')
-              }
-              title="Free State"
-            />
-
-            {/* KwaZulu-Natal - Right - Dark Gray */}
-            <button
-              onClick={() => handleProvinceClickNew('KZN')}
-              className="absolute transition-all border-2 border-transparent rounded"
-              style={{
-                top: '48%',
-                left: '76%',
-                width: '20%',
-                height: '32%',
-                backgroundColor: 'rgba(97, 97, 97, 0.3)',
-              }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.backgroundColor = 'rgba(97, 97, 97, 0.5)')
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.backgroundColor = 'rgba(97, 97, 97, 0.3)')
-              }
-              title="KwaZulu-Natal"
-            />
-
-            {/* Northern Cape - Left - Blue */}
-            <button
-              onClick={() => handleProvinceClickNew('NC')}
-              className="absolute transition-all border-2 border-transparent rounded"
-              style={{
-                top: '40%',
-                left: '22%',
-                width: '32%',
-                height: '38%',
-                backgroundColor: 'rgba(66, 165, 245, 0.3)',
-              }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.backgroundColor = 'rgba(66, 165, 245, 0.5)')
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.backgroundColor = 'rgba(66, 165, 245, 0.3)')
-              }
-              title="Northern Cape"
-            />
-
-            {/* Eastern Cape - Bottom Center - Brown/Rust */}
-            <button
-              onClick={() => handleProvinceClickNew('EC')}
-              className="absolute transition-all border-2 border-transparent rounded"
-              style={{
-                top: '70%',
-                left: '52%',
-                width: '30%',
-                height: '24%',
-                backgroundColor: 'rgba(141, 110, 99, 0.3)',
-              }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.backgroundColor = 'rgba(141, 110, 99, 0.5)')
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.backgroundColor = 'rgba(141, 110, 99, 0.3)')
-              }
-              title="Eastern Cape"
-            />
-
-            {/* Western Cape - Bottom Left - Orange */}
-            <button
-              onClick={() => handleProvinceClickNew('WC')}
-              className="absolute transition-all border-2 border-transparent rounded"
-              style={{
-                top: '75%',
-                left: '18%',
-                width: '22%',
-                height: '22%',
-                backgroundColor: 'rgba(255, 152, 0, 0.3)',
-              }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.backgroundColor = 'rgba(255, 152, 0, 0.5)')
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.backgroundColor = 'rgba(255, 152, 0, 0.3)')
-              }
-              title="Western Cape"
-            />
-
-            {/* Client count badges on provinces */}
+            {/* Client count badges on provinces - Enhanced circular design */}
             {provinces.map((province) => {
               const clientCount = getProvinceClients(province.id).length;
               if (clientCount === 0) return null;
 
               const positions: Record<string, { top: string; left: string }> = {
                 LP: { top: '15%', left: '70%' },
-                MP: { top: '28%', left: '81%' },
-                GP: { top: '32%', left: '69%' },
-                NW: { top: '32%', left: '47%' },
+                MP: { top: '34%', left: '76%' },
+                GP: { top: '32%', left: '67%' },
+                NW: { top: '35%', left: '50%' },
                 FS: { top: '54%', left: '56%' },
-                KZN: { top: '58%', left: '82%' },
-                NC: { top: '52%', left: '38%' },
+                KZN: { top: '55%', left: '79%' },
+                NC: { top: '62%', left: '30%' },
                 EC: { top: '80%', left: '58%' },
-                WC: { top: '85%', left: '26%' },
+                WC: { top: '88%', left: '26%' },
               };
 
               const pos = positions[province.id];
 
+              // Responsive circle sizes: mobile (sm), tablet (md), desktop (lg)
+              const getCircleSize = () => {
+                if (clientCount >= 100) return 'w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 lg:w-14 lg:h-14';
+                if (clientCount >= 10) return 'w-7 h-7 sm:w-9 sm:h-9 md:w-11 md:h-11 lg:w-12 lg:h-12';
+                return 'w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 lg:w-11 lg:h-11';
+              };
+
+              // Responsive font sizes
+              const getFontSize = () => {
+                if (clientCount >= 100) return 'text-[10px] sm:text-xs md:text-sm lg:text-base';
+                if (clientCount >= 10) return 'text-[10px] sm:text-xs md:text-sm lg:text-base';
+                return 'text-xs sm:text-sm md:text-base lg:text-lg';
+              };
+
               return (
                 <div
                   key={province.id}
-                  className="absolute flex items-center justify-center w-10 h-10 rounded-full shadow-lg animate-pulse"
+                  className={`absolute flex items-center justify-center rounded-full shadow-lg sm:shadow-xl md:shadow-2xl bg-white dark:bg-gray-900 ${getCircleSize()} pointer-events-none animate-[fadeInScale_0.5s_ease-out]`}
                   style={{
                     top: pos.top,
                     left: pos.left,
-                    backgroundColor: province.color,
+                    border: `2px solid ${province.color}`,
                     transform: 'translate(-50%, -50%)',
+                    boxShadow: `0 2px 8px rgba(0, 0, 0, 0.2), 0 0 0 2px ${province.color}40`,
+                    animation: `fadeInScale 0.5s ease-out ${provinces.findIndex(p => p.id === province.id) * 0.1}s both, pulse 2s ease-in-out ${provinces.findIndex(p => p.id === province.id) * 0.1}s infinite`,
                   }}
                   title={`${clientCount} client${clientCount === 1 ? '' : 's'} in ${province.name}`}
                 >
-                  <span className="text-white font-bold text-sm">{clientCount}</span>
+                  <span className={`text-white font-semibold ${getFontSize()}`} style={{
+                    textShadow: '0 1px 3px rgba(0, 0, 0, 0.5)'
+                  }}>
+                    {clientCount}
+                  </span>
                 </div>
               );
             })}
+            </div>
           </div>
         </div>
-      </div>
+      </>
+      )}
 
       {/* Province Clients Modal */}
       {showProvinceModal && selectedProvinceData && (
@@ -571,9 +721,6 @@ export default function MyPEGPage() {
                               {client.name}
                             </h3>
                           </div>
-                          <p className="text-sm text-gray-600 dark:text-gray-400 ml-7">
-                            {client.location}
-                          </p>
                         </div>
                         <div className="flex gap-2 flex-shrink-0">
                           <button
@@ -619,6 +766,16 @@ export default function MyPEGPage() {
                       </div>
 
                       <div className="ml-7 space-y-2 text-sm">
+                        {client.location && (
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-gray-700 dark:text-gray-300 min-w-[80px]">
+                              Location:
+                            </span>
+                            <span className="text-gray-600 dark:text-gray-400">
+                              {client.location}
+                            </span>
+                          </div>
+                        )}
                         {client.contactPerson && (
                           <div className="flex items-center gap-2">
                             <span className="font-medium text-gray-700 dark:text-gray-300 min-w-[80px]">
@@ -754,6 +911,22 @@ export default function MyPEGPage() {
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Tags/Categories
+                </label>
+                <input
+                  type="text"
+                  value={formData.tags}
+                  onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+                  placeholder="e.g., VIP, Corporate, Retail (comma-separated)"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Separate multiple tags with commas
+                </p>
               </div>
 
               <div className="flex gap-3 pt-4">

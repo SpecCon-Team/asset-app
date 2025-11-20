@@ -208,7 +208,7 @@ export default function AdminDashboard() {
   const assetStatusData = useMemo(() => [
     { name: 'Available', value: assets.filter((a) => a.status === 'available').length },
     { name: 'Assigned', value: assets.filter((a) => a.status === 'assigned').length },
-    { name: 'Maintenance', value: assets.filter((a) => a.status === 'maintenance').length },
+    { name: 'Maintenance', value: assets.filter((a) => ['maintenance', 'repair'].includes(a.status)).length },
     { name: 'Retired', value: assets.filter((a) => a.status === 'retired').length },
   ], [assets]);
 

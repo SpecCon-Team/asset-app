@@ -221,32 +221,33 @@ export default function NotificationBell() {
             id="notifications-dropdown"
             role="menu"
             aria-label="Notifications menu"
-            className="absolute right-0 mt-2 w-96 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-[9999] max-h-[600px] flex flex-col"
+            className="fixed sm:absolute right-2 sm:right-0 left-2 sm:left-auto mt-2 sm:w-96 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-[9999] max-h-[80vh] sm:max-h-[600px] flex flex-col"
           >
             {/* Header */}
-            <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+            <div className="p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700">
               <div className="flex justify-between items-center mb-3">
-                <h3 className="font-semibold text-lg text-gray-900 dark:text-white">Notifications</h3>
+                <h3 className="font-semibold text-base sm:text-lg text-gray-900 dark:text-white">Notifications</h3>
                 {unreadCount > 0 && (
                   <button
                     onClick={handleMarkAllAsRead}
-                    className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
+                    className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
                     title="Mark all as read"
                     aria-label="Mark all notifications as read"
                   >
-                    <CheckCheck className="w-4 h-4" />
-                    Mark all read
+                    <CheckCheck className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">Mark all read</span>
+                    <span className="sm:hidden">Read all</span>
                   </button>
                 )}
               </div>
               {notifications.length > 0 && (
                 <button
                   onClick={handleDismissAll}
-                  className="w-full px-4 py-2 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
+                  className="w-full px-3 sm:px-4 py-2 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white text-sm sm:text-base font-semibold rounded-lg shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
                   title="Dismiss all notifications"
                   aria-label="Dismiss all notifications"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
                   Dismiss All
                 </button>
               )}
@@ -267,7 +268,7 @@ export default function NotificationBell() {
                       ref={(el) => (notificationRefs.current[index] = el)}
                       role="menuitem"
                       tabIndex={0}
-                      className={`p-4 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset ${
+                      className={`p-3 sm:p-4 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset ${
                         !notification.read ? 'bg-blue-50 dark:bg-blue-900/20' : ''
                       }`}
                       onClick={() => handleNotificationClick(notification)}

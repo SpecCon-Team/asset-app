@@ -224,9 +224,23 @@ body {
 @keyframes pulse {
   0%, 100% {
     opacity: 1;
+    transform: scale(1);
   }
   50% {
-    opacity: 0.5;
+    opacity: 0.85;
+    transform: scale(1.05);
+  }
+}
+
+/* Fade in and scale animation for PEG circles */
+@keyframes fadeInScale {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
   }
 }
 

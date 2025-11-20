@@ -114,7 +114,8 @@ export default function AnalyticsPage() {
     totalAssets: filteredAssets.length,
     availableAssets: filteredAssets.filter(a => a.status === 'available').length,
     assignedAssets: filteredAssets.filter(a => a.status === 'assigned').length,
-    maintenanceAssets: filteredAssets.filter(a => a.status === 'maintenance').length,
+    maintenanceAssets: filteredAssets.filter(a => a.status === 'maintenance' || a.status === 'repair').length,
+    repairAssets: filteredAssets.filter(a => a.status === 'repair').length,
   };
 
   // Chart data
@@ -134,7 +135,7 @@ export default function AnalyticsPage() {
   const assetStatusData = [
     { name: 'Available', value: stats.availableAssets, color: COLORS.green },
     { name: 'Assigned', value: stats.assignedAssets, color: COLORS.blue },
-    { name: 'Maintenance', value: stats.maintenanceAssets, color: COLORS.yellow },
+    { name: 'Maintenance/Repair', value: stats.maintenanceAssets, color: COLORS.yellow },
     { name: 'Retired', value: filteredAssets.filter(a => a.status === 'retired').length, color: COLORS.gray },
   ].filter(item => item.value > 0);
 
@@ -596,7 +597,7 @@ export default function AnalyticsPage() {
                 <td className="py-3 text-right font-semibold text-blue-600 dark:text-blue-400">{stats.assignedAssets}</td>
               </tr>
               <tr>
-                <td className="py-3 text-gray-700 dark:text-gray-300">Maintenance</td>
+                <td className="py-3 text-gray-700 dark:text-gray-300">Maintenance/Repair</td>
                 <td className="py-3 text-right font-semibold text-yellow-600 dark:text-yellow-400">{stats.maintenanceAssets}</td>
               </tr>
             </tbody>

@@ -5,6 +5,40 @@
       "value": "C:\\Program Files\\Git\\bin;C:\\Program Files\\Git\\cmd;${env:PATH}"
     }
   ],
+  // Auto-save configuration - saves automatically after 1 second of no typing
   "files.autoSave": "afterDelay",
-  "files.autoSaveDelay": 1000
+  "files.autoSaveDelay": 1000,
+
+  // Also save when switching windows/tabs
+  "files.autoSaveWhenNoErrors": true,
+
+  // File watcher settings
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/dist/**": true,
+    "**/build/**": true
+  },
+  "files.watcherInclude": [
+    "**/*"
+  ],
+
+  // Hot reload support
+  "files.eol": "\n",
+  "editor.formatOnSave": false,
+
+  // Ensure TypeScript/JavaScript files auto-save properly
+  "[typescript]": {
+    "editor.formatOnSave": false
+  },
+  "[typescriptreact]": {
+    "editor.formatOnSave": false
+  },
+  "[javascript]": {
+    "editor.formatOnSave": false
+  },
+  "[javascriptreact]": {
+    "editor.formatOnSave": false
+  }
 }

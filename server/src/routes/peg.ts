@@ -1,0 +1,201 @@
+import { Router } from 'express';
+import { z } from 'zod';
+import { prisma } from '../lib/prisma';
+import { authenticate, AuthRequest } from '../middleware/auth';
+import { logAudit } from '../lib/auditLog';
+
+const router = Router();
+
+// Validation schema for PEG client
+const pegClientSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  location: z.string().min(1, 'Location is required'),
+  contactPerson: z.string().optional(),
+  phone: z.string().optional(),
+  email: z.union([z.string().email(), z.literal('')]).optional(),
+  provinceId: z.string().min(1, 'Province is required'),
+});
+
+// Get all PEG clients for the authenticated user
+router.get('/', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.user!.id;
+
+    const clients = await prisma.pEGClient.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    res.json(clients);
+  } catch (error) {
+    console.error('Error fetching PEG clients:', error);
+    res.status(500).json({ error: 'Failed to fetch PEG clients' });
+  }
+});
+
+// Get clients by province
+router.get('/province/:provinceId', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.user!.id;
+    const { provinceId } = req.params;
+
+    const clients = await prisma.pEGClient.findMany({
+      where: {
+        userId,
+        provinceId,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    res.json(clients);
+  } catch (error) {
+    console.error('Error fetching province clients:', error);
+    res.status(500).json({ error: 'Failed to fetch province clients' });
+  }
+});
+
+// Create a new PEG client
+router.post('/', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.user!.id;
+    const validatedData = pegClientSchema.parse(req.body);
+
+    const client = await prisma.pEGClient.create({
+      data: {
+        ...validatedData,
+        email: validatedData.email || null,
+        contactPerson: validatedData.contactPerson || null,
+        phone: validatedData.phone || null,
+        userId,
+      },
+    });
+
+    await logAudit(
+      req,
+      'CREATE',
+      'PEGClient',
+      client.id,
+      { new: client }
+    );
+
+    res.status(201).json(client);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors });
+    }
+    console.error('Error creating PEG client:', error);
+    res.status(500).json({ error: 'Failed to create PEG client' });
+  }
+});
+
+// Update a PEG client
+router.put('/:id', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.user!.id;
+    const { id } = req.params;
+    const validatedData = pegClientSchema.parse(req.body);
+
+    // Check if the client belongs to the user
+    const existingClient = await prisma.pEGClient.findUnique({
+      where: { id },
+    });
+
+    if (!existingClient) {
+      return res.status(404).json({ error: 'Client not found' });
+    }
+
+    if (existingClient.userId !== userId) {
+      return res.status(403).json({ error: 'Not authorized to update this client' });
+    }
+
+    const updatedClient = await prisma.pEGClient.update({
+      where: { id },
+      data: {
+        ...validatedData,
+        email: validatedData.email || null,
+        contactPerson: validatedData.contactPerson || null,
+        phone: validatedData.phone || null,
+      },
+    });
+
+    await logAudit(
+      req,
+      'UPDATE',
+      'PEGClient',
+      id,
+      { old: existingClient, new: updatedClient }
+    );
+
+    res.json(updatedClient);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors });
+    }
+    console.error('Error updating PEG client:', error);
+    res.status(500).json({ error: 'Failed to update PEG client' });
+  }
+});
+
+// Delete a PEG client
+router.delete('/:id', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.user!.id;
+    const { id } = req.params;
+
+    // Check if the client belongs to the user
+    const existingClient = await prisma.pEGClient.findUnique({
+      where: { id },
+    });
+
+    if (!existingClient) {
+      return res.status(404).json({ error: 'Client not found' });
+    }
+
+    if (existingClient.userId !== userId) {
+      return res.status(403).json({ error: 'Not authorized to delete this client' });
+    }
+
+    await prisma.pEGClient.delete({
+      where: { id },
+    });
+
+    await logAudit(
+      req,
+      'DELETE',
+      'PEGClient',
+      id,
+      { deleted: existingClient }
+    );
+
+    res.json({ message: 'Client deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting PEG client:', error);
+    res.status(500).json({ error: 'Failed to delete PEG client' });
+  }
+});
+
+// Bulk delete all clients for the user
+router.delete('/', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.user!.id;
+
+    const result = await prisma.pEGClient.deleteMany({
+      where: { userId },
+    });
+
+    await logAudit(
+      req,
+      'DELETE',
+      'PEGClient',
+      'bulk',
+      { deletedCount: result.count }
+    );
+
+    res.json({ message: `${result.count} clients deleted successfully`, count: result.count });
+  } catch (error) {
+    console.error('Error deleting all PEG clients:', error);
+    res.status(500).json({ error: 'Failed to delete PEG clients' });
+  }
+});
+
+export default router;

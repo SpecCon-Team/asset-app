@@ -19,6 +19,9 @@ import gdprRouter from './routes/gdpr';
 import whatsappRouter from './routes/whatsapp';
 import wooalertsRouter from './routes/wooalerts';
 import aiChatRouter from './routes/aiChat';
+import pegRouter from './routes/peg';
+import attachmentsRouter from './routes/attachments';
+import path from 'path';
 import {
   securityLogger,
   validateInput,
@@ -252,6 +255,9 @@ app.get('/health', async (_req, res) => {
   }
 });
 
+// Serve static files from uploads directory
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+
 app.use('/api/auth', authRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/assets', assetsRouter);
@@ -263,6 +269,8 @@ app.use('/api/2fa', twoFactorRouter);
 app.use('/api/gdpr', gdprRouter);
 app.use('/api/whatsapp', whatsappRouter);
 app.use('/api/ai-chat', aiChatRouter);
+app.use('/api/peg', pegRouter);
+app.use('/api/attachments', attachmentsRouter);
 app.use('/api', wooalertsRouter); // WooAlerts webhook at /api/wooalerts-webhook
 
 app.get('/api', (_req, res) => {

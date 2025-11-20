@@ -1,82 +1,99 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import AppLayout from '@/app/layout/AppLayout';
-import Dashboard from '@/features/dashboard/Dashboard';
-import AssetsListPage from '@/features/assets/pages/AssetsListPage';
-import AssetDetailsPage from '@/features/assets/pages/AssetDetailsPage';
-import TicketsListPage from '@/features/tickets/pages/TicketsListPage';
-import TicketDetailsPage from '@/features/tickets/pages/TicketDetailsPage';
-import NewTicketPage from '@/features/tickets/pages/NewTicketPage';
-import MyAssetsPage from '@/features/assets/pages/MyAssetsPage';
-import MyTicketsPage from '@/features/tickets/pages/MyTicketsPage';
-import MyTasksPage from '@/features/tickets/pages/MyTasksPage';
-import MyClientsPage from '@/features/users/pages/MyClientsPage';
-import MyPEGPage from '@/features/peg/MyPEGPage';
-import TravelPlanPage from '@/features/travel/TravelPlanPage';
-import MyProfilePage from '@/features/users/pages/MyProfilePage';
-import GeneralSettingsPage from '@/features/users/pages/GeneralSettingsPage';
-import TwoFactorManagementPage from '@/features/users/pages/TwoFactorManagementPage';
-import WhatsAppSetup from '@/features/whatsapp/WhatsAppSetup';
-import AuditLogsPage from '@/features/auditLogs/AuditLogsPage';
-import LoginPage from '@/features/auth/LoginPage';
-import SignUpPage from '@/features/auth/SignUpPage';
-import ForgotPasswordPage from '@/features/auth/ForgotPasswordPage';
-import ResetPasswordPage from '@/features/auth/ResetPasswordPage';
-import VerifyOTPPage from '@/features/auth/VerifyOTPPage';
-import TwoFactorSetupPage from '@/features/auth/TwoFactorSetupPage';
-import PrivacyDashboard from '@/features/privacy/PrivacyDashboard';
-import AnalyticsPage from '@/features/reports/AnalyticsPage';
-import DownloadMobileApp from '@/pages/DownloadMobileApp';
-import HelpAndResources from '@/pages/HelpAndResources';
+
+// Loading fallback component
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="text-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+      <p className="text-gray-600 dark:text-gray-400">Loading...</p>
+    </div>
+  </div>
+);
+
+// Lazy load all pages for better performance
+const Dashboard = lazy(() => import('@/features/dashboard/Dashboard'));
+const AssetsListPage = lazy(() => import('@/features/assets/pages/AssetsListPage'));
+const AssetDetailsPage = lazy(() => import('@/features/assets/pages/AssetDetailsPage'));
+const TicketsListPage = lazy(() => import('@/features/tickets/pages/TicketsListPage'));
+const TicketDetailsPage = lazy(() => import('@/features/tickets/pages/TicketDetailsPage'));
+const NewTicketPage = lazy(() => import('@/features/tickets/pages/NewTicketPage'));
+const MyAssetsPage = lazy(() => import('@/features/assets/pages/MyAssetsPage'));
+const MyTicketsPage = lazy(() => import('@/features/tickets/pages/MyTicketsPage'));
+const MyTasksPage = lazy(() => import('@/features/tickets/pages/MyTasksPage'));
+const MyClientsPage = lazy(() => import('@/features/users/pages/MyClientsPage'));
+const MyPEGPage = lazy(() => import('@/features/peg/MyPEGPage'));
+const TravelPlanPage = lazy(() => import('@/features/travel/TravelPlanPage'));
+const MyProfilePage = lazy(() => import('@/features/users/pages/MyProfilePage'));
+const GeneralSettingsPage = lazy(() => import('@/features/users/pages/GeneralSettingsPage'));
+const TwoFactorManagementPage = lazy(() => import('@/features/users/pages/TwoFactorManagementPage'));
+const WhatsAppSetup = lazy(() => import('@/features/whatsapp/WhatsAppSetup'));
+const AuditLogsPage = lazy(() => import('@/features/auditLogs/AuditLogsPage'));
+const LoginPage = lazy(() => import('@/features/auth/LoginPage'));
+const SignUpPage = lazy(() => import('@/features/auth/SignUpPage'));
+const ForgotPasswordPage = lazy(() => import('@/features/auth/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('@/features/auth/ResetPasswordPage'));
+const VerifyOTPPage = lazy(() => import('@/features/auth/VerifyOTPPage'));
+const TwoFactorSetupPage = lazy(() => import('@/features/auth/TwoFactorSetupPage'));
+const PrivacyDashboard = lazy(() => import('@/features/privacy/PrivacyDashboard'));
+const AnalyticsPage = lazy(() => import('@/features/reports/AnalyticsPage'));
+const DownloadMobileApp = lazy(() => import('@/pages/DownloadMobileApp'));
+const HelpAndResources = lazy(() => import('@/pages/HelpAndResources'));
+
+// Wrapper component to add Suspense boundary
+const LazyPage = ({ children }: { children: React.ReactNode }) => (
+  <Suspense fallback={<PageLoader />}>{children}</Suspense>
+);
 
 export const router = createBrowserRouter([
   {
     path: '/login',
-    element: <LoginPage />,
+    element: <LazyPage><LoginPage /></LazyPage>,
   },
   {
     path: '/signup',
-    element: <SignUpPage />,
+    element: <LazyPage><SignUpPage /></LazyPage>,
   },
   {
     path: '/forgot-password',
-    element: <ForgotPasswordPage />,
+    element: <LazyPage><ForgotPasswordPage /></LazyPage>,
   },
   {
     path: '/reset-password/:token',
-    element: <ResetPasswordPage />,
+    element: <LazyPage><ResetPasswordPage /></LazyPage>,
   },
   {
     path: '/verify-otp',
-    element: <VerifyOTPPage />,
+    element: <LazyPage><VerifyOTPPage /></LazyPage>,
   },
   {
     path: '/',
     element: <AppLayout />,
     children: [
-      { index: true, element: <Dashboard /> },
-      { path: 'assets', element: <AssetsListPage /> },
-      { path: 'assets/new', element: <AssetDetailsPage /> },
-      { path: 'assets/:id', element: <AssetDetailsPage /> },
-      { path: 'tickets', element: <TicketsListPage /> },
-      { path: 'tickets/new', element: <NewTicketPage /> },
-      { path: 'tickets/:id', element: <TicketDetailsPage /> },
-      { path: 'my-tasks', element: <MyTasksPage /> },
-      { path: 'my-clients', element: <MyClientsPage /> },
-      { path: 'my-assets', element: <MyAssetsPage /> },
-      { path: 'my-tickets', element: <MyTicketsPage /> },
-      { path: 'my-peg', element: <MyPEGPage /> },
-      { path: 'travel-plan', element: <TravelPlanPage /> },
-      { path: 'my-profile', element: <MyProfilePage /> },
-      { path: 'settings', element: <GeneralSettingsPage /> },
-      { path: '2fa-setup', element: <TwoFactorSetupPage /> },
-      { path: '2fa-management', element: <TwoFactorManagementPage /> },
-      { path: 'privacy', element: <PrivacyDashboard /> },
-      { path: 'analytics', element: <AnalyticsPage /> },
-      { path: 'audit-logs', element: <AuditLogsPage /> },
-      { path: 'whatsapp-setup', element: <WhatsAppSetup /> },
-      { path: 'download-mobile-app', element: <DownloadMobileApp /> },
-      { path: 'help', element: <HelpAndResources /> },
+      { index: true, element: <LazyPage><Dashboard /></LazyPage> },
+      { path: 'assets', element: <LazyPage><AssetsListPage /></LazyPage> },
+      { path: 'assets/new', element: <LazyPage><AssetDetailsPage /></LazyPage> },
+      { path: 'assets/:id', element: <LazyPage><AssetDetailsPage /></LazyPage> },
+      { path: 'tickets', element: <LazyPage><TicketsListPage /></LazyPage> },
+      { path: 'tickets/new', element: <LazyPage><NewTicketPage /></LazyPage> },
+      { path: 'tickets/:id', element: <LazyPage><TicketDetailsPage /></LazyPage> },
+      { path: 'my-tasks', element: <LazyPage><MyTasksPage /></LazyPage> },
+      { path: 'my-clients', element: <LazyPage><MyClientsPage /></LazyPage> },
+      { path: 'my-assets', element: <LazyPage><MyAssetsPage /></LazyPage> },
+      { path: 'my-tickets', element: <LazyPage><MyTicketsPage /></LazyPage> },
+      { path: 'my-peg', element: <LazyPage><MyPEGPage /></LazyPage> },
+      { path: 'travel-plan', element: <LazyPage><TravelPlanPage /></LazyPage> },
+      { path: 'my-profile', element: <LazyPage><MyProfilePage /></LazyPage> },
+      { path: 'settings', element: <LazyPage><GeneralSettingsPage /></LazyPage> },
+      { path: '2fa-setup', element: <LazyPage><TwoFactorSetupPage /></LazyPage> },
+      { path: '2fa-management', element: <LazyPage><TwoFactorManagementPage /></LazyPage> },
+      { path: 'privacy', element: <LazyPage><PrivacyDashboard /></LazyPage> },
+      { path: 'analytics', element: <LazyPage><AnalyticsPage /></LazyPage> },
+      { path: 'audit-logs', element: <LazyPage><AuditLogsPage /></LazyPage> },
+      { path: 'whatsapp-setup', element: <LazyPage><WhatsAppSetup /></LazyPage> },
+      { path: 'download-mobile-app', element: <LazyPage><DownloadMobileApp /></LazyPage> },
+      { path: 'help', element: <LazyPage><HelpAndResources /></LazyPage> },
       { path: '*', element: <Navigate to="/" replace /> },
     ],
   },

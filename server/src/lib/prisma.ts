@@ -103,7 +103,8 @@ function createDualWriteOperation(operation: string, model: string, originalMeth
 
 // Wrap write operations for dual write
 const writeOperations = ['create', 'update', 'delete', 'upsert', 'createMany', 'updateMany', 'deleteMany'];
-const models = ['user', 'asset', 'ticket', 'comment', 'notification'];
+// Exclude 'notification' from dual write to prevent duplicates (notifications use auto-generated IDs)
+const models = ['user', 'asset', 'ticket', 'comment'];
 
 if (ENABLE_DUAL_WRITE && backupClient) {
   models.forEach(model => {

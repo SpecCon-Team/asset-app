@@ -42,19 +42,20 @@ model User {
   comments            Comment[]
   notifications       Notification[] @relation("NotificationRecipient")
   sentNotifications   Notification[] @relation("NotificationSender")
+  pegClients          PEGClient[]    @relation("PEGClients")
   createdAt           DateTime       @default(now())
   updatedAt           DateTime       @updatedAt
 }
 
 model Asset {
-  id              String   @id @default(cuid())
-  asset_code      String   @unique
+  id              String         @id @default(cuid())
+  asset_code      String         @unique
   name            String
   serial_number   String?
   remote_id       String?
   asset_type      String?
   condition       String?
-  status          String   @default("available")
+  status          String         @default("available")
   assigned_to     String?
   scanned_by      String?
   scan_datetime   String?
@@ -69,31 +70,35 @@ model Asset {
   notes           String?
 
   // Relations
-  owner           User?    @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  owner           User?          @relation(fields: [ownerId], references: [id], onDelete: SetNull)
   ownerId         String?
   tickets         Ticket[]
+  history         AssetHistory[]
+  maintenance     MaintenanceSchedule[]
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
 }
 
 model Ticket {
-  id           String    @id @default(cuid())
-  number       String    @unique
+  id           String       @id @default(cuid())
+  number       String       @unique
   title        String
   description  String
-  status       String    @default("open")
-  priority     String    @default("medium")
-  createdBy    User      @relation("UserTickets", fields: [createdById], references: [id], onDelete: Cascade)
+  status       String       @default("open")
+  priority     String       @default("medium")
+  dueDate      DateTime?    // SLA deadline
+  createdBy    User         @relation("UserTickets", fields: [createdById], references: [id], onDelete: Cascade)
   createdById  String
-  assignedTo   User?     @relation("AssignedTickets", fields: [assignedToId], references: [id], onDelete: SetNull)
+  assignedTo   User?        @relation("AssignedTickets", fields: [assignedToId], references: [id], onDelete: SetNull)
   assignedToId String?
-  asset        Asset?    @relation(fields: [assetId], references: [id])
+  asset        Asset?       @relation(fields: [assetId], references: [id])
   assetId      String?
   resolution   String?
   comments     Comment[]
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  attachments  Attachment[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 }
 
 model Comment {
@@ -141,6 +146,121 @@ model AuditLog {
   @@index([userId])
   @@index([action])
   @@index([entityType])
+  @@index([createdAt])
+}
+
+model PEGClient {
+  id             String   @id @default(cuid())
+  name           String
+  location       String
+  contactPerson  String?
+  phone          String?
+  email          String?
+  provinceId     String   // 'WC', 'EC', 'NC', 'FS', 'KZN', 'NW', 'GP', 'MP', 'LP'
+  userId         String   // Owner of this client entry
+  user           User     @relation("PEGClients", fields: [userId], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([userId])
+  @@index([provinceId])
+}
+
+model Attachment {
+  id           String   @id @default(cuid())
+  filename     String
+  originalName String
+  mimetype     String
+  size         Int      // File size in bytes
+  url          String   // Storage URL or path
+  ticketId     String
+  ticket       Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  uploadedBy   String   // User ID who uploaded
+  createdAt    DateTime @default(now())
+
+  @@index([ticketId])
+}
+
+model AssetHistory {
+  id          String   @id @default(cuid())
+  assetId     String
+  asset       Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  action      String   // 'STATUS_CHANGE', 'ASSIGNMENT', 'UPDATE', 'MAINTENANCE'
+  field       String?  // Field that changed
+  oldValue    String?  @db.Text
+  newValue    String?  @db.Text
+  userId      String?  // User who made the change
+  userName    String?  // Cached name
+  description String?  // Human-readable description
+  createdAt   DateTime @default(now())
+
+  @@index([assetId])
+  @@index([createdAt])
+}
+
+model MaintenanceSchedule {
+  id               String    @id @default(cuid())
+  assetId          String
+  asset            Asset     @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  title            String
+  description      String?
+  frequency        String    // 'once', 'daily', 'weekly', 'monthly', 'quarterly', 'yearly'
+  nextDueDate      DateTime
+  lastCompletedAt  DateTime?
+  assignedToId     String?   // Technician assigned
+  status           String    @default("scheduled") // 'scheduled', 'completed', 'overdue', 'cancelled'
+  notes            String?   @db.Text
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([assetId])
+  @@index([nextDueDate])
+  @@index([status])
+}
+
+model SavedFilter {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  entityType  String   // 'tickets', 'assets', 'users'
+  filters     String   @db.Text // JSON string of filter configuration
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([entityType])
+}
+
+model DashboardWidget {
+  id          String   @id @default(cuid())
+  userId      String
+  widgetType  String   // 'ticket_stats', 'asset_chart', 'recent_activity', etc.
+  position    Int      // Order position
+  size        String   @default("medium") // 'small', 'medium', 'large'
+  settings    String?  @db.Text // JSON configuration
+  visible     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([position])
+}
+
+model LoginHistory {
+  id          String   @id @default(cuid())
+  userId      String
+  userEmail   String
+  ipAddress   String?
+  userAgent   String?  @db.Text
+  location    String?  // Geolocation info
+  device      String?  // Device type
+  browser     String?  // Browser info
+  success     Boolean  @default(true)
+  failureReason String?
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
   @@index([createdAt])
 }
 

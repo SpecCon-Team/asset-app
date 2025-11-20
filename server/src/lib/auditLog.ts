@@ -61,7 +61,7 @@ export async function logAudit(
     userId: user?.id,
     userEmail: user?.email,
     userName: user?.name,
-    ipAddress: req.ip || req.connection.remoteAddress,
+    ipAddress: req.ip || req.socket?.remoteAddress || 'unknown',
     userAgent: req.get('user-agent'),
     changes,
     metadata,
