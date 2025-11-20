@@ -56,7 +56,10 @@
       "Bash(code --list-extensions:*)",
       "Bash(xargs ls:*)",
       "Bash(./check-sweetalert.sh:*)",
-      "Bash(bash:*)"
+      "Bash(bash:*)",
+      "Bash(psql:*)",
+      "Bash(npx prisma db execute:*)",
+      "Bash(npx prisma generate:*)"
     ],
     "deny": [],
     "ask": []

@@ -231,7 +231,10 @@ router.post('/', authenticate, async (req: AuthRequest, res) => {
       console.log(`[CREATE] Creating new comment...`);
 
       const comment = await prisma.comment.create({
-        data: parsed.data,
+        data: {
+          ...parsed.data,
+          contentHash, // Store hash for duplicate detection
+        },
         include: {
           author: {
             select: { id: true, email: true, name: true, role: true },
@@ -274,49 +277,117 @@ router.post('/', authenticate, async (req: AuthRequest, res) => {
 
     const comment = await creationPromise;
 
-    // Determine if comment is from admin/technician or regular user
-    const isAdminComment = comment.author.role === 'ADMIN' || comment.author.role === 'TECHNICIAN';
-    const isUserComment = comment.author.role === 'USER';
-    const ticketCreatorId = comment.ticket.createdById;
-    const isNotSelfComment = ticketCreatorId !== comment.authorId;
+    // Determine who should be notified based on commenter role
+    const commentAuthorRole = comment.author.role;
+    const ticketCreatorId = comment.ticket.createdBy?.id;
+    const notificationPromises: Promise<any>[] = [];
 
-    // If admin/tech comments → notify ticket creator (user)
-    if (isAdminComment && isNotSelfComment) {
-      await createNotificationIfNotExists({
-        type: 'comment',
-        title: 'New comment on your ticket',
-        message: `${comment.author.name || comment.author.email} commented: "${comment.content.substring(0, 100)}${comment.content.length > 100 ? '...' : ''}"`,
-        userId: ticketCreatorId,
-        senderId: comment.authorId,
-        ticketId: comment.ticketId,
-      });
-    }
+    console.log(`\n[NOTIFICATIONS] Processing notifications for comment by ${commentAuthorRole}`);
+    console.log(`[NOTIFICATIONS] Author ID: ${comment.authorId}`);
+    console.log(`[NOTIFICATIONS] Ticket Creator ID: ${ticketCreatorId}`);
 
-    // If user comments → notify all admins/technicians
-    if (isUserComment) {
-      const adminsAndTechs = await prisma.user.findMany({
-        where: {
-          role: {
-            in: ['ADMIN', 'TECHNICIAN'],
-          },
-        },
-        select: { id: true },
-      });
-
-      const notificationPromises = adminsAndTechs.map(admin =>
+    // Always notify the ticket creator (if not commenting on their own ticket)
+    if (ticketCreatorId !== comment.authorId) {
+      console.log(`[NOTIFICATIONS] Adding notification for ticket creator: ${ticketCreatorId}`);
+      notificationPromises.push(
         createNotificationIfNotExists({
           type: 'comment',
-          title: 'User replied to ticket',
+          title: 'New comment on your ticket',
           message: `${comment.author.name || comment.author.email} commented: "${comment.content.substring(0, 100)}${comment.content.length > 100 ? '...' : ''}"`,
-          userId: admin.id,
+          userId: ticketCreatorId,
           senderId: comment.authorId,
           ticketId: comment.ticketId,
         })
       );
-
-      await Promise.all(notificationPromises);
-      console.log(`✅ Created comment notifications for ${adminsAndTechs.length} admins/technicians`);
+    } else {
+      console.log(`[NOTIFICATIONS] Skipping ticket creator (commenting on own ticket)`);
     }
+
+    // If TECHNICIAN comments → also notify all ADMINS
+    if (commentAuthorRole === 'TECHNICIAN') {
+      console.log(`[NOTIFICATIONS] Technician comment detected, fetching admins...`);
+      const admins = await prisma.user.findMany({
+        where: { role: 'ADMIN' },
+        select: { id: true, name: true, email: true },
+      });
+
+      console.log(`[NOTIFICATIONS] Found ${admins.length} admins:`, admins.map(a => a.name || a.email));
+
+      admins.forEach(admin => {
+        if (admin.id !== comment.authorId) { // Don't notify self
+          console.log(`[NOTIFICATIONS] Adding notification for admin: ${admin.name || admin.email} (${admin.id})`);
+          notificationPromises.push(
+            createNotificationIfNotExists({
+              type: 'comment',
+              title: 'Technician commented on ticket',
+              message: `${comment.author.name || comment.author.email} commented: "${comment.content.substring(0, 100)}${comment.content.length > 100 ? '...' : ''}"`,
+              userId: admin.id,
+              senderId: comment.authorId,
+              ticketId: comment.ticketId,
+            })
+          );
+        } else {
+          console.log(`[NOTIFICATIONS] Skipping self-notification for admin: ${admin.name || admin.email}`);
+        }
+      });
+
+      console.log(`✅ Queued ${notificationPromises.length} notifications for admins`);
+    }
+
+    // If ADMIN comments → also notify all TECHNICIANS
+    if (commentAuthorRole === 'ADMIN') {
+      const technicians = await prisma.user.findMany({
+        where: { role: 'TECHNICIAN' },
+        select: { id: true },
+      });
+
+      technicians.forEach(tech => {
+        if (tech.id !== comment.authorId) { // Don't notify self
+          notificationPromises.push(
+            createNotificationIfNotExists({
+              type: 'comment',
+              title: 'Admin commented on ticket',
+              message: `${comment.author.name || comment.author.email} commented: "${comment.content.substring(0, 100)}${comment.content.length > 100 ? '...' : ''}"`,
+              userId: tech.id,
+              senderId: comment.authorId,
+              ticketId: comment.ticketId,
+            })
+          );
+        }
+      });
+
+      console.log(`✅ Notifying ${technicians.length} technicians about admin comment`);
+    }
+
+    // If USER comments → notify all admins and technicians
+    if (commentAuthorRole === 'USER') {
+      const adminsAndTechs = await prisma.user.findMany({
+        where: {
+          role: { in: ['ADMIN', 'TECHNICIAN'] },
+        },
+        select: { id: true },
+      });
+
+      adminsAndTechs.forEach(user => {
+        notificationPromises.push(
+          createNotificationIfNotExists({
+            type: 'comment',
+            title: 'User replied to ticket',
+            message: `${comment.author.name || comment.author.email} commented: "${comment.content.substring(0, 100)}${comment.content.length > 100 ? '...' : ''}"`,
+            userId: user.id,
+            senderId: comment.authorId,
+            ticketId: comment.ticketId,
+          })
+        );
+      });
+
+      console.log(`✅ Notifying ${adminsAndTechs.length} admins/technicians about user comment`);
+    }
+
+    // Send all notifications
+    console.log(`[NOTIFICATIONS] Sending ${notificationPromises.length} total notifications...`);
+    await Promise.all(notificationPromises);
+    console.log(`[NOTIFICATIONS] ✅ All notifications sent\n`);
 
     // Log audit trail
     await logAudit(req, 'CREATE', 'Comment', comment.id, undefined, {
@@ -325,7 +396,7 @@ router.post('/', authenticate, async (req: AuthRequest, res) => {
     });
 
     // Record first response for SLA if comment is from admin/technician
-    if (isAdminComment) {
+    if (commentAuthorRole === 'ADMIN' || commentAuthorRole === 'TECHNICIAN') {
       slaEngine.recordFirstResponse(comment.ticketId).catch(err => {
         console.error('SLA first response recording error:', err);
       });

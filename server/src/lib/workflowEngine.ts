@@ -1,6 +1,7 @@
 import { prisma } from './prisma';
 import { createNotificationIfNotExists } from './notificationHelper';
 import { whatsappService } from './whatsapp';
+import crypto from 'crypto';
 
 // Workflow Engine - Executes workflows based on triggers and conditions
 
@@ -331,11 +332,20 @@ class WorkflowEngine {
         throw new Error('System user not found');
       }
 
+      const commentContent = `🤖 ${content}`;
+
+      // Create content hash for duplicate detection
+      const contentHash = crypto
+        .createHash('md5')
+        .update(commentContent + ticketId + systemUser.id)
+        .digest('hex');
+
       const comment = await prisma.comment.create({
         data: {
           ticketId,
           authorId: systemUser.id,
-          content: `🤖 ${content}`,
+          content: commentContent,
+          contentHash,
         },
       });
 

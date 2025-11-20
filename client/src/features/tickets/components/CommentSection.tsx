@@ -121,104 +121,89 @@ export default function CommentSection({ ticketId }: CommentSectionProps) {
     console.log('  - isSubmitting:', isSubmitting);
     console.log('  - isLoading:', isLoading);
 
-    // GLOBAL LOCK - only one comment submission at a time across entire app
-    if (isGloballySubmitting) {
-      console.log('[BLOCKED] ❌ Global submission in progress - ignoring request');
+    // CRITICAL: Set ALL locks IMMEDIATELY before any other checks
+    // This prevents race conditions where two clicks both pass the checks
+    if (isGloballySubmitting || isProcessingRef.current || isSubmitting || isLoading) {
+      console.log('[BLOCKED] ❌ Submission in progress - ignoring request');
       return;
     }
 
-    // COMPONENT LOCK - prevent this specific component from submitting
-    if (isProcessingRef.current) {
-      console.log('[BLOCKED] ❌ Component already processing - ignoring request');
-      return;
-    }
-
-    // ABSOLUTE BLOCK - if already submitting, do nothing
-    if (isSubmitting || isLoading) {
-      console.log('[BLOCKED] ❌ Already submitting, ignoring request');
-      return;
-    }
-
-    console.log('[SUBMIT] ✅ All checks passed - proceeding with submission');
-
-    // Set processing flag immediately
-    isProcessingRef.current = true;
-
-    // For regular users, use their own ID; for admins, use selected user
-    const authorId = userIsAdmin ? selectedUserId : currentUserId;
-
-    // Check localStorage for recent identical comment (last 30 seconds)
-    const localStorageKey = `lastComment_${authorId}_${ticketId}`;
-    const lastCommentData = localStorage.getItem(localStorageKey);
-
-    if (lastCommentData) {
-      try {
-        const { content, timestamp } = JSON.parse(lastCommentData);
-        const timeSinceLastComment = Date.now() - timestamp;
-
-        // If same content within 30 seconds, block it
-        if (content === newComment.trim() && timeSinceLastComment < 30000) {
-          console.log('[BLOCKED] Identical comment in localStorage - preventing duplicate');
-          await Swal.fire({
-            title: 'Duplicate Comment',
-            text: 'You already submitted this exact comment. Please wait 30 seconds to submit it again.',
-            icon: 'warning',
-            confirmButtonColor: '#3B82F6',
-          });
-          return;
-        }
-      } catch (error) {
-        console.error('Error reading localStorage:', error);
-      }
-    }
-
-    // Count submit attempts
-    submitCountRef.current += 1;
-    console.log(`[SUBMIT] Attempt #${submitCountRef.current}`);
-
-    // Prevent rapid double-clicks (5 seconds debounce)
-    const now = Date.now();
-    if (now - lastSubmitTimeRef.current < 5000) {
-      console.log('[BLOCKED] Too soon - must wait 5 seconds between comments');
-      await Swal.fire({
-        title: 'Please Wait',
-        text: 'Please wait 5 seconds between comments',
-        icon: 'warning',
-        confirmButtonColor: '#3B82F6',
-        timer: 2000,
-      });
-      return;
-    }
-    lastSubmitTimeRef.current = now;
-
-    if (!newComment.trim()) {
-      await Swal.fire({
-        title: 'Missing Comment',
-        text: 'Please enter a comment',
-        icon: 'warning',
-        confirmButtonColor: '#3B82F6',
-      });
-      return;
-    }
-
-    if (!authorId) {
-      await Swal.fire({
-        title: 'Authentication Error',
-        text: 'Unable to identify user. Please try logging in again.',
-        icon: 'error',
-        confirmButtonColor: '#EF4444',
-      });
-      return;
-    }
-
-    // Set GLOBAL lock first
+    // Set ALL locks IMMEDIATELY in the same synchronous tick
     isGloballySubmitting = true;
-
-    // Set BOTH flags to block any new submissions
+    isProcessingRef.current = true;
     setIsSubmitting(true);
     setIsLoading(true);
 
+    console.log('[SUBMIT] ✅ All locks set - proceeding with submission');
+
     try {
+      // For regular users, use their own ID; for admins, use selected user
+      const authorId = userIsAdmin ? selectedUserId : currentUserId;
+
+      // Validate inputs first
+      if (!newComment.trim()) {
+        await Swal.fire({
+          title: 'Missing Comment',
+          text: 'Please enter a comment',
+          icon: 'warning',
+          confirmButtonColor: '#3B82F6',
+        });
+        return;
+      }
+
+      if (!authorId) {
+        await Swal.fire({
+          title: 'Authentication Error',
+          text: 'Unable to identify user. Please try logging in again.',
+          icon: 'error',
+          confirmButtonColor: '#EF4444',
+        });
+        return;
+      }
+
+      // Check localStorage for recent identical comment (last 30 seconds)
+      const localStorageKey = `lastComment_${authorId}_${ticketId}`;
+      const lastCommentData = localStorage.getItem(localStorageKey);
+
+      if (lastCommentData) {
+        try {
+          const { content, timestamp } = JSON.parse(lastCommentData);
+          const timeSinceLastComment = Date.now() - timestamp;
+
+          // If same content within 30 seconds, block it
+          if (content === newComment.trim() && timeSinceLastComment < 30000) {
+            console.log('[BLOCKED] Identical comment in localStorage - preventing duplicate');
+            await Swal.fire({
+              title: 'Duplicate Comment',
+              text: 'You already submitted this exact comment. Please wait 30 seconds to submit it again.',
+              icon: 'warning',
+              confirmButtonColor: '#3B82F6',
+            });
+            return;
+          }
+        } catch (error) {
+          console.error('Error reading localStorage:', error);
+        }
+      }
+
+      // Count submit attempts
+      submitCountRef.current += 1;
+      console.log(`[SUBMIT] Attempt #${submitCountRef.current}`);
+
+      // Prevent rapid double-clicks (5 seconds debounce)
+      const now = Date.now();
+      if (now - lastSubmitTimeRef.current < 5000) {
+        console.log('[BLOCKED] Too soon - must wait 5 seconds between comments');
+        await Swal.fire({
+          title: 'Please Wait',
+          text: 'Please wait 5 seconds between comments',
+          icon: 'warning',
+          confirmButtonColor: '#3B82F6',
+          timer: 2000,
+        });
+        return;
+      }
+      lastSubmitTimeRef.current = now;
       const token = localStorage.getItem('token');
       const headers: HeadersInit = {
         'Content-Type': 'application/json',
@@ -252,8 +237,7 @@ export default function CommentSection({ ticketId }: CommentSectionProps) {
       const newCommentData = await response.json();
       console.log('[API] Comment created successfully:', newCommentData.id);
 
-      // Store in localStorage to prevent duplicates
-      const localStorageKey = `lastComment_${authorId}_${ticketId}`;
+      // Store in localStorage to prevent duplicates (reuse localStorageKey from above)
       localStorage.setItem(localStorageKey, JSON.stringify({
         content: newComment.trim(),
         timestamp: Date.now(),
@@ -476,6 +460,11 @@ export default function CommentSection({ ticketId }: CommentSectionProps) {
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
+            // Extra check at onClick level
+            if (isGloballySubmitting || isProcessingRef.current || isSubmitting || isLoading) {
+              console.log('[BUTTON BLOCKED] Already submitting');
+              return;
+            }
             handleSubmit(e as any);
           }}
           disabled={isSubmitting || isLoading || (!userIsAdmin && !currentUserId) || !newComment.trim()}
