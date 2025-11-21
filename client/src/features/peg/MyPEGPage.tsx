@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MapPin, Plus, X, Users, Edit2, Trash2, Search, Download, BarChart3, List, Map as MapIcon, Phone, Mail, Navigation } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { getApiClient } from '@/features/assets/lib/apiClient';
@@ -30,6 +31,7 @@ interface Client {
 }
 
 export default function MyPEGPage() {
+  const navigate = useNavigate();
   const [selectedProvince, setSelectedProvince] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [clients, setClients] = useState<Client[]>([]);
@@ -247,8 +249,8 @@ export default function MyPEGPage() {
   const [showProvinceModal, setShowProvinceModal] = useState(false);
 
   const handleProvinceClickNew = (provinceId: string) => {
-    setSelectedProvince(provinceId);
-    setShowProvinceModal(true);
+    // Navigate to province details page
+    navigate(`/my-peg/${provinceId}`);
   };
 
   const clearAllData = async () => {

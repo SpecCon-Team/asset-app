@@ -12,6 +12,7 @@
     "test": "vitest"
   },
   "dependencies": {
+    "@hello-pangea/dnd": "^18.0.1",
     "@hookform/resolvers": "^3.9.0",
     "@types/qrcode": "^1.5.6",
     "axios": "^1.7.7",

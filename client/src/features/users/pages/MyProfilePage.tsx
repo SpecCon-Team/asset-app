@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Camera, Mail, User as UserIcon, Phone, MapPin, Building, Save } from 'lucide-react';
+import { Camera, Mail, User as UserIcon, Phone, MapPin, Building, Save, X } from 'lucide-react';
 import { getApiClient } from '@/features/assets/lib/apiClient';
 import toast from 'react-hot-toast';
 
@@ -58,9 +58,15 @@ export default function MyProfilePage() {
       reader.onloadend = () => {
         const base64String = reader.result as string;
         setFormData((prev) => ({ ...prev, profilePicture: base64String }));
+        toast.success('Profile picture updated! Click "Save Changes" to apply.');
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleRemoveProfilePicture = () => {
+    setFormData((prev) => ({ ...prev, profilePicture: '' }));
+    toast.success('Profile picture removed! Click "Save Changes" to apply.');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -70,8 +76,12 @@ export default function MyProfilePage() {
     try {
       const response = await getApiClient().patch(`/users/${currentUser.id}/profile`, formData);
 
-      // Update localStorage with new user data from server response
-      const updatedUser = { ...currentUser, ...response.data };
+      // Update localStorage with new user data (merge formData to ensure profilePicture is included)
+      const updatedUser = {
+        ...currentUser,
+        ...formData,
+        ...(response.data || {})
+      };
       localStorage.setItem('user', JSON.stringify(updatedUser));
       setCurrentUser(updatedUser);
 
@@ -148,9 +158,12 @@ export default function MyProfilePage() {
                     <span className="text-white font-bold text-4xl">{getInitials()}</span>
                   </div>
                 )}
+
+                {/* Upload button */}
                 <label
                   htmlFor="profile-upload"
                   className="absolute bottom-0 right-0 bg-blue-600 rounded-full p-2 cursor-pointer hover:bg-blue-700 transition-colors shadow-lg"
+                  title="Change profile picture"
                 >
                   <Camera className="w-5 h-5 text-white" />
                   <input
@@ -161,6 +174,18 @@ export default function MyProfilePage() {
                     className="hidden"
                   />
                 </label>
+
+                {/* Remove button - only show if there's a profile picture */}
+                {formData.profilePicture && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveProfilePicture}
+                    className="absolute bottom-0 left-0 bg-red-600 rounded-full p-2 cursor-pointer hover:bg-red-700 transition-colors shadow-lg"
+                    title="Remove profile picture"
+                  >
+                    <X className="w-5 h-5 text-white" />
+                  </button>
+                )}
               </div>
             </div>
           </div>

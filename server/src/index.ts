@@ -11,6 +11,7 @@ import authRouter from './routes/auth';
 import usersRouter from './routes/users';
 import assetsRouter from './routes/assets';
 import ticketsRouter from './routes/tickets';
+import ticketTemplatesRouter from './routes/ticketTemplates';
 import commentsRouter from './routes/comments';
 import notificationsRouter from './routes/notifications';
 import auditLogsRouter from './routes/auditLogs';
@@ -23,6 +24,7 @@ import pegRouter from './routes/peg';
 import attachmentsRouter from './routes/attachments';
 import travelRouter from './routes/travel';
 import workflowsRouter from './routes/workflows';
+import sessionsRouter from './routes/sessions';
 import path from 'path';
 import {
   securityLogger,
@@ -34,6 +36,7 @@ import {
   preventParameterPollution,
   validateDataIntegrity
 } from './middleware/security';
+import { dynamicRateLimiter, progressiveDelayMiddleware } from './lib/enhancedRateLimiting';
 
 const app = express();
 
@@ -160,17 +163,28 @@ app.use(securityLogger);
 // 4. Enhanced security headers
 app.use(enhancedSecurityHeaders);
 
-// 5. Security headers with Helmet
+// 5. Security headers with Helmet (Enhanced CSP)
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'"], // TODO: Replace with nonces in production
       scriptSrc: ["'self'"],
       imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'", process.env.CLIENT_URL || "http://localhost:5173"],
+      frameSrc: ["'none'"],
+      objectSrc: ["'none'"],
+      upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : null,
     },
+    reportOnly: false,
+  },
+  strictTransportSecurity: {
+    maxAge: 31536000, // 1 year
+    includeSubDomains: true,
+    preload: true
   },
   crossOriginEmbedderPolicy: false, // Allow embedding for development
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' }
 }));
 
 // 6. Cookie parser (required for CSRF)
@@ -223,8 +237,9 @@ app.use(preventParameterPollution);
 // 13. Data integrity validation
 app.use(validateDataIntegrity);
 
-// 14. Global rate limiting (applies to all routes)
-app.use('/api/', globalRateLimiter);
+// 14. Enhanced dynamic rate limiting (applies to all routes)
+app.use('/api/', dynamicRateLimiter);
+app.use('/api/', progressiveDelayMiddleware);
 
 // Enhanced health check endpoint
 app.get('/health', async (_req, res) => {
@@ -264,6 +279,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/assets', assetsRouter);
 app.use('/api/tickets', ticketsRouter);
+app.use('/api/ticket-templates', ticketTemplatesRouter);
 app.use('/api/comments', commentsRouter);
 app.use('/api/notifications', notificationsRouter);
 app.use('/api/audit-logs', auditLogsRouter);
@@ -275,6 +291,7 @@ app.use('/api/peg', pegRouter);
 app.use('/api/attachments', attachmentsRouter);
 app.use('/api/travel', travelRouter);
 app.use('/api/workflows', workflowsRouter);
+app.use('/api/sessions', sessionsRouter);
 app.use('/api', wooalertsRouter); // WooAlerts webhook at /api/wooalerts-webhook
 
 app.get('/api', (_req, res) => {
@@ -333,4 +350,14 @@ app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`Health check: http://localhost:${port}/health`);
+
+  // Enable automated backups in production only
+  if (process.env.NODE_ENV === 'production' && process.env.ENABLE_AUTOMATED_BACKUPS === 'true') {
+    import('./lib/backupService').then(({ scheduleAutomatedBackups }) => {
+      scheduleAutomatedBackups(2); // Daily at 2 AM
+      console.log('📅 Automated backups enabled (daily at 2:00 AM)');
+    }).catch(err => {
+      console.error('❌ Failed to enable automated backups:', err.message);
+    });
+  }
 });

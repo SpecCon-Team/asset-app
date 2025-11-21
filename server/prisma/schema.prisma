@@ -36,6 +36,9 @@ model User {
   isWhatsAppUser      Boolean        @default(false) // Identifies users created via WhatsApp
   whatsAppNotifications Boolean      @default(true)  // Enable/disable WhatsApp notifications
 
+  // Password Security
+  passwordHistory     String?        @db.Text // JSON array of last 5 password hashes
+
   tickets             Ticket[]       @relation("UserTickets")
   assigned            Ticket[]       @relation("AssignedTickets")
   assets              Asset[]
@@ -44,6 +47,11 @@ model User {
   sentNotifications   Notification[] @relation("NotificationSender")
   pegClients          PEGClient[]    @relation("PEGClients")
   trips               Trip[]         @relation("UserTrips")
+  refreshTokens       RefreshToken[]
+  sessions            UserSession[]
+  createdTemplates    TicketTemplate[] @relation("TemplateCreator")
+  assignedTemplates   TicketTemplate[] @relation("TemplateAssignee")
+  replyTemplates      ReplyTemplate[] @relation("ReplyTemplateCreator")
   createdAt           DateTime       @default(now())
   updatedAt           DateTime       @updatedAt
 }
@@ -387,6 +395,126 @@ model TicketSLA {
   @@index([status])
   @@index([responseDeadline])
   @@index([resolutionDeadline])
+}
+
+model RefreshToken {
+  id          String   @id @default(cuid())
+  token       String   @unique
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt   DateTime
+  isRevoked   Boolean  @default(false)
+  ipAddress   String?
+  userAgent   String?  @db.Text
+  createdAt   DateTime @default(now())
+  revokedAt   DateTime?
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+}
+
+model UserSession {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessionToken    String   @unique
+  ipAddress       String?
+  userAgent       String?  @db.Text
+  device          String?  // Device type
+  browser         String?  // Browser info
+  location        String?  // Geolocation
+  fingerprint     String?  // Browser fingerprint
+  isActive        Boolean  @default(true)
+  lastActivityAt  DateTime @default(now())
+  expiresAt       DateTime
+  createdAt       DateTime @default(now())
+
+  @@index([userId])
+  @@index([sessionToken])
+  @@index([isActive])
+  @@index([expiresAt])
+}
+
+model WebhookLog {
+  id          String   @id @default(cuid())
+  source      String   // 'whatsapp', 'wooalerts'
+  event       String   // Event type
+  payload     String   @db.Text // Full webhook payload
+  signature   String?  // Webhook signature
+  verified    Boolean  @default(false)
+  processed   Boolean  @default(false)
+  error       String?  @db.Text
+  createdAt   DateTime @default(now())
+
+  @@index([source])
+  @@index([processed])
+  @@index([createdAt])
+}
+
+model SecurityEvent {
+  id          String   @id @default(cuid())
+  eventType   String   // 'failed_login', 'suspicious_activity', 'account_lockout', etc.
+  severity    String   // 'low', 'medium', 'high', 'critical'
+  userId      String?
+  userEmail   String?
+  ipAddress   String?
+  userAgent   String?  @db.Text
+  details     String?  @db.Text // JSON details
+  resolved    Boolean  @default(false)
+  resolvedBy  String?
+  resolvedAt  DateTime?
+  createdAt   DateTime @default(now())
+
+  @@index([eventType])
+  @@index([severity])
+  @@index([userId])
+  @@index([resolved])
+  @@index([createdAt])
+}
+
+model TicketTemplate {
+  id                  String   @id @default(cuid())
+  name                String   // Template name (e.g., "Password Reset Request")
+  description         String?  // Description of when to use this template
+  title               String   // Pre-filled ticket title
+  ticketDescription   String   @db.Text // Pre-filled ticket description
+  priority            String   @default("medium") // Default priority
+  category            String?  // Category for organization
+  tags                String[] // Tags for filtering
+  assignedToId        String?  // Default assignee (optional)
+  isActive            Boolean  @default(true) // Can be archived
+
+  createdBy           User     @relation("TemplateCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  createdById         String
+  assignedTo          User?    @relation("TemplateAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([createdById])
+  @@index([assignedToId])
+  @@index([isActive])
+  @@index([category])
+}
+
+model ReplyTemplate {
+  id          String   @id @default(cuid())
+  name        String   // Template name (e.g., "Password Reset Steps")
+  content     String   @db.Text // Reply content with variables
+  category    String?  // Category for organization
+  isActive    Boolean  @default(true) // Can be archived
+  usageCount  Int      @default(0) // Track usage
+
+  createdBy   User     @relation("ReplyTemplateCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  createdById String
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([createdById])
+  @@index([category])
+  @@index([isActive])
 }
 
 enum Role {

@@ -4,6 +4,14 @@ import path from 'path';
 import fs from 'fs/promises';
 import { PrismaClient } from '@prisma/client';
 import { authenticate } from '../middleware/auth.js';
+import {
+  validateUploadedFile,
+  sanitizeFilename,
+  generateSecureFilename,
+  uploadRateLimiter,
+  calculateFileHash,
+  validateExtensionMimeMatch
+} from '../lib/fileUploadSecurity.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -57,13 +65,37 @@ const upload = multer({
 });
 
 // Upload attachment to ticket
-router.post('/:ticketId', authenticate, upload.single('file'), async (req, res) => {
+router.post('/:ticketId', authenticate, uploadRateLimiter, upload.single('file'), async (req, res) => {
   try {
     const { ticketId } = req.params;
     const user = (req as any).user;
 
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    // Validate extension matches MIME type
+    if (!validateExtensionMimeMatch(req.file.originalname, req.file.mimetype)) {
+      await fs.unlink(req.file.path);
+      return res.status(400).json({ error: 'File extension does not match file type' });
+    }
+
+    // Read file buffer for validation
+    const buffer = await fs.readFile(req.file.path);
+
+    // Comprehensive security validation
+    const validation = await validateUploadedFile(
+      buffer,
+      req.file.originalname,
+      req.file.mimetype
+    );
+
+    if (!validation.valid) {
+      await fs.unlink(req.file.path);
+      return res.status(400).json({
+        error: 'File validation failed',
+        details: validation.errors
+      });
     }
 
     // Verify ticket exists
@@ -77,18 +109,30 @@ router.post('/:ticketId', authenticate, upload.single('file'), async (req, res) 
       return res.status(404).json({ error: 'Ticket not found' });
     }
 
+    // Generate secure filename
+    const secureFilename = generateSecureFilename(req.file.originalname);
+    const newPath = path.join(path.dirname(req.file.path), secureFilename);
+
+    // Rename file to secure name
+    await fs.rename(req.file.path, newPath);
+
+    // Calculate file hash for integrity checking
+    const fileHash = calculateFileHash(buffer);
+
     // Create attachment record
     const attachment = await prisma.attachment.create({
       data: {
-        filename: req.file.filename,
-        originalName: req.file.originalname,
+        filename: secureFilename,
+        originalName: sanitizeFilename(req.file.originalname),
         mimetype: req.file.mimetype,
         size: req.file.size,
-        url: `/uploads/tickets/${req.file.filename}`,
+        url: `/uploads/tickets/${secureFilename}`,
         ticketId,
         uploadedBy: user.id,
       }
     });
+
+    console.log(`✅ File uploaded securely: ${secureFilename} (hash: ${fileHash.substring(0, 16)}...)`);
 
     res.json(attachment);
   } catch (error) {

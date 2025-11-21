@@ -576,4 +576,213 @@ router.post('/import-csv', authenticate, requireRole('ADMIN', 'TECHNICIAN'), upl
   }
 });
 
+// Bulk close tickets
+router.post('/bulk/close', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: AuthRequest, res) => {
+  const schema = z.object({
+    ticketIds: z.array(z.string()),
+    resolution: z.string().optional(),
+  });
+
+  const parsed = schema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json(parsed.error.flatten());
+
+  try {
+    const { ticketIds, resolution } = parsed.data;
+
+    // Update all tickets to closed status
+    await prisma.ticket.updateMany({
+      where: { id: { in: ticketIds } },
+      data: {
+        status: 'closed',
+        resolution: resolution || 'Bulk closed',
+      },
+    });
+
+    // Get updated tickets for response
+    const closedTickets = await prisma.ticket.findMany({
+      where: { id: { in: ticketIds } },
+      include: {
+        createdBy: { select: { id: true, name: true, email: true } },
+        assignedTo: { select: { id: true, name: true, email: true } },
+      },
+    });
+
+    // Send notifications to ticket creators
+    const notificationPromises = closedTickets.map(ticket =>
+      createNotificationIfNotExists({
+        type: 'ticket_status',
+        title: 'Ticket closed',
+        message: `Your ticket "${ticket.title}" has been closed`,
+        userId: ticket.createdById,
+        senderId: req.user!.id,
+        ticketId: ticket.id,
+      })
+    );
+
+    await Promise.all(notificationPromises);
+
+    // Log audit trail
+    await logAudit(req, 'UPDATE', 'Ticket', 'BULK', undefined, {
+      action: 'bulk_close',
+      count: ticketIds.length,
+      ticketIds,
+    });
+
+    console.log(`✅ Bulk closed ${ticketIds.length} tickets`);
+    res.json({
+      message: `Successfully closed ${ticketIds.length} tickets`,
+      count: ticketIds.length,
+      tickets: closedTickets,
+    });
+  } catch (error) {
+    console.error('Bulk close error:', error);
+    res.status(500).json({ message: 'Failed to close tickets' });
+  }
+});
+
+// Bulk export tickets
+router.post('/bulk/export', authenticate, async (req: AuthRequest, res) => {
+  const schema = z.object({
+    ticketIds: z.array(z.string()),
+    format: z.enum(['json', 'csv']).default('json'),
+  });
+
+  const parsed = schema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json(parsed.error.flatten());
+
+  try {
+    const { ticketIds, format } = parsed.data;
+
+    // Check access - users can only export their own tickets unless admin/tech
+    const whereClause: any = { id: { in: ticketIds } };
+    if (req.user?.role !== 'ADMIN' && req.user?.role !== 'TECHNICIAN') {
+      whereClause.createdById = req.user?.id;
+    }
+
+    const tickets = await prisma.ticket.findMany({
+      where: whereClause,
+      include: {
+        createdBy: { select: { id: true, name: true, email: true } },
+        assignedTo: { select: { id: true, name: true, email: true } },
+        asset: { select: { id: true, name: true, serialNumber: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (format === 'csv') {
+      // Generate CSV
+      const headers = [
+        'Ticket Number',
+        'Title',
+        'Description',
+        'Status',
+        'Priority',
+        'Created By',
+        'Assigned To',
+        'Asset',
+        'Created At',
+        'Updated At',
+      ];
+
+      const rows = tickets.map(ticket => [
+        ticket.number,
+        ticket.title,
+        ticket.description,
+        ticket.status,
+        ticket.priority,
+        ticket.createdBy?.name || ticket.createdBy?.email || '',
+        ticket.assignedTo?.name || ticket.assignedTo?.email || '',
+        ticket.asset?.name || '',
+        ticket.createdAt.toISOString(),
+        ticket.updatedAt.toISOString(),
+      ]);
+
+      const csv = [headers, ...rows]
+        .map(row => row.map(cell => `"${cell}"`).join(','))
+        .join('\n');
+
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename="tickets-export-${Date.now()}.csv"`);
+      return res.send(csv);
+    }
+
+    // Return JSON format
+    res.json({
+      count: tickets.length,
+      exportedAt: new Date().toISOString(),
+      tickets,
+    });
+  } catch (error) {
+    console.error('Bulk export error:', error);
+    res.status(500).json({ message: 'Failed to export tickets' });
+  }
+});
+
+// Bulk delete tickets (admin only)
+router.delete('/bulk', authenticate, requireRole('ADMIN'), async (req: AuthRequest, res) => {
+  const schema = z.object({
+    ticketIds: z.array(z.string()),
+  });
+
+  const parsed = schema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json(parsed.error.flatten());
+
+  try {
+    const { ticketIds } = parsed.data;
+
+    // Get ticket details before deletion for audit log
+    const ticketsToDelete = await prisma.ticket.findMany({
+      where: { id: { in: ticketIds } },
+      select: {
+        id: true,
+        number: true,
+        title: true,
+        createdById: true,
+      },
+    });
+
+    // Delete related records first (due to foreign key constraints)
+    await prisma.notification.deleteMany({
+      where: { ticketId: { in: ticketIds } },
+    });
+
+    await prisma.comment.deleteMany({
+      where: { ticketId: { in: ticketIds } },
+    });
+
+    await prisma.attachment.deleteMany({
+      where: { ticketId: { in: ticketIds } },
+    });
+
+    await prisma.sLA.deleteMany({
+      where: { ticketId: { in: ticketIds } },
+    });
+
+    await prisma.workflowHistory.deleteMany({
+      where: { ticketId: { in: ticketIds } },
+    });
+
+    // Delete the tickets
+    await prisma.ticket.deleteMany({
+      where: { id: { in: ticketIds } },
+    });
+
+    // Log audit trail
+    await logAudit(req, 'DELETE', 'Ticket', 'BULK', undefined, {
+      action: 'bulk_delete',
+      count: ticketIds.length,
+      tickets: ticketsToDelete,
+    });
+
+    console.log(`✅ Bulk deleted ${ticketIds.length} tickets`);
+    res.json({
+      message: `Successfully deleted ${ticketIds.length} tickets`,
+      count: ticketIds.length,
+    });
+  } catch (error) {
+    console.error('Bulk delete error:', error);
+    res.status(500).json({ message: 'Failed to delete tickets' });
+  }
+});
+
 export default router;

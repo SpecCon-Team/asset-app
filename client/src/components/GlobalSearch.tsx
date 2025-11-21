@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, X, Package, Ticket, User, Clock, TrendingUp, Plane } from 'lucide-react';
+import { listAssets } from '@/features/assets/api';
+import { listUsers } from '@/features/users/api';
+import { useTicketsStore } from '@/features/tickets/store';
 import { getApiClient } from '@/features/assets/lib/apiClient';
 
 interface SearchResult {
@@ -59,26 +62,27 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
     const searchTimeout = setTimeout(async () => {
       setIsSearching(true);
       try {
-        // Search assets
-        const assetsResponse = await getApiClient().get('/assets', {
-          params: { search: query },
-        });
+        // Search all endpoints in parallel using proper API functions
+        const [assets, tickets, users, trips] = await Promise.all([
+          listAssets().catch(() => []),
+          getApiClient().get('/tickets').then(res => Array.isArray(res.data) ? res.data : []).catch(() => []),
+          listUsers().catch(() => []),
+          getApiClient().get('/travel').then(res => Array.isArray(res.data) ? res.data : []).catch(() => []),
+        ]);
 
-        // Search tickets
-        const ticketsResponse = await getApiClient().get('/tickets', {
-          params: { search: query },
-        });
+        // Filter assets by query
+        const filteredAssets = assets.filter((asset: any) =>
+          asset.name?.toLowerCase().includes(query.toLowerCase()) ||
+          asset.asset_code?.toLowerCase().includes(query.toLowerCase()) ||
+          asset.description?.toLowerCase().includes(query.toLowerCase())
+        );
 
-        // Search users
-        const usersResponse = await getApiClient().get('/users');
-
-        // Search trips
-        const tripsResponse = await getApiClient().get('/travel');
-
-        const assets = assetsResponse.data || [];
-        const tickets = ticketsResponse.data || [];
-        const users = usersResponse.data || [];
-        const trips = tripsResponse.data || [];
+        // Filter tickets by query
+        const filteredTickets = tickets.filter((ticket: any) =>
+          ticket.title?.toLowerCase().includes(query.toLowerCase()) ||
+          ticket.number?.toLowerCase().includes(query.toLowerCase()) ||
+          ticket.description?.toLowerCase().includes(query.toLowerCase())
+        );
 
         // Filter users by query
         const filteredUsers = users.filter((user: any) =>
@@ -94,8 +98,8 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
         );
 
         const searchResults: SearchResult[] = [
-          // Assets
-          ...assets.slice(0, 4).map((asset: any) => ({
+          // Assets - show more results (filtered)
+          ...filteredAssets.slice(0, 10).map((asset: any) => ({
             id: asset.id,
             type: 'asset' as const,
             title: asset.name,
@@ -103,8 +107,8 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
             link: `/assets/${asset.id}`,
             icon: Package,
           })),
-          // Tickets
-          ...tickets.slice(0, 4).map((ticket: any) => ({
+          // Tickets - show more results (filtered)
+          ...filteredTickets.slice(0, 10).map((ticket: any) => ({
             id: ticket.id,
             type: 'ticket' as const,
             title: ticket.title,
@@ -112,8 +116,8 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
             link: `/tickets/${ticket.id}`,
             icon: Ticket,
           })),
-          // Trips
-          ...filteredTrips.slice(0, 3).map((trip: any) => ({
+          // Trips - show more results (filtered)
+          ...filteredTrips.slice(0, 10).map((trip: any) => ({
             id: trip.id,
             type: 'trip' as const,
             title: trip.destination,
@@ -121,8 +125,8 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
             link: `/travel-plan`,
             icon: Plane,
           })),
-          // Users
-          ...filteredUsers.slice(0, 2).map((user: any) => ({
+          // Users - show more results (filtered)
+          ...filteredUsers.slice(0, 10).map((user: any) => ({
             id: user.id,
             type: 'user' as const,
             title: user.name || user.email,
@@ -145,35 +149,8 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
     return () => clearTimeout(searchTimeout);
   }, [query]);
 
-  // Keyboard navigation
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!isOpen) return;
-
-      switch (e.key) {
-        case 'ArrowDown':
-          e.preventDefault();
-          setSelectedIndex((prev) => Math.min(prev + 1, results.length - 1));
-          break;
-        case 'ArrowUp':
-          e.preventDefault();
-          setSelectedIndex((prev) => Math.max(prev - 1, 0));
-          break;
-        case 'Enter':
-          e.preventDefault();
-          if (results[selectedIndex]) {
-            handleSelectResult(results[selectedIndex]);
-          }
-          break;
-        case 'Escape':
-          onClose();
-          break;
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, results, selectedIndex, onClose]);
+  // Note: Keyboard navigation is now handled directly in the input's onKeyDown handler
+  // to prevent conflicts with other global keyboard listeners
 
   // Scroll selected item into view
   useEffect(() => {
@@ -208,7 +185,11 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-start justify-center pt-[10vh] px-4">
+    <div
+      className="fixed inset-0 z-[9999] flex items-start justify-center pt-[10vh] px-4"
+      onMouseDown={(e) => e.stopPropagation()}
+      onKeyDown={(e) => e.stopPropagation()}
+    >
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
@@ -216,7 +197,10 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
       />
 
       {/* Search Modal */}
-      <div className="relative w-full max-w-2xl bg-white dark:bg-gray-800 rounded-lg shadow-2xl overflow-hidden">
+      <div
+        className="relative w-full max-w-2xl bg-white dark:bg-gray-800 rounded-lg shadow-2xl overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Search Input */}
         <div className="flex items-center gap-3 px-4 py-4 border-b border-gray-200 dark:border-gray-700">
           <Search className="w-5 h-5 text-gray-400 dark:text-gray-500 flex-shrink-0" />
@@ -225,8 +209,33 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              // Stop propagation to prevent other handlers from interfering
+              e.stopPropagation();
+
+              // Allow typing in input, only prevent default for navigation keys
+              if (['ArrowDown', 'ArrowUp'].includes(e.key)) {
+                e.preventDefault();
+                // Navigate results
+                if (e.key === 'ArrowDown') {
+                  setSelectedIndex((prev) => Math.min(prev + 1, results.length - 1));
+                } else {
+                  setSelectedIndex((prev) => Math.max(prev - 1, 0));
+                }
+              } else if (e.key === 'Escape') {
+                e.preventDefault();
+                onClose();
+              } else if (e.key === 'Enter' && results[selectedIndex]) {
+                e.preventDefault();
+                handleSelectResult(results[selectedIndex]);
+              }
+              // Let other keys work normally in the input for typing
+            }}
             placeholder="Search assets, tickets, trips, users..."
             className="flex-1 bg-transparent text-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none"
+            autoFocus
+            autoComplete="off"
+            data-global-search-input="true"
           />
           {query && (
             <button
