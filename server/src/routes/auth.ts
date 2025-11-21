@@ -33,6 +33,7 @@ const loginLimiter = rateLimit({
   message: 'Too many login attempts. Please try again after 15 minutes.',
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { trustProxy: false },
 });
 
 const otpVerifyLimiter = rateLimit({
@@ -41,6 +42,7 @@ const otpVerifyLimiter = rateLimit({
   message: 'Too many OTP verification attempts. Please request a new code.',
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { trustProxy: false },
 });
 
 const otpResendLimiter = rateLimit({
@@ -49,6 +51,7 @@ const otpResendLimiter = rateLimit({
   message: 'Too many OTP resend requests. Please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { trustProxy: false },
 });
 
 const forgotPasswordLimiter = rateLimit({
@@ -57,6 +60,7 @@ const forgotPasswordLimiter = rateLimit({
   message: 'Too many password reset requests. Please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { trustProxy: false },
 });
 
 const registerLimiter = rateLimit({
@@ -65,6 +69,7 @@ const registerLimiter = rateLimit({
   message: 'Too many registration attempts. Please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { trustProxy: false },
 });
 
 const credsSchema = z.object({
