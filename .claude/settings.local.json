@@ -53,7 +53,20 @@
       "Bash(export DATABASE_URL=\"postgresql://neondb_owner:npg_Ift9wmXVQeG7@ep-flat-bread-af4w3ign-pooler.c-2.us-west-2.aws.neon.tech/neondb?sslmode=require\")",
       "Bash(chmod:*)",
       "WebFetch(domain:www.touropia.com)",
-      "Bash(code --list-extensions:*)"
+      "Bash(code --list-extensions:*)",
+      "Bash(xargs ls:*)",
+      "Bash(./check-sweetalert.sh:*)",
+      "Bash(bash:*)",
+      "Bash(psql:*)",
+      "Bash(npx prisma db execute:*)",
+      "Bash(npx prisma generate:*)",
+      "Bash(npm audit:*)",
+      "Bash(BACKUP_ENCRYPTION_KEY=\"Jinz1ToSG0kJBjSjlJ/LUfJFNBW+2+DfkHjrHFhbsZA=\" DATABASE_URL=\"postgresql://postgres:postgres@localhost:5433/asset_app\" node:*)",
+      "WebFetch(domain:woosms.in)",
+      "Bash(for i in {1..5})",
+      "Bash(do echo \"Request $i:\")",
+      "Bash(done)",
+      "Bash(do time curl -s -o /dev/null http://localhost:4000/)"
     ],
     "deny": [],
     "ask": []

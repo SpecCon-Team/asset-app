@@ -117,7 +117,10 @@ export default function SignUpPage() {
       <div className="max-w-md w-full">
         {/* Logo/Brand */}
         <div className="text-center mb-8">
-          <div className="inline-flex w-16 h-16 bg-blue-600 rounded-full items-center justify-center mb-4">
+          <div
+            className="inline-flex w-16 h-16 rounded-full items-center justify-center mb-4"
+            style={{ backgroundColor: 'var(--color-primary)' }}
+          >
             <span className="text-white font-bold text-2xl">AT</span>
           </div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Create Your Account</h1>
@@ -141,7 +144,8 @@ export default function SignUpPage() {
                       <p className="mb-2 text-sm">This email is already associated with an account. Please sign in instead or use a different email address.</p>
                       <Link
                         to="/login"
-                        className="inline-block w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-center font-medium"
+                        className="inline-block w-full px-4 py-2 text-white rounded-lg text-center font-medium transition-opacity hover:opacity-90"
+                        style={{ backgroundColor: 'var(--color-primary)' }}
                       >
                         Go to Sign In
                       </Link>
@@ -287,15 +291,24 @@ export default function SignUpPage() {
                 type="checkbox"
                 checked={agreedToTerms}
                 onChange={(e) => setAgreedToTerms(e.target.checked)}
-                className="mt-1 w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
+                className="mt-1 w-4 h-4 border-gray-300 dark:border-gray-600 rounded"
+                style={{ accentColor: 'var(--color-primary)' }}
               />
               <label htmlFor="terms" className="ml-2 text-sm text-gray-600 dark:text-gray-400">
                 I agree to the{' '}
-                <a href="#" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium">
+                <a
+                  href="#"
+                  className="font-medium transition-opacity hover:opacity-80"
+                  style={{ color: 'var(--color-primary)' }}
+                >
                   Terms of Use
                 </a>
                 {' '}and{' '}
-                <a href="#" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium">
+                <a
+                  href="#"
+                  className="font-medium transition-opacity hover:opacity-80"
+                  style={{ color: 'var(--color-primary)' }}
+                >
                   Privacy Policy
                 </a>
               </label>
@@ -304,7 +317,8 @@ export default function SignUpPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
+              className="w-full text-white py-3 rounded-lg font-medium disabled:bg-gray-400 transition-opacity hover:opacity-90"
+              style={{ backgroundColor: isLoading ? undefined : 'var(--color-primary)' }}
             >
               {isLoading ? 'Creating account...' : 'Sign up'}
             </button>
@@ -313,7 +327,11 @@ export default function SignUpPage() {
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600 dark:text-gray-400">
               Already have an account?{' '}
-              <Link to="/login" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium">
+              <Link
+                to="/login"
+                className="font-medium transition-opacity hover:opacity-80"
+                style={{ color: 'var(--color-primary)' }}
+              >
                 Sign in
               </Link>
             </p>

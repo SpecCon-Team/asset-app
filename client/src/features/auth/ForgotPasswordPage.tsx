@@ -61,14 +61,16 @@ export default function ForgotPasswordPage() {
 
               <button
                 onClick={() => setIsEmailSent(false)}
-                className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                className="w-full text-white py-3 rounded-lg font-medium transition-opacity hover:opacity-90"
+                style={{ backgroundColor: 'var(--color-primary)' }}
               >
                 Try Another Email
               </button>
 
               <Link
                 to="/login"
-                className="flex items-center justify-center gap-2 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                className="flex items-center justify-center gap-2 text-sm transition-opacity hover:opacity-80"
+                style={{ color: 'var(--color-primary)' }}
               >
                 <ArrowLeft className="w-4 h-4" />
                 Back to Login
@@ -85,7 +87,10 @@ export default function ForgotPasswordPage() {
       <div className="max-w-md w-full">
         {/* Logo/Brand */}
         <div className="text-center mb-8">
-          <div className="inline-flex w-16 h-16 bg-blue-600 rounded-full items-center justify-center mb-4">
+          <div
+            className="inline-flex w-16 h-16 rounded-full items-center justify-center mb-4"
+            style={{ backgroundColor: 'var(--color-primary)' }}
+          >
             <span className="text-white font-bold text-2xl">AT</span>
           </div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Reset Password</h1>
@@ -106,7 +111,8 @@ export default function ForgotPasswordPage() {
               </p>
               <Link
                 to="/sign-up"
-                className="block w-full text-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+                className="block w-full text-center px-4 py-2 text-white rounded-lg font-medium transition-opacity hover:opacity-90"
+                style={{ backgroundColor: 'var(--color-primary)' }}
               >
                 Create New Account
               </Link>
@@ -131,7 +137,8 @@ export default function ForgotPasswordPage() {
                   }}
                   placeholder="you@example.com"
                   required
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:border-transparent"
+                  style={{ '--tw-ring-color': 'var(--color-primary)' } as React.CSSProperties}
                 />
               </div>
             </div>
@@ -139,7 +146,8 @@ export default function ForgotPasswordPage() {
             <button
               type="submit"
               disabled={isLoading || !email}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              className="w-full text-white py-3 rounded-lg font-medium disabled:bg-gray-400 disabled:cursor-not-allowed transition-opacity hover:opacity-90"
+              style={{ backgroundColor: (isLoading || !email) ? undefined : 'var(--color-primary)' }}
             >
               {isLoading ? 'Sending...' : 'Send Reset Instructions'}
             </button>
@@ -148,7 +156,8 @@ export default function ForgotPasswordPage() {
           <div className="mt-6 text-center">
             <Link
               to="/login"
-              className="inline-flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+              className="inline-flex items-center gap-2 text-sm transition-opacity hover:opacity-80"
+              style={{ color: 'var(--color-primary)' }}
             >
               <ArrowLeft className="w-4 h-4" />
               Back to Login

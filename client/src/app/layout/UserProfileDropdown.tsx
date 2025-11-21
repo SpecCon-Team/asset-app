@@ -20,14 +20,31 @@ export default function UserProfileDropdown({ user }: UserProfileDropdownProps) 
   const [isOpen, setIsOpen] = useState(false);
   const [isAvailable, setIsAvailable] = useState(user?.isAvailable ?? true);
   const [focusedIndex, setFocusedIndex] = useState<number>(-1);
+  const [currentUser, setCurrentUser] = useState(user);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const menuItemRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const navigate = useNavigate();
 
-  // Update isAvailable when user prop changes
+  // Update state when user prop changes
   useEffect(() => {
+    setCurrentUser(user);
     setIsAvailable(user?.isAvailable ?? true);
   }, [user]);
+
+  // Listen for user updates from localStorage
+  useEffect(() => {
+    const handleUserUpdate = () => {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const updatedUser = JSON.parse(userStr);
+        setCurrentUser(updatedUser);
+        setIsAvailable(updatedUser?.isAvailable ?? true);
+      }
+    };
+
+    window.addEventListener('userUpdated', handleUserUpdate);
+    return () => window.removeEventListener('userUpdated', handleUserUpdate);
+  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -92,13 +109,14 @@ export default function UserProfileDropdown({ user }: UserProfileDropdownProps) 
     setIsAvailable(newAvailability);
 
     try {
-      await getApiClient().patch(`/users/${user.id}/availability`, {
+      await getApiClient().patch(`/users/${currentUser.id}/availability`, {
         isAvailable: newAvailability,
       });
 
       // Update localStorage with new availability status
-      const updatedUser = { ...user, isAvailable: newAvailability };
+      const updatedUser = { ...currentUser, isAvailable: newAvailability };
       localStorage.setItem('user', JSON.stringify(updatedUser));
+      setCurrentUser(updatedUser);
 
       // Dispatch custom event to notify other components
       window.dispatchEvent(new CustomEvent('userUpdated'));
@@ -122,26 +140,26 @@ export default function UserProfileDropdown({ user }: UserProfileDropdownProps) 
 
   // Get user initials
   const getInitials = () => {
-    if (user.name) {
-      return user.name
+    if (currentUser.name) {
+      return currentUser.name
         .split(' ')
         .map((n: string) => n[0])
         .join('')
         .toUpperCase()
         .slice(0, 2);
     }
-    return user.email?.slice(0, 2).toUpperCase() || 'U';
+    return currentUser.email?.slice(0, 2).toUpperCase() || 'U';
   };
 
   // Get display name
   const getDisplayName = () => {
-    return user.name || user.email || 'User';
+    return currentUser.name || currentUser.email || 'User';
   };
 
   // Get role label
   const getRoleLabel = () => {
-    return user.role
-      ? user.role.charAt(0).toUpperCase() + user.role.slice(1).toLowerCase()
+    return currentUser.role
+      ? currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1).toLowerCase()
       : 'User';
   };
 
@@ -200,9 +218,9 @@ export default function UserProfileDropdown({ user }: UserProfileDropdownProps) 
         aria-controls="user-profile-dropdown"
       >
         <div className="relative">
-          {user.profilePicture ? (
+          {currentUser.profilePicture ? (
             <img
-              src={user.profilePicture}
+              src={currentUser.profilePicture}
               alt="Profile"
               className="w-10 h-10 rounded-full object-cover"
             />
@@ -231,9 +249,9 @@ export default function UserProfileDropdown({ user }: UserProfileDropdownProps) 
           <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center gap-3">
               <div className="relative">
-                {user.profilePicture ? (
+                {currentUser.profilePicture ? (
                   <img
-                    src={user.profilePicture}
+                    src={currentUser.profilePicture}
                     alt="Profile"
                     className="w-12 h-12 rounded-full object-cover"
                   />
@@ -248,7 +266,7 @@ export default function UserProfileDropdown({ user }: UserProfileDropdownProps) 
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{getDisplayName()}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{getDisplayName()}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{currentUser.email || ''}</p>
                 <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{getRoleLabel()}</p>
               </div>
             </div>

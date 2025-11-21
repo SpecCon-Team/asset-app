@@ -29,7 +29,7 @@ const router = Router();
 // Rate limiters for different endpoints
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 attempts
+  max: process.env.NODE_ENV === 'development' ? 100 : 5, // 100 for dev, 5 for production
   message: 'Too many login attempts. Please try again after 15 minutes.',
   standardHeaders: true,
   legacyHeaders: false,

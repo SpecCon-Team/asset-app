@@ -8,9 +8,10 @@ import { showThemedAlert, showSuccess, showError, showConfirmation } from '@/lib
 import { formatDate } from '@/lib/dateFormatter';
 import { PageLoader } from '@/components/LoadingSpinner';
 import { exportToCSV, TICKET_EXPORT_COLUMNS, generateFilename, downloadCSVTemplate, TICKET_IMPORT_TEMPLATE_COLUMNS } from '@/lib/exportUtils';
-import { Download, FileSpreadsheet, Upload } from 'lucide-react';
+import { Download, FileSpreadsheet, Upload, LayoutGrid, List } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { CSVImportModal } from '@/components';
+import { KanbanBoard } from '@/components/KanbanBoard';
 
 export default function TicketsListPage() {
   const navigate = useNavigate();
@@ -29,6 +30,18 @@ export default function TicketsListPage() {
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+
+  // View mode state with localStorage
+  const [viewMode, setViewMode] = useState<'list' | 'kanban'>(() => {
+    const saved = localStorage.getItem('ticketsViewMode');
+    return (saved === 'kanban' || saved === 'list') ? saved : 'list';
+  });
+
+  // Save view mode to localStorage when it changes
+  const handleViewModeChange = (mode: 'list' | 'kanban') => {
+    setViewMode(mode);
+    localStorage.setItem('ticketsViewMode', mode);
+  };
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -130,6 +143,22 @@ export default function TicketsListPage() {
     setPriorityFilter('');
     setAssigneeFilter('');
     setSearchQuery('');
+  };
+
+  const handleStatusChange = async (ticketId: string, newStatus: string) => {
+    try {
+      const client = getApiClient();
+      console.log('Updating ticket:', ticketId, 'to status:', newStatus);
+      const response = await client.patch(`/tickets/${ticketId}`, { status: newStatus });
+      console.log('Update response:', response.data);
+      await fetchTickets({ status: statusFilter, priority: priorityFilter });
+      showSuccess('Status updated successfully');
+    } catch (error: any) {
+      console.error('Status update error:', error);
+      const errorMsg = error.response?.data?.message || error.message || 'Unknown error';
+      showError('Failed to update ticket status', errorMsg);
+      throw error; // Re-throw so Kanban board knows it failed
+    }
   };
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -310,38 +339,68 @@ export default function TicketsListPage() {
         </div>
 
         {/* Action Buttons - Responsive Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:flex lg:flex-wrap gap-2 sm:gap-3">
-          <button
-            onClick={handleDownloadTemplate}
-            className="px-3 sm:px-4 py-2 min-h-[44px] bg-purple-600 dark:bg-purple-500 text-white rounded-lg hover:bg-purple-700 dark:hover:bg-purple-600 flex items-center justify-center gap-2 transition-colors text-sm sm:text-base"
-            title="Download CSV template for bulk import"
-          >
-            <FileSpreadsheet className="w-4 h-4 flex-shrink-0" />
-            <span className="truncate">Template</span>
-          </button>
-          <button
-            onClick={() => setIsImportModalOpen(true)}
-            className="px-3 sm:px-4 py-2 min-h-[44px] bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 flex items-center justify-center gap-2 transition-colors text-sm sm:text-base"
-            title="Import tickets from CSV"
-          >
-            <Upload className="w-4 h-4 flex-shrink-0" />
-            <span className="truncate">Import CSV</span>
-          </button>
-          <button
-            onClick={handleExportCSV}
-            disabled={tickets.length === 0}
-            className="px-3 sm:px-4 py-2 min-h-[44px] bg-green-600 dark:bg-green-500 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-600 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm sm:text-base"
-            title="Export tickets to CSV"
-          >
-            <Download className="w-4 h-4 flex-shrink-0" />
-            <span className="truncate">Export CSV</span>
-          </button>
-          <button
-            onClick={() => navigate('/tickets/new')}
-            className="px-3 sm:px-4 py-2 min-h-[44px] bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 flex items-center justify-center gap-2 transition-colors text-sm sm:text-base"
-          >
-            <span>+</span> <span className="truncate">New Ticket</span>
-          </button>
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3 flex-1">
+            <button
+              onClick={handleDownloadTemplate}
+              className="px-3 sm:px-4 py-2 min-h-[44px] bg-purple-600 dark:bg-purple-500 text-white rounded-lg hover:bg-purple-700 dark:hover:bg-purple-600 flex items-center justify-center gap-2 transition-colors text-sm sm:text-base"
+              title="Download CSV template for bulk import"
+            >
+              <FileSpreadsheet className="w-4 h-4 flex-shrink-0" />
+              <span className="truncate">Template</span>
+            </button>
+            <button
+              onClick={() => setIsImportModalOpen(true)}
+              className="px-3 sm:px-4 py-2 min-h-[44px] bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 flex items-center justify-center gap-2 transition-colors text-sm sm:text-base"
+              title="Import tickets from CSV"
+            >
+              <Upload className="w-4 h-4 flex-shrink-0" />
+              <span className="truncate">Import CSV</span>
+            </button>
+            <button
+              onClick={handleExportCSV}
+              disabled={tickets.length === 0}
+              className="px-3 sm:px-4 py-2 min-h-[44px] bg-green-600 dark:bg-green-500 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-600 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm sm:text-base"
+              title="Export tickets to CSV"
+            >
+              <Download className="w-4 h-4 flex-shrink-0" />
+              <span className="truncate">Export CSV</span>
+            </button>
+            <button
+              onClick={() => navigate('/tickets/new')}
+              className="px-3 sm:px-4 py-2 min-h-[44px] bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 flex items-center justify-center gap-2 transition-colors text-sm sm:text-base"
+            >
+              <span>+</span> <span className="truncate">New Ticket</span>
+            </button>
+          </div>
+
+          {/* View Mode Toggle */}
+          <div className="flex gap-2 bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
+            <button
+              onClick={() => handleViewModeChange('list')}
+              className={`px-3 sm:px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${
+                viewMode === 'list'
+                  ? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+              }`}
+              title="List View"
+            >
+              <List className="w-4 h-4" />
+              <span className="hidden sm:inline">List</span>
+            </button>
+            <button
+              onClick={() => handleViewModeChange('kanban')}
+              className={`px-3 sm:px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${
+                viewMode === 'kanban'
+                  ? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+              }`}
+              title="Kanban View"
+            >
+              <LayoutGrid className="w-4 h-4" />
+              <span className="hidden sm:inline">Kanban</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -495,9 +554,20 @@ export default function TicketsListPage() {
             <button
               onClick={handleBulkUpdate}
               disabled={isUpdating}
-              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-400"
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-400 flex items-center gap-2"
             >
-              {isUpdating ? 'Updating...' : 'Apply Changes'}
+              {isUpdating ? (
+                <>
+                  <div className="flex items-center gap-1">
+                    <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                    <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                    <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                  </div>
+                  <span className="sr-only">Updating</span>
+                </>
+              ) : (
+                'Apply Changes'
+              )}
             </button>
           </div>
           <div className="flex justify-end border-t border-purple-200 dark:border-purple-700 pt-4">
@@ -506,16 +576,29 @@ export default function TicketsListPage() {
               disabled={isDeleting}
               className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 flex items-center gap-2"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-              {isDeleting ? 'Deleting...' : `Delete Selected (${selectedTickets.size})`}
+              {isDeleting ? (
+                <>
+                  <div className="flex items-center gap-1">
+                    <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                    <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                    <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                  </div>
+                  <span className="sr-only">Deleting</span>
+                </>
+              ) : (
+                <>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  {`Delete Selected (${selectedTickets.size})`}
+                </>
+              )}
             </button>
           </div>
         </div>
       )}
 
-      {/* Tickets Table */}
+      {/* Tickets Table or Kanban Board */}
       <div className="flex-1 flex flex-col">
         {filteredTickets.length === 0 ? (
           <div className="bg-white dark:bg-gray-800 p-12 rounded-lg shadow text-center">
@@ -533,6 +616,12 @@ export default function TicketsListPage() {
               </button>
             )}
           </div>
+        ) : viewMode === 'kanban' ? (
+          <KanbanBoard
+            tickets={filteredTickets}
+            onStatusChange={handleStatusChange}
+            onTicketClick={(ticketId) => navigate(`/tickets/${ticketId}`)}
+          />
         ) : (
           <>
             {/* Mobile Card View */}

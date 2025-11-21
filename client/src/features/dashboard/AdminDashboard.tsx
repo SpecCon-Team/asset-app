@@ -5,6 +5,8 @@ import { useUsersStore } from '@/features/users/store';
 import Papa from 'papaparse';
 import { useNavigate } from 'react-router-dom';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, Area, AreaChart } from 'recharts';
+import SLAWidget from '@/features/workflows/components/SLAWidget';
+import WorkflowStatsWidget from '@/features/workflows/components/WorkflowStatsWidget';
 
 const COLORS = {
   blue: '#3B82F6',
@@ -167,7 +169,7 @@ export default function AdminDashboard() {
         title: 'Total Assets',
         value: assets.length,
         detail: `${assets.filter((a) => a.status === 'assigned').length} assigned`,
-        color: 'bg-blue-500',
+        color: 'theme-primary',
       },
       {
         title: 'Open Tickets',
@@ -294,7 +296,7 @@ export default function AdminDashboard() {
         {stats.map((s) => (
           <div
             key={s.title}
-            className="group relative border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 p-4 sm:p-5 md:p-6 shadow-sm hover:shadow-md dark:hover:shadow-xl transition-all duration-300"
+            className="admin-stat-card group relative border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 p-4 sm:p-5 md:p-6 shadow-sm hover:shadow-md dark:hover:shadow-xl transition-all duration-300"
             role="article"
             aria-label={`${s.title}: ${s.value}`}
           >
@@ -317,15 +319,29 @@ export default function AdminDashboard() {
               </div>
 
               {/* Icon - Responsive size */}
-              <div className={`flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 ${s.color} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
+              <div
+                className={`flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300 ${s.color === 'theme-primary' ? '' : s.color}`}
+                style={s.color === 'theme-primary' ? { backgroundColor: 'var(--color-primary)' } : undefined}
+              >
                 <div className="w-5 h-5 sm:w-6 sm:h-6 bg-white dark:bg-gray-900 rounded-full opacity-80"></div>
               </div>
             </div>
 
-            {/* Hover indicator */}
-            <div className="absolute inset-0 border-2 border-transparent group-hover:border-blue-500 dark:group-hover:border-blue-400 rounded-xl transition-colors pointer-events-none"></div>
+            {/* Hover indicator - using CSS */}
+            <style>{`
+              .admin-stat-card:hover .stat-hover-border {
+                border-color: var(--color-primary) !important;
+              }
+            `}</style>
+            <div className="stat-hover-border absolute inset-0 border-2 border-transparent rounded-xl transition-colors pointer-events-none"></div>
           </div>
         ))}
+      </div>
+
+      {/* Automation Widgets - Responsive Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <SLAWidget />
+        <WorkflowStatsWidget />
       </div>
 
       {/* Charts Row - Responsive */}
@@ -529,9 +545,20 @@ export default function AdminDashboard() {
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
-              className="px-3 sm:px-4 py-2 min-h-[44px] rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-400 text-sm sm:text-base"
+              className="px-3 sm:px-4 py-2 min-h-[44px] rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-400 text-sm sm:text-base flex items-center gap-2"
             >
-              {uploading ? 'Uploading...' : 'Upload CSV File'}
+              {uploading ? (
+                <>
+                  <div className="flex items-center gap-1">
+                    <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                    <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                    <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                  </div>
+                  <span className="sr-only">Uploading</span>
+                </>
+              ) : (
+                'Upload CSV File'
+              )}
             </button>
           </div>
         </div>

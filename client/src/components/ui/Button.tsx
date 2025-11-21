@@ -74,14 +74,14 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 ' +
       'focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900 ' +
       'disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none ' +
-      'active:scale-95';
+      'active:scale-95 hover:shadow-md transform hover:-translate-y-0.5 ';
 
     // Variant styles
     const variantStyles: Record<ButtonVariant, string> = {
       primary:
-        'bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white shadow-sm ' +
-        'dark:bg-blue-500 dark:hover:bg-blue-600 dark:active:bg-blue-700 ' +
-        'focus-visible:ring-blue-500',
+        'text-white shadow-sm ' +
+        'focus-visible:ring-2 ' +
+        'theme-primary-button',
 
       secondary:
         'bg-gray-200 hover:bg-gray-300 active:bg-gray-400 text-gray-900 shadow-sm ' +

@@ -2,12 +2,13 @@ import React, { lazy, Suspense } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import AppLayout from '@/app/layout/AppLayout';
 
-// Loading fallback component
+// Modern loading fallback component - 100% visual, no text
 const PageLoader = () => (
-  <div className="flex items-center justify-center min-h-screen">
-    <div className="text-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-      <p className="text-gray-600 dark:text-gray-400">Loading...</p>
+  <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="flex items-center justify-center gap-3">
+      <div className="w-5 h-5 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+      <div className="w-5 h-5 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+      <div className="w-5 h-5 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
     </div>
   </div>
 );
@@ -24,6 +25,7 @@ const MyTicketsPage = lazy(() => import('@/features/tickets/pages/MyTicketsPage'
 const MyTasksPage = lazy(() => import('@/features/tickets/pages/MyTasksPage'));
 const MyClientsPage = lazy(() => import('@/features/users/pages/MyClientsPage'));
 const MyPEGPage = lazy(() => import('@/features/peg/MyPEGPage'));
+const ProvinceDetailsPage = lazy(() => import('@/features/peg/ProvinceDetailsPage'));
 const TravelPlanPage = lazy(() => import('@/features/travel/TravelPlanPage'));
 const MyProfilePage = lazy(() => import('@/features/users/pages/MyProfilePage'));
 const GeneralSettingsPage = lazy(() => import('@/features/users/pages/GeneralSettingsPage'));
@@ -38,6 +40,10 @@ const VerifyOTPPage = lazy(() => import('@/features/auth/VerifyOTPPage'));
 const TwoFactorSetupPage = lazy(() => import('@/features/auth/TwoFactorSetupPage'));
 const PrivacyDashboard = lazy(() => import('@/features/privacy/PrivacyDashboard'));
 const AnalyticsPage = lazy(() => import('@/features/reports/AnalyticsPage'));
+const WorkflowsPage = lazy(() => import('@/features/workflows/pages/WorkflowsPage'));
+const SLAPoliciesPage = lazy(() => import('@/features/workflows/pages/SLAPoliciesPage'));
+const AssignmentRulesPage = lazy(() => import('@/features/workflows/pages/AssignmentRulesPage'));
+const WorkflowHistoryPage = lazy(() => import('@/features/workflows/pages/WorkflowHistoryPage'));
 const DownloadMobileApp = lazy(() => import('@/pages/DownloadMobileApp'));
 const HelpAndResources = lazy(() => import('@/pages/HelpAndResources'));
 
@@ -83,6 +89,7 @@ export const router = createBrowserRouter([
       { path: 'my-assets', element: <LazyPage><MyAssetsPage /></LazyPage> },
       { path: 'my-tickets', element: <LazyPage><MyTicketsPage /></LazyPage> },
       { path: 'my-peg', element: <LazyPage><MyPEGPage /></LazyPage> },
+      { path: 'my-peg/:provinceId', element: <LazyPage><ProvinceDetailsPage /></LazyPage> },
       { path: 'travel-plan', element: <LazyPage><TravelPlanPage /></LazyPage> },
       { path: 'my-profile', element: <LazyPage><MyProfilePage /></LazyPage> },
       { path: 'settings', element: <LazyPage><GeneralSettingsPage /></LazyPage> },
@@ -91,6 +98,10 @@ export const router = createBrowserRouter([
       { path: 'privacy', element: <LazyPage><PrivacyDashboard /></LazyPage> },
       { path: 'analytics', element: <LazyPage><AnalyticsPage /></LazyPage> },
       { path: 'audit-logs', element: <LazyPage><AuditLogsPage /></LazyPage> },
+      { path: 'workflows', element: <LazyPage><WorkflowsPage /></LazyPage> },
+      { path: 'sla-policies', element: <LazyPage><SLAPoliciesPage /></LazyPage> },
+      { path: 'assignment-rules', element: <LazyPage><AssignmentRulesPage /></LazyPage> },
+      { path: 'workflow-history', element: <LazyPage><WorkflowHistoryPage /></LazyPage> },
       { path: 'whatsapp-setup', element: <LazyPage><WhatsAppSetup /></LazyPage> },
       { path: 'download-mobile-app', element: <LazyPage><DownloadMobileApp /></LazyPage> },
       { path: 'help', element: <LazyPage><HelpAndResources /></LazyPage> },

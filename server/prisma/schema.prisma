@@ -36,6 +36,9 @@ model User {
   isWhatsAppUser      Boolean        @default(false) // Identifies users created via WhatsApp
   whatsAppNotifications Boolean      @default(true)  // Enable/disable WhatsApp notifications
 
+  // Password Security
+  passwordHistory     String?        @db.Text // JSON array of last 5 password hashes
+
   tickets             Ticket[]       @relation("UserTickets")
   assigned            Ticket[]       @relation("AssignedTickets")
   assets              Asset[]
@@ -43,6 +46,12 @@ model User {
   notifications       Notification[] @relation("NotificationRecipient")
   sentNotifications   Notification[] @relation("NotificationSender")
   pegClients          PEGClient[]    @relation("PEGClients")
+  trips               Trip[]         @relation("UserTrips")
+  refreshTokens       RefreshToken[]
+  sessions            UserSession[]
+  createdTemplates    TicketTemplate[] @relation("TemplateCreator")
+  assignedTemplates   TicketTemplate[] @relation("TemplateAssignee")
+  replyTemplates      ReplyTemplate[] @relation("ReplyTemplateCreator")
   createdAt           DateTime       @default(now())
   updatedAt           DateTime       @updatedAt
 }
@@ -102,14 +111,17 @@ model Ticket {
 }
 
 model Comment {
-  id        String   @id @default(cuid())
-  content   String
-  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  ticketId  String
-  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  authorId  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(cuid())
+  content     String
+  contentHash String?  @db.VarChar(32) // MD5 hash for duplicate detection
+  ticket      Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  ticketId    String
+  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([contentHash, createdAt(sort: Desc)])
 }
 
 model Notification {
@@ -262,6 +274,247 @@ model LoginHistory {
 
   @@index([userId])
   @@index([createdAt])
+}
+
+model Trip {
+  id          String   @id @default(cuid())
+  destination String
+  country     String?
+  startDate   DateTime
+  endDate     DateTime
+  category    String   // business, personal, family, adventure, honeymoon, medical
+  status      String   // upcoming, ongoing, completed, cancelled
+  budget      Float    @default(0)
+  spent       Float    @default(0)
+  notes       String?  @db.Text
+  itinerary   Json?    // Store itinerary items as JSON array
+  userId      String
+  user        User     @relation("UserTrips", fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([category])
+  @@index([startDate])
+}
+
+model WorkflowTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  entityType  String   // 'ticket', 'asset'
+  trigger     String   // 'created', 'status_changed', 'assigned', 'priority_changed'
+  conditions  Json?    // Array of conditions to evaluate
+  actions     Json     // Array of actions to execute
+  isActive    Boolean  @default(true)
+  priority    Int      @default(0) // Higher priority workflows run first
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  executions  WorkflowExecution[]
+
+  @@index([entityType])
+  @@index([trigger])
+  @@index([isActive])
+}
+
+model WorkflowExecution {
+  id          String   @id @default(cuid())
+  workflowId  String
+  workflow    WorkflowTemplate @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  entityType  String
+  entityId    String
+  status      String   // 'pending', 'running', 'completed', 'failed'
+  result      Json?    // Result of execution
+  error       String?  @db.Text
+  executedAt  DateTime @default(now())
+  completedAt DateTime?
+
+  @@index([workflowId])
+  @@index([entityId])
+  @@index([status])
+  @@index([executedAt])
+}
+
+model AutoAssignmentRule {
+  id              String   @id @default(cuid())
+  name            String
+  description     String?
+  isActive        Boolean  @default(true)
+  priority        Int      @default(0)
+  conditions      Json     // Conditions to match (priority, asset type, keywords, etc.)
+  assignmentType  String   // 'round_robin', 'least_busy', 'skill_based', 'location_based', 'specific_user'
+  targetUserId    String?  // For specific_user assignment
+  targetUserIds   Json?    // Array of user IDs for round robin
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([priority])
+}
+
+model SLAPolicy {
+  id                   String   @id @default(cuid())
+  name                 String
+  description          String?
+  priority             String   // 'critical', 'high', 'medium', 'low'
+  responseTimeMinutes  Int      // Minutes to first response
+  resolutionTimeMinutes Int     // Minutes to resolution
+  businessHoursOnly    Boolean  @default(true)
+  escalationEnabled    Boolean  @default(true)
+  escalationUserId     String?  // User to escalate to
+  notifyBeforeMinutes  Int      @default(30) // Warn before SLA breach
+  isActive             Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([priority])
+  @@index([isActive])
+}
+
+model TicketSLA {
+  id                    String    @id @default(cuid())
+  ticketId              String    @unique
+  policyId              String
+  responseDeadline      DateTime
+  resolutionDeadline    DateTime
+  firstResponseAt       DateTime?
+  resolvedAt            DateTime?
+  status                String    // 'on_track', 'at_risk', 'breached'
+  responseBreached      Boolean   @default(false)
+  resolutionBreached    Boolean   @default(false)
+  warningsSent          Int       @default(0)
+  escalated             Boolean   @default(false)
+  escalatedAt           DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([ticketId])
+  @@index([status])
+  @@index([responseDeadline])
+  @@index([resolutionDeadline])
+}
+
+model RefreshToken {
+  id          String   @id @default(cuid())
+  token       String   @unique
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt   DateTime
+  isRevoked   Boolean  @default(false)
+  ipAddress   String?
+  userAgent   String?  @db.Text
+  createdAt   DateTime @default(now())
+  revokedAt   DateTime?
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+}
+
+model UserSession {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessionToken    String   @unique
+  ipAddress       String?
+  userAgent       String?  @db.Text
+  device          String?  // Device type
+  browser         String?  // Browser info
+  location        String?  // Geolocation
+  fingerprint     String?  // Browser fingerprint
+  isActive        Boolean  @default(true)
+  lastActivityAt  DateTime @default(now())
+  expiresAt       DateTime
+  createdAt       DateTime @default(now())
+
+  @@index([userId])
+  @@index([sessionToken])
+  @@index([isActive])
+  @@index([expiresAt])
+}
+
+model WebhookLog {
+  id          String   @id @default(cuid())
+  source      String   // 'whatsapp', 'wooalerts'
+  event       String   // Event type
+  payload     String   @db.Text // Full webhook payload
+  signature   String?  // Webhook signature
+  verified    Boolean  @default(false)
+  processed   Boolean  @default(false)
+  error       String?  @db.Text
+  createdAt   DateTime @default(now())
+
+  @@index([source])
+  @@index([processed])
+  @@index([createdAt])
+}
+
+model SecurityEvent {
+  id          String   @id @default(cuid())
+  eventType   String   // 'failed_login', 'suspicious_activity', 'account_lockout', etc.
+  severity    String   // 'low', 'medium', 'high', 'critical'
+  userId      String?
+  userEmail   String?
+  ipAddress   String?
+  userAgent   String?  @db.Text
+  details     String?  @db.Text // JSON details
+  resolved    Boolean  @default(false)
+  resolvedBy  String?
+  resolvedAt  DateTime?
+  createdAt   DateTime @default(now())
+
+  @@index([eventType])
+  @@index([severity])
+  @@index([userId])
+  @@index([resolved])
+  @@index([createdAt])
+}
+
+model TicketTemplate {
+  id                  String   @id @default(cuid())
+  name                String   // Template name (e.g., "Password Reset Request")
+  description         String?  // Description of when to use this template
+  title               String   // Pre-filled ticket title
+  ticketDescription   String   @db.Text // Pre-filled ticket description
+  priority            String   @default("medium") // Default priority
+  category            String?  // Category for organization
+  tags                String[] // Tags for filtering
+  assignedToId        String?  // Default assignee (optional)
+  isActive            Boolean  @default(true) // Can be archived
+
+  createdBy           User     @relation("TemplateCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  createdById         String
+  assignedTo          User?    @relation("TemplateAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([createdById])
+  @@index([assignedToId])
+  @@index([isActive])
+  @@index([category])
+}
+
+model ReplyTemplate {
+  id          String   @id @default(cuid())
+  name        String   // Template name (e.g., "Password Reset Steps")
+  content     String   @db.Text // Reply content with variables
+  category    String?  // Category for organization
+  isActive    Boolean  @default(true) // Can be archived
+  usageCount  Int      @default(0) // Track usage
+
+  createdBy   User     @relation("ReplyTemplateCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  createdById String
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([createdById])
+  @@index([category])
+  @@index([isActive])
 }
 
 enum Role {

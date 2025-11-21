@@ -8,6 +8,10 @@ import { logAudit } from '../lib/auditLog';
 import { applyFieldVisibility } from '../middleware/fieldVisibility';
 import { validateFieldUpdates, Role } from '../lib/permissions';
 import { whatsappService } from '../lib/whatsapp';
+import { createNotificationIfNotExists } from '../lib/notificationHelper';
+import { workflowEngine } from '../lib/workflowEngine';
+import { autoAssignmentEngine } from '../lib/autoAssignment';
+import { slaEngine } from '../lib/slaEngine';
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -155,6 +159,21 @@ router.post('/', authenticate, async (req: AuthRequest, res) => {
       priority: ticket.priority,
     });
 
+    // Execute workflow automation (async - don't wait)
+    workflowEngine.executeWorkflows('ticket', 'created', ticket.id, ticket).catch(err => {
+      console.error('Workflow execution error:', err);
+    });
+
+    // Create SLA tracker
+    slaEngine.createSLA(ticket.id).catch(err => {
+      console.error('SLA creation error:', err);
+    });
+
+    // Auto-assign ticket if enabled
+    autoAssignmentEngine.autoAssignTicket(ticket.id).catch(err => {
+      console.error('Auto-assignment error:', err);
+    });
+
     res.json(ticket);
   } catch (error) {
     console.error('Failed to create ticket:', error);
@@ -258,15 +277,13 @@ router.patch('/:id', authenticate, async (req: AuthRequest, res) => {
     // Send notification if status changed
     if (parsed.data.status && oldTicket && parsed.data.status !== oldTicket.status) {
       // Notify the ticket creator
-      await prisma.notification.create({
-        data: {
-          type: 'ticket_status',
-          title: 'Ticket status updated',
-          message: `Your ticket status has been changed from "${oldTicket.status}" to "${parsed.data.status}"`,
-          userId: ticket.createdById,
-          senderId: ticket.assignedToId,
-          ticketId: ticket.id,
-        },
+      await createNotificationIfNotExists({
+        type: 'ticket_status',
+        title: 'Ticket status updated',
+        message: `Your ticket status has been changed from "${oldTicket.status}" to "${parsed.data.status}"`,
+        userId: ticket.createdById,
+        senderId: ticket.assignedToId,
+        ticketId: ticket.id,
       });
 
       // Send WhatsApp notification if ticket is resolved or closed
@@ -319,15 +336,13 @@ Type *MENU* for more options.`,
         });
 
         const adminNotifications = admins.map(admin =>
-          prisma.notification.create({
-            data: {
-              type: 'ticket_status',
-              title: 'Ticket closed',
-              message: `${ticket.assignedTo?.name || 'A technician'} closed ticket: "${ticket.title}" (${ticket.number})`,
-              userId: admin.id,
-              senderId: ticket.assignedToId,
-              ticketId: ticket.id,
-            },
+          createNotificationIfNotExists({
+            type: 'ticket_status',
+            title: 'Ticket closed',
+            message: `${ticket.assignedTo?.name || 'A technician'} closed ticket: "${ticket.title}" (${ticket.number})`,
+            userId: admin.id,
+            senderId: ticket.assignedToId,
+            ticketId: ticket.id,
           })
         );
 
@@ -338,30 +353,55 @@ Type *MENU* for more options.`,
     // Send notification if ticket was assigned
     if (parsed.data.assignedToId && oldTicket && parsed.data.assignedToId !== oldTicket.assignedToId) {
       // Notify the ticket creator
-      await prisma.notification.create({
-        data: {
-          type: 'ticket_assigned',
-          title: 'Ticket assigned',
-          message: `Your ticket has been assigned to ${ticket.assignedTo?.name || ticket.assignedTo?.email || 'a technician'}`,
-          userId: ticket.createdById,
-          senderId: parsed.data.assignedToId,
-          ticketId: ticket.id,
-        },
+      await createNotificationIfNotExists({
+        type: 'ticket_assigned',
+        title: 'Ticket assigned',
+        message: `Your ticket has been assigned to ${ticket.assignedTo?.name || ticket.assignedTo?.email || 'a technician'}`,
+        userId: ticket.createdById,
+        senderId: parsed.data.assignedToId,
+        ticketId: ticket.id,
       });
 
       // Notify the assigned technician
       if (parsed.data.assignedToId) {
-        await prisma.notification.create({
-          data: {
-            type: 'ticket_assigned',
-            title: 'New ticket assigned to you',
-            message: `You have been assigned to ticket: ${ticket.title}`,
-            userId: parsed.data.assignedToId,
-            senderId: ticket.createdById,
-            ticketId: ticket.id,
-          },
+        await createNotificationIfNotExists({
+          type: 'ticket_assigned',
+          title: 'New ticket assigned to you',
+          message: `You have been assigned to ticket: ${ticket.title}`,
+          userId: parsed.data.assignedToId,
+          senderId: ticket.createdById,
+          ticketId: ticket.id,
         });
       }
+    }
+
+    // Trigger workflows based on what changed
+    if (parsed.data.status && parsed.data.status !== oldTicket.status) {
+      // Status changed workflow
+      workflowEngine.executeWorkflows('ticket', 'status_changed', ticket.id, ticket, oldTicket).catch(err => {
+        console.error('Workflow execution error:', err);
+      });
+
+      // Record SLA events
+      if (parsed.data.status === 'resolved' || parsed.data.status === 'closed') {
+        slaEngine.recordResolution(ticket.id).catch(err => {
+          console.error('SLA resolution recording error:', err);
+        });
+      }
+    }
+
+    if (parsed.data.assignedToId && parsed.data.assignedToId !== oldTicket.assignedToId) {
+      // Assignment changed workflow
+      workflowEngine.executeWorkflows('ticket', 'assigned', ticket.id, ticket, oldTicket).catch(err => {
+        console.error('Workflow execution error:', err);
+      });
+    }
+
+    if (parsed.data.priority && parsed.data.priority !== oldTicket.priority) {
+      // Priority changed workflow
+      workflowEngine.executeWorkflows('ticket', 'priority_changed', ticket.id, ticket, oldTicket).catch(err => {
+        console.error('Workflow execution error:', err);
+      });
     }
 
     res.json(ticket);
@@ -533,6 +573,215 @@ router.post('/import-csv', authenticate, requireRole('ADMIN', 'TECHNICIAN'), upl
       message: 'Failed to import tickets from CSV',
       error: error instanceof Error ? error.message : String(error)
     });
+  }
+});
+
+// Bulk close tickets
+router.post('/bulk/close', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: AuthRequest, res) => {
+  const schema = z.object({
+    ticketIds: z.array(z.string()),
+    resolution: z.string().optional(),
+  });
+
+  const parsed = schema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json(parsed.error.flatten());
+
+  try {
+    const { ticketIds, resolution } = parsed.data;
+
+    // Update all tickets to closed status
+    await prisma.ticket.updateMany({
+      where: { id: { in: ticketIds } },
+      data: {
+        status: 'closed',
+        resolution: resolution || 'Bulk closed',
+      },
+    });
+
+    // Get updated tickets for response
+    const closedTickets = await prisma.ticket.findMany({
+      where: { id: { in: ticketIds } },
+      include: {
+        createdBy: { select: { id: true, name: true, email: true } },
+        assignedTo: { select: { id: true, name: true, email: true } },
+      },
+    });
+
+    // Send notifications to ticket creators
+    const notificationPromises = closedTickets.map(ticket =>
+      createNotificationIfNotExists({
+        type: 'ticket_status',
+        title: 'Ticket closed',
+        message: `Your ticket "${ticket.title}" has been closed`,
+        userId: ticket.createdById,
+        senderId: req.user!.id,
+        ticketId: ticket.id,
+      })
+    );
+
+    await Promise.all(notificationPromises);
+
+    // Log audit trail
+    await logAudit(req, 'UPDATE', 'Ticket', 'BULK', undefined, {
+      action: 'bulk_close',
+      count: ticketIds.length,
+      ticketIds,
+    });
+
+    console.log(`✅ Bulk closed ${ticketIds.length} tickets`);
+    res.json({
+      message: `Successfully closed ${ticketIds.length} tickets`,
+      count: ticketIds.length,
+      tickets: closedTickets,
+    });
+  } catch (error) {
+    console.error('Bulk close error:', error);
+    res.status(500).json({ message: 'Failed to close tickets' });
+  }
+});
+
+// Bulk export tickets
+router.post('/bulk/export', authenticate, async (req: AuthRequest, res) => {
+  const schema = z.object({
+    ticketIds: z.array(z.string()),
+    format: z.enum(['json', 'csv']).default('json'),
+  });
+
+  const parsed = schema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json(parsed.error.flatten());
+
+  try {
+    const { ticketIds, format } = parsed.data;
+
+    // Check access - users can only export their own tickets unless admin/tech
+    const whereClause: any = { id: { in: ticketIds } };
+    if (req.user?.role !== 'ADMIN' && req.user?.role !== 'TECHNICIAN') {
+      whereClause.createdById = req.user?.id;
+    }
+
+    const tickets = await prisma.ticket.findMany({
+      where: whereClause,
+      include: {
+        createdBy: { select: { id: true, name: true, email: true } },
+        assignedTo: { select: { id: true, name: true, email: true } },
+        asset: { select: { id: true, name: true, serialNumber: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (format === 'csv') {
+      // Generate CSV
+      const headers = [
+        'Ticket Number',
+        'Title',
+        'Description',
+        'Status',
+        'Priority',
+        'Created By',
+        'Assigned To',
+        'Asset',
+        'Created At',
+        'Updated At',
+      ];
+
+      const rows = tickets.map(ticket => [
+        ticket.number,
+        ticket.title,
+        ticket.description,
+        ticket.status,
+        ticket.priority,
+        ticket.createdBy?.name || ticket.createdBy?.email || '',
+        ticket.assignedTo?.name || ticket.assignedTo?.email || '',
+        ticket.asset?.name || '',
+        ticket.createdAt.toISOString(),
+        ticket.updatedAt.toISOString(),
+      ]);
+
+      const csv = [headers, ...rows]
+        .map(row => row.map(cell => `"${cell}"`).join(','))
+        .join('\n');
+
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename="tickets-export-${Date.now()}.csv"`);
+      return res.send(csv);
+    }
+
+    // Return JSON format
+    res.json({
+      count: tickets.length,
+      exportedAt: new Date().toISOString(),
+      tickets,
+    });
+  } catch (error) {
+    console.error('Bulk export error:', error);
+    res.status(500).json({ message: 'Failed to export tickets' });
+  }
+});
+
+// Bulk delete tickets (admin only)
+router.delete('/bulk', authenticate, requireRole('ADMIN'), async (req: AuthRequest, res) => {
+  const schema = z.object({
+    ticketIds: z.array(z.string()),
+  });
+
+  const parsed = schema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json(parsed.error.flatten());
+
+  try {
+    const { ticketIds } = parsed.data;
+
+    // Get ticket details before deletion for audit log
+    const ticketsToDelete = await prisma.ticket.findMany({
+      where: { id: { in: ticketIds } },
+      select: {
+        id: true,
+        number: true,
+        title: true,
+        createdById: true,
+      },
+    });
+
+    // Delete related records first (due to foreign key constraints)
+    await prisma.notification.deleteMany({
+      where: { ticketId: { in: ticketIds } },
+    });
+
+    await prisma.comment.deleteMany({
+      where: { ticketId: { in: ticketIds } },
+    });
+
+    await prisma.attachment.deleteMany({
+      where: { ticketId: { in: ticketIds } },
+    });
+
+    await prisma.sLA.deleteMany({
+      where: { ticketId: { in: ticketIds } },
+    });
+
+    await prisma.workflowHistory.deleteMany({
+      where: { ticketId: { in: ticketIds } },
+    });
+
+    // Delete the tickets
+    await prisma.ticket.deleteMany({
+      where: { id: { in: ticketIds } },
+    });
+
+    // Log audit trail
+    await logAudit(req, 'DELETE', 'Ticket', 'BULK', undefined, {
+      action: 'bulk_delete',
+      count: ticketIds.length,
+      tickets: ticketsToDelete,
+    });
+
+    console.log(`✅ Bulk deleted ${ticketIds.length} tickets`);
+    res.json({
+      message: `Successfully deleted ${ticketIds.length} tickets`,
+      count: ticketIds.length,
+    });
+  } catch (error) {
+    console.error('Bulk delete error:', error);
+    res.status(500).json({ message: 'Failed to delete tickets' });
   }
 });
 

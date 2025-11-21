@@ -1,80 +1,46 @@
-import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-async function cleanupDuplicateComments() {
-  try {
-    console.log('🧹 Starting cleanup of duplicate comments...\n');
+async function cleanupDuplicates() {
+  console.log('=== Cleaning Up Duplicate Comments ===\n');
 
-    // Find all comments
-    const allComments = await prisma.comment.findMany({
-      orderBy: { createdAt: 'asc' },
-      include: {
-        author: {
-          select: { name: true, email: true }
-        }
-      }
-    });
-
-    console.log(`📊 Total comments in database: ${allComments.length}`);
-
-    // Group comments by unique key (authorId + ticketId + content)
-    const grouped = new Map();
-
-    for (const comment of allComments) {
-      const key = `${comment.authorId}_${comment.ticketId}_${comment.content}`;
-
-      if (!grouped.has(key)) {
-        grouped.set(key, []);
-      }
-      grouped.get(key).push(comment);
+  const allComments = await prisma.comment.findMany({
+    orderBy: {
+      createdAt: 'asc'
     }
+  });
 
-    // Find duplicates and keep only the first one
-    let duplicateCount = 0;
-    let deletedCount = 0;
+  const grouped = {};
 
-    for (const [key, comments] of grouped.entries()) {
-      if (comments.length > 1) {
-        duplicateCount++;
-        console.log(`\n🔍 Found ${comments.length} duplicates:`);
-        console.log(`   Author: ${comments[0].author.name || comments[0].author.email}`);
-        console.log(`   Content: "${comments[0].content.substring(0, 50)}${comments[0].content.length > 50 ? '...' : ''}"`);
+  allComments.forEach(comment => {
+    const key = `${comment.authorId}-${comment.ticketId}-${comment.content}`;
+    if (!grouped[key]) {
+      grouped[key] = [];
+    }
+    grouped[key].push(comment);
+  });
 
-        // Keep the first (oldest) comment, delete the rest
-        const toDelete = comments.slice(1);
+  let deletedCount = 0;
 
-        for (const comment of toDelete) {
-          await prisma.comment.delete({
-            where: { id: comment.id }
-          });
-          deletedCount++;
-        }
+  for (const [key, comments] of Object.entries(grouped)) {
+    if (comments.length > 1) {
+      console.log(`🔧 Found ${comments.length} duplicates`);
+      console.log(`   Keeping: ${comments[0].id}`);
 
-        console.log(`   ✅ Kept 1, deleted ${toDelete.length} duplicates`);
+      for (let i = 1; i < comments.length; i++) {
+        console.log(`   Deleting: ${comments[i].id}`);
+        await prisma.comment.delete({
+          where: { id: comments[i].id }
+        });
+        deletedCount++;
       }
     }
-
-    console.log('\n' + '='.repeat(50));
-    console.log('📊 Cleanup Summary:');
-    console.log(`   Total comments before: ${allComments.length}`);
-    console.log(`   Duplicate groups found: ${duplicateCount}`);
-    console.log(`   Comments deleted: ${deletedCount}`);
-    console.log(`   Comments remaining: ${allComments.length - deletedCount}`);
-    console.log('='.repeat(50));
-
-    if (deletedCount > 0) {
-      console.log('\n✅ Cleanup completed successfully!');
-    } else {
-      console.log('\n✅ No duplicates found - database is clean!');
-    }
-
-  } catch (error) {
-    console.error('❌ Error during cleanup:', error);
-  } finally {
-    await prisma.$disconnect();
   }
+
+  console.log(`\n✅ Deleted ${deletedCount} duplicate comments`);
+
+  await prisma.$disconnect();
 }
 
-cleanupDuplicateComments();
+cleanupDuplicates().catch(console.error);

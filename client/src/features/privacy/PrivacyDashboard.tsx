@@ -176,8 +176,13 @@ export default function PrivacyDashboard() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <LoadingSpinner />
+      <div className="flex items-center justify-center min-h-[400px] bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 rounded-lg">
+        <div className="flex items-center gap-3">
+          <div className="w-5 h-5 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+          <div className="w-5 h-5 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+          <div className="w-5 h-5 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+        </div>
+        <span className="sr-only">Loading privacy dashboard</span>
       </div>
     );
   }
@@ -256,8 +261,12 @@ export default function PrivacyDashboard() {
           >
             {isExporting ? (
               <>
-                <LoadingSpinner />
-                <span>Exporting...</span>
+                <div className="flex items-center gap-1">
+                  <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                  <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                  <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                </div>
+                <span className="sr-only">Exporting</span>
               </>
             ) : (
               <>

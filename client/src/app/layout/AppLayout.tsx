@@ -1,12 +1,13 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { Package, Ticket, Home, FolderOpen, ClipboardList, Settings, Users, CheckSquare, Menu, X, Keyboard, Search, Shield, Lock, ChevronLeft, ChevronRight, Bell, HelpCircle, Download, ShieldCheck, UserCog, BarChart3, FileText, Plane } from 'lucide-react';
+import { Package, Ticket, Home, FolderOpen, ClipboardList, Settings, Users, CheckSquare, Menu, X, Keyboard, Search, Shield, Lock, ChevronLeft, ChevronRight, Bell, HelpCircle, Download, ShieldCheck, UserCog, BarChart3, FileText, Plane, Workflow, Clock, GitBranch, History } from 'lucide-react';
 import NotificationBell from '@/features/notifications/NotificationBell';
 import UserProfileDropdown from './UserProfileDropdown';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import KeyboardShortcutsModal from '@/components/KeyboardShortcutsModal';
 import GlobalSearch from '@/components/GlobalSearch';
 import AIChatWidget from '@/components/AIChatWidget';
+import ThemeSwitcher from '@/components/ThemeSwitcher';
 
 export default function AppLayout() {
   const navigate = useNavigate();
@@ -156,6 +157,15 @@ export default function AppLayout() {
       ]
     },
     {
+      label: 'Automation',
+      links: [
+        { to: '/workflows', label: 'Workflows', icon: Workflow, roles: ['ADMIN'] },
+        { to: '/sla-policies', label: 'SLA Policies', icon: Clock, roles: ['ADMIN'] },
+        { to: '/assignment-rules', label: 'Auto-Assignment', icon: GitBranch, roles: ['ADMIN'] },
+        { to: '/workflow-history', label: 'Execution History', icon: History, roles: ['ADMIN'] },
+      ]
+    },
+    {
       label: 'Configuration',
       links: [
         { to: '/whatsapp-setup', label: 'WhatsApp Setup', icon: Settings, roles: ['ADMIN'] },
@@ -181,7 +191,7 @@ export default function AppLayout() {
   }
 
   return (
-    <div className="min-h-screen flex bg-gray-50 dark:bg-gray-900">
+    <div className="h-screen flex bg-gray-50 dark:bg-gray-900 overflow-hidden" style={{ height: '100dvh' }}>
       {/* Mobile overlay */}
       {mobileMenuOpen && (
         <div
@@ -195,10 +205,12 @@ export default function AppLayout() {
         ref={sidebarRef}
         onMouseEnter={() => setSidebarHovered(true)}
         onMouseLeave={() => setSidebarHovered(false)}
+        style={{ height: '100dvh' }}
         className={`
           bg-gradient-to-b from-white to-gray-50 dark:from-gray-800 dark:to-gray-900
           border-r border-gray-200 dark:border-gray-700
           flex flex-col
+          h-screen
           inset-y-0 left-0 z-50
           transition-all duration-300 ease-in-out
 
@@ -229,15 +241,25 @@ export default function AppLayout() {
               ${sidebarHovered ? 'lg:justify-start lg:w-auto lg:gap-3' : ''}
             `}
           >
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform flex-shrink-0">
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform flex-shrink-0"
+              style={{
+                background: 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%)'
+              }}
+            >
               <span className="text-white font-bold text-lg">AT</span>
             </div>
             {/* Show title on mobile when menu open, or desktop when hovered */}
-            <span className={`font-bold bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-400 dark:to-blue-600 bg-clip-text text-transparent transition-all duration-300 truncate
+            <span
+              className={`font-bold bg-clip-text text-transparent transition-all duration-300 truncate
               text-lg sm:text-xl
               ${mobileMenuOpen ? 'inline md:hidden' : 'hidden'}
               ${sidebarHovered ? 'lg:inline' : 'lg:hidden'}
-            `}>
+            `}
+              style={{
+                backgroundImage: 'linear-gradient(to right, var(--color-primary), var(--color-primary-dark))'
+              }}
+            >
               AssetTrack Pro
             </span>
           </Link>
@@ -282,11 +304,15 @@ export default function AppLayout() {
                         min-h-[44px]
                         ${
                           isActive
-                            ? 'bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 text-blue-700 dark:text-blue-300 shadow-sm'
+                            ? 'shadow-sm'
                             : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600'
                         }
                         ${!isCollapsed ? 'hover:translate-x-1' : ''}`
                       }
+                      style={({ isActive }) => isActive ? {
+                        background: 'linear-gradient(to right, rgba(var(--color-primary-rgb, 59, 130, 246), 0.1), rgba(var(--color-primary-rgb, 59, 130, 246), 0.15))',
+                        color: 'var(--color-primary)'
+                      } : undefined}
                       title={isCollapsed ? link.label : undefined}
                       onClick={() => {
                         // Close mobile menu when clicking a link on mobile
@@ -298,12 +324,16 @@ export default function AppLayout() {
                       {({ isActive }) => (
                         <>
                           {isActive && (
-                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-600 dark:bg-blue-400 rounded-r-full" />
+                            <div
+                              className="absolute left-0 top-0 bottom-0 w-1 rounded-r-full"
+                              style={{ backgroundColor: 'var(--color-primary)' }}
+                            />
                           )}
                           <Icon
                             className={`${isCollapsed ? 'w-6 h-6' : 'w-5 h-5'} flex-shrink-0
-                            ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400'}
+                            ${isActive ? '' : 'text-gray-500 dark:text-gray-400'}
                             transition-colors`}
+                            style={isActive ? { color: 'var(--color-primary)' } : undefined}
                           />
                           {/* Show label on mobile when menu open, or desktop when hovered */}
                           {!isCollapsed && (
@@ -328,9 +358,9 @@ export default function AppLayout() {
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 overflow-auto flex flex-col min-w-0">
+      <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden" style={{ height: '100dvh' }}>
         {/* Header with Notifications and User Profile */}
-        <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-3 sm:px-4 lg:px-6 py-3 md:py-4 flex justify-between items-center gap-2 sm:gap-4 sticky top-0 z-[50]">
+        <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-3 sm:px-4 lg:px-6 py-3 md:py-4 flex justify-between items-center gap-2 sm:gap-4 flex-shrink-0 z-[50]">
           {/* Hamburger menu button for mobile/tablet */}
           <button
             onClick={() => setMobileMenuOpen(true)}
@@ -358,13 +388,14 @@ export default function AppLayout() {
             >
               <Keyboard className="w-5 h-5" />
             </button>
+            <ThemeSwitcher />
             <NotificationBell />
             <UserProfileDropdown user={currentUser} />
           </div>
         </header>
 
         {/* Page Content */}
-        <div className="flex-1 p-3 sm:p-4 md:p-6 bg-gray-50 dark:bg-gray-900">
+        <div className="flex-1 p-3 sm:p-4 md:p-6 bg-gray-50 dark:bg-gray-900 overflow-y-auto">
           <Outlet />
         </div>
       </main>

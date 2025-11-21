@@ -496,9 +496,20 @@ export default function AssetDetailsPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="px-6 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 disabled:bg-gray-400 transition-colors"
+            className="px-6 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 disabled:bg-gray-400 transition-colors flex items-center gap-2"
           >
-            {isLoading ? 'Saving...' : isEditMode ? 'Update Asset' : 'Create Asset'}
+            {isLoading ? (
+              <>
+                <div className="flex items-center gap-1">
+                  <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                  <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                  <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                </div>
+                <span className="sr-only">Saving</span>
+              </>
+            ) : (
+              isEditMode ? 'Update Asset' : 'Create Asset'
+            )}
           </button>
         </div>
       </form>

@@ -86,7 +86,8 @@ export default function AuditLogsPage() {
       link.remove();
     } catch (error) {
       console.error('Failed to export logs:', error);
-      alert('Failed to export audit logs');
+      const { showError } = await import('@/lib/sweetalert');
+      showError('Failed to export audit logs. Please try again.');
     }
   };
 
@@ -309,8 +310,13 @@ export default function AuditLogsPage() {
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
-                    Loading audit logs...
+                  <td colSpan={6} className="px-6 py-12 text-center">
+                    <div className="flex items-center justify-center gap-3">
+                      <div className="w-4 h-4 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                      <div className="w-4 h-4 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                      <div className="w-4 h-4 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                    </div>
+                    <span className="sr-only">Loading audit logs</span>
                   </td>
                 </tr>
               ) : filteredLogs.length === 0 ? (
