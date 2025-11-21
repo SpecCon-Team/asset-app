@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Mail, ArrowLeft, CheckCircle } from 'lucide-react';
+import { Mail, ArrowLeft } from 'lucide-react';
 import { getApiClient } from '@/features/assets/lib/apiClient';
 
 export default function VerifyOTPPage() {
@@ -9,16 +9,14 @@ export default function VerifyOTPPage() {
   const location = useLocation();
   const email = location.state?.email || '';
 
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [otp, setOtp] = useState<string[]>(['', '', '', '', '', '']);
   const [isLoading, setIsLoading] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
     // Focus first input on mount
-    if (inputRefs.current[0]) {
-      inputRefs.current[0].focus();
-    }
+    inputRefs.current[0]?.focus();
   }, []);
 
   useEffect(() => {
@@ -78,7 +76,7 @@ export default function VerifyOTPPage() {
     try {
       const response = await getApiClient().post('/auth/verify-otp', {
         email,
-        otp: otpCode
+        otp: otpCode,
       });
 
       toast.success('Email verified successfully!');
@@ -92,7 +90,8 @@ export default function VerifyOTPPage() {
         navigate('/');
       }, 1000);
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || error.message || 'Verification failed. Please try again.';
+      const errorMessage =
+        error.response?.data?.message || error.message || 'Verification failed. Please try again.';
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
@@ -108,7 +107,8 @@ export default function VerifyOTPPage() {
       setOtp(['', '', '', '', '', '']);
       inputRefs.current[0]?.focus();
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || error.message || 'Failed to resend OTP. Please try again.';
+      const errorMessage =
+        error.response?.data?.message || error.message || 'Failed to resend OTP. Please try again.';
       toast.error(errorMessage);
     } finally {
       setIsResending(false);
@@ -120,16 +120,18 @@ export default function VerifyOTPPage() {
       <div className="max-w-md w-full">
         {/* Logo/Brand */}
         <div className="text-center mb-8">
-          <div className="inline-flex w-16 h-16 rounded-full" style={{ backgroundColor: 'var(--color-primary)' }} items-center justify-center mb-4">
+          <div
+            className="inline-flex w-16 h-16 rounded-full items-center justify-center mb-4"
+            style={{ backgroundColor: 'var(--color-primary)' }}
+          >
             <Mail className="w-8 h-8 text-white" />
           </div>
+
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Verify Your Email</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">
-            Enter the 6-digit code sent to
-          </p>
-          <p className="text-blue-600 dark:text-blue-400 font-medium">
-            {email}
-          </p>
+
+          <p className="text-gray-600 dark:text-gray-400 mt-2">Enter the 6-digit code sent to</p>
+
+          <p className="text-blue-600 dark:text-blue-400 font-medium">{email}</p>
         </div>
 
         {/* OTP Form */}
@@ -139,6 +141,7 @@ export default function VerifyOTPPage() {
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-4 text-center">
                 Enter Verification Code
               </label>
+
               <div className="flex gap-2 justify-center" onPaste={handlePaste}>
                 {otp.map((digit, index) => (
                   <input
@@ -166,9 +169,7 @@ export default function VerifyOTPPage() {
           </form>
 
           <div className="mt-6 text-center space-y-4">
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Didn't receive the code?
-            </p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Didn&apos;t receive the code?</p>
             <button
               onClick={handleResendOTP}
               disabled={isResending}
@@ -191,7 +192,8 @@ export default function VerifyOTPPage() {
           {/* Info Box */}
           <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
             <p className="text-xs text-blue-800 dark:text-blue-200">
-              The verification code is valid for 10 minutes. Check your spam folder if you don't see the email.
+              The verification code is valid for 10 minutes. Check your spam folder if you don&apos;t
+              see the email.
             </p>
           </div>
         </div>
