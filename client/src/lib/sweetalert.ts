@@ -7,15 +7,11 @@ import Swal from 'sweetalert2';
 
 // Get theme from DOM class or localStorage or system preference
 const isDarkMode = () => {
-  // Check DOM first (most reliable)
-  if (document.documentElement.classList.contains('dark')) {
-    return true;
-  }
-  // Fallback to localStorage
-  const theme = localStorage.getItem('theme');
-  if (theme) return theme === 'dark';
-  // Fallback to system preference
-  return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  // Check DOM class FIRST (most reliable - ThemeContext applies it)
+  const hasDarkClass = document.documentElement.classList.contains('dark');
+
+  // Always trust the DOM class since ThemeContext manages it
+  return hasDarkClass;
 };
 
 // Base configuration for all alerts

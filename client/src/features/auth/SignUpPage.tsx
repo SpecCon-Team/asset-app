@@ -113,8 +113,9 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
-      <div className="max-w-md w-full">
+    <div className="h-screen bg-gray-50 dark:bg-gray-900 overflow-y-auto">
+      <div className="min-h-full flex items-center justify-center p-4 py-12">
+        <div className="max-w-md w-full">
         {/* Logo/Brand */}
         <div className="text-center mb-8">
           <div
@@ -268,6 +269,12 @@ export default function SignUpPage() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   onBlur={() => handleBlur('confirmPassword')}
+                  onPaste={(e) => {
+                    e.preventDefault();
+                    toast.error('Please type your password confirmation manually');
+                  }}
+                  onCopy={(e) => e.preventDefault()}
+                  onCut={(e) => e.preventDefault()}
                   placeholder="••••••••••••"
                   className={`w-full px-4 py-3 pr-12 border ${touched.confirmPassword && !confirmPassword ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                 />
@@ -336,6 +343,7 @@ export default function SignUpPage() {
               </Link>
             </p>
           </div>
+        </div>
         </div>
       </div>
     </div>
