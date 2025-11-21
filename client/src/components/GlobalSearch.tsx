@@ -253,8 +253,13 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
         {/* Results */}
         <div className="max-h-[60vh] overflow-y-auto">
           {isSearching && (
-            <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-              Searching...
+            <div className="p-8 text-center">
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                <div className="w-2 h-2 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+              </div>
+              <p className="text-gray-600 dark:text-gray-400 text-sm">Searching...</p>
             </div>
           )}
 
