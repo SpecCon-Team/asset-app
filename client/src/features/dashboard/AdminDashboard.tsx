@@ -545,9 +545,20 @@ export default function AdminDashboard() {
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
-              className="px-3 sm:px-4 py-2 min-h-[44px] rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-400 text-sm sm:text-base"
+              className="px-3 sm:px-4 py-2 min-h-[44px] rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-400 text-sm sm:text-base flex items-center gap-2"
             >
-              {uploading ? 'Uploading...' : 'Upload CSV File'}
+              {uploading ? (
+                <>
+                  <div className="flex items-center gap-1">
+                    <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                    <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                    <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                  </div>
+                  <span className="sr-only">Uploading</span>
+                </>
+              ) : (
+                'Upload CSV File'
+              )}
             </button>
           </div>
         </div>

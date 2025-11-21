@@ -393,9 +393,20 @@ export default function WorkflowForm({ workflow, onSave, onCancel }: WorkflowFor
             <button
               type="submit"
               disabled={loading || formData.actions.length === 0}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
-              {loading ? 'Saving...' : workflow ? 'Update Workflow' : 'Create Workflow'}
+              {loading ? (
+                <>
+                  <div className="flex items-center gap-1">
+                    <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                    <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                    <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                  </div>
+                  <span className="sr-only">Saving</span>
+                </>
+              ) : (
+                workflow ? 'Update Workflow' : 'Create Workflow'
+              )}
             </button>
           </div>
         </form>

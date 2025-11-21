@@ -2,22 +2,13 @@ import React, { lazy, Suspense } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import AppLayout from '@/app/layout/AppLayout';
 
-// Modern loading fallback component
+// Modern loading fallback component - 100% visual, no text
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-    <div className="text-center">
-      {/* Pulsing dots loader */}
-      <div className="flex items-center justify-center gap-2 mb-6">
-        <div className="w-4 h-4 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-        <div className="w-4 h-4 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-        <div className="w-4 h-4 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-      </div>
-      <p className="text-gray-700 dark:text-gray-300 font-medium text-lg">Loading...</p>
-      <div className="mt-2 flex items-center justify-center gap-1">
-        <span className="w-2 h-2 bg-gray-400 dark:bg-gray-600 rounded-full animate-pulse" style={{ animationDelay: '0ms' }}></span>
-        <span className="w-2 h-2 bg-gray-400 dark:bg-gray-600 rounded-full animate-pulse" style={{ animationDelay: '200ms' }}></span>
-        <span className="w-2 h-2 bg-gray-400 dark:bg-gray-600 rounded-full animate-pulse" style={{ animationDelay: '400ms' }}></span>
-      </div>
+    <div className="flex items-center justify-center gap-3">
+      <div className="w-5 h-5 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+      <div className="w-5 h-5 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+      <div className="w-5 h-5 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
     </div>
   </div>
 );

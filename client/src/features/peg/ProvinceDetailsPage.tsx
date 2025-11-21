@@ -275,9 +275,12 @@ export default function ProvinceDetailsPage() {
 
       {/* Clients List */}
       {loading ? (
-        <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading clients...</p>
+        <div className="flex items-center justify-center py-20">
+          <div className="flex items-center gap-3">
+            <div className="w-4 h-4 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+            <div className="w-4 h-4 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+            <div className="w-4 h-4 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+          </div>
         </div>
       ) : clients.length === 0 ? (
         <div className="bg-white dark:bg-gray-800 p-12 rounded-lg shadow-sm text-center border border-gray-200 dark:border-gray-700">

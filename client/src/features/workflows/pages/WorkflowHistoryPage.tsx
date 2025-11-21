@@ -4,15 +4,16 @@ import { History, CheckCircle, XCircle, Clock, Filter, Search, Calendar } from '
 interface WorkflowExecution {
   id: string;
   workflowId: string;
-  workflowName: string;
+  workflow?: {
+    name: string;
+  };
   entityType: string;
   entityId: string;
-  status: 'success' | 'failed' | 'partial';
-  executedAt: string;
-  duration: number;
-  actionsExecuted: number;
-  actionsFailed: number;
+  status: string; // 'pending', 'running', 'completed', 'failed'
+  result?: any;
   error?: string;
+  executedAt: string;
+  completedAt?: string;
 }
 
 export default function WorkflowHistoryPage() {
@@ -34,15 +35,35 @@ export default function WorkflowHistoryPage() {
       if (entityTypeFilter !== 'all') params.append('entityType', entityTypeFilter);
       if (dateRange !== 'all') params.append('dateRange', dateRange);
 
-      const response = await fetch(`/api/workflows/executions?${params.toString()}`, {
+      const response = await fetch(`http://localhost:4000/api/workflows/executions?${params.toString()}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json',
         },
       });
+
+      if (!response.ok) {
+        if (response.status === 403) {
+          console.warn('Access denied: Admin role required for workflow executions');
+        } else {
+          console.error('Failed to fetch workflow executions: HTTP', response.status);
+        }
+        setExecutions([]);
+        return;
+      }
+
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        console.error('Server returned non-JSON response:', contentType);
+        setExecutions([]);
+        return;
+      }
+
       const data = await response.json();
-      setExecutions(data);
+      setExecutions(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Failed to fetch workflow executions:', error);
+      setExecutions([]);
     } finally {
       setLoading(false);
     }
@@ -50,11 +71,13 @@ export default function WorkflowHistoryPage() {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'success':
+      case 'completed':
         return <CheckCircle className="w-5 h-5 text-green-600" />;
       case 'failed':
         return <XCircle className="w-5 h-5 text-red-600" />;
-      case 'partial':
+      case 'running':
+        return <Clock className="w-5 h-5 text-blue-600 animate-spin" />;
+      case 'pending':
         return <Clock className="w-5 h-5 text-yellow-600" />;
       default:
         return <Clock className="w-5 h-5 text-gray-600" />;
@@ -63,11 +86,13 @@ export default function WorkflowHistoryPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'success':
+      case 'completed':
         return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
       case 'failed':
         return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
-      case 'partial':
+      case 'running':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400';
+      case 'pending':
         return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
       default:
         return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400';
@@ -91,14 +116,14 @@ export default function WorkflowHistoryPage() {
   };
 
   const filteredExecutions = executions.filter((execution) =>
-    execution.workflowName.toLowerCase().includes(searchTerm.toLowerCase())
+    execution.workflow?.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const stats = {
     total: executions.length,
-    successful: executions.filter((e) => e.status === 'success').length,
+    successful: executions.filter((e) => e.status === 'completed').length,
     failed: executions.filter((e) => e.status === 'failed').length,
-    partial: executions.filter((e) => e.status === 'partial').length,
+    running: executions.filter((e) => e.status === 'running' || e.status === 'pending').length,
   };
 
   const successRate =
@@ -106,8 +131,13 @@ export default function WorkflowHistoryPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="flex items-center justify-center h-64 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 rounded-lg">
+        <div className="flex items-center gap-3">
+          <div className="w-4 h-4 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+          <div className="w-4 h-4 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+          <div className="w-4 h-4 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+        </div>
+        <span className="sr-only">Loading workflow history</span>
       </div>
     );
   }
@@ -171,10 +201,10 @@ export default function WorkflowHistoryPage() {
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Partial</p>
-              <p className="text-2xl font-bold text-yellow-600">{stats.partial}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">In Progress</p>
+              <p className="text-2xl font-bold text-blue-600">{stats.running}</p>
             </div>
-            <Clock className="w-8 h-8 text-yellow-600" />
+            <Clock className="w-8 h-8 text-blue-600" />
           </div>
         </div>
       </div>
@@ -203,9 +233,10 @@ export default function WorkflowHistoryPage() {
               className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white appearance-none"
             >
               <option value="all">All Status</option>
-              <option value="success">Success</option>
+              <option value="completed">Completed</option>
               <option value="failed">Failed</option>
-              <option value="partial">Partial</option>
+              <option value="running">Running</option>
+              <option value="pending">Pending</option>
             </select>
           </div>
 
@@ -285,7 +316,7 @@ export default function WorkflowHistoryPage() {
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900 dark:text-white">
-                        {execution.workflowName}
+                        {execution.workflow?.name || 'Unknown Workflow'}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -315,16 +346,18 @@ export default function WorkflowHistoryPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900 dark:text-white">
-                        {execution.actionsExecuted} / {execution.actionsExecuted + execution.actionsFailed}
+                        {execution.result?.actionsExecuted || 0} / {(execution.result?.actionsExecuted || 0) + (execution.result?.actionsFailed || 0)}
                       </div>
-                      {execution.actionsFailed > 0 && (
+                      {execution.result?.actionsFailed > 0 && (
                         <div className="text-xs text-red-600 dark:text-red-400">
-                          {execution.actionsFailed} failed
+                          {execution.result.actionsFailed} failed
                         </div>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                      {formatDuration(execution.duration)}
+                      {execution.completedAt && execution.executedAt
+                        ? formatDuration(new Date(execution.completedAt).getTime() - new Date(execution.executedAt).getTime())
+                        : '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                       {formatDate(execution.executedAt)}
