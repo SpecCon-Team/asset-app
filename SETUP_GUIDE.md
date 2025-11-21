@@ -73,9 +73,18 @@ npx prisma generate
 # Run migrations to create all tables
 npx prisma migrate dev
 
+# Create admin user (REQUIRED)
+npm run create-admin
+
 # (Optional) Seed the database with sample data
 npm run seed
 ```
+
+**Important:** The `create-admin` command creates the default admin account with these credentials:
+- **Email:** `admin@example.com`
+- **Password:** `password123`
+
+You can also run it manually anytime: `node createAdmin.mjs`
 
 ## Step 5: Start the Application
 
@@ -99,12 +108,16 @@ The client will start on `http://localhost:5173`
 
 Open your browser and go to `http://localhost:5173`
 
-### Default Admin Account (if you ran the seed)
-- Email: `admin@example.com`
-- Password: `password123`
+### Default Admin Account
+Use these credentials to login:
+- **Email:** `admin@example.com`
+- **Password:** `password123`
 
-### Create Your Own Account
-Click "Sign Up" to create a new account.
+⚠️ **Important:** Change the password after your first login!
+
+### Create Additional Accounts
+- Admins can create new users from the "My Clients" page
+- Or click "Sign Up" to self-register (will be USER role by default)
 
 ## Troubleshooting
 
