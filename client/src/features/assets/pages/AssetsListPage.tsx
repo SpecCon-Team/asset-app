@@ -6,6 +6,7 @@ import { PageLoader } from '@/components/LoadingSpinner';
 import { ConfirmDialog, CSVImportModal } from '@/components';
 import toast from 'react-hot-toast';
 import { exportToCSV, ASSET_EXPORT_COLUMNS, generateFilename, downloadCSVTemplate, ASSET_IMPORT_TEMPLATE_COLUMNS } from '@/lib/exportUtils';
+import { getApiClient } from '@/features/assets/lib/apiClient';
 
 export default function AssetsListPage() {
   const navigate = useNavigate();
@@ -89,18 +90,13 @@ export default function AssetsListPage() {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch('http://localhost:4000/api/assets/import-csv', {
-      method: 'POST',
-      headers,
-      body: formData,
+    const response = await getApiClient().post('/assets/import-csv', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
     });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to import CSV');
-    }
-
-    const result = await response.json();
+    const result = response.data;
 
     // Refresh assets list after import
     await fetchAssets({ search, status: statusFilter });

@@ -27,13 +27,13 @@ export default function NotificationBell() {
     fetchNotifications(currentUser.id);
     fetchUnreadCount(currentUser.id);
 
-    // Poll for new notifications every 30 seconds
+    // Poll for new notifications every 2 minutes (120 seconds)
     const interval = setInterval(() => {
       if (currentUser?.id) {
         fetchNotifications(currentUser.id);
         fetchUnreadCount(currentUser.id);
       }
-    }, 30000);
+    }, 120000);
 
     return () => clearInterval(interval);
   }, [currentUser?.id, fetchNotifications, fetchUnreadCount]);

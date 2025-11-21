@@ -59,15 +59,21 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
       return;
     }
 
+    // Require minimum 3 characters before searching
+    if (query.trim().length < 3) {
+      setResults([]);
+      return;
+    }
+
     const searchTimeout = setTimeout(async () => {
       setIsSearching(true);
       try {
-        // Search all endpoints in parallel using proper API functions
+        // Search all endpoints in parallel with pagination limit
         const [assets, tickets, users, trips] = await Promise.all([
-          listAssets().catch(() => []),
-          getApiClient().get('/tickets').then(res => Array.isArray(res.data) ? res.data : []).catch(() => []),
-          listUsers().catch(() => []),
-          getApiClient().get('/travel').then(res => Array.isArray(res.data) ? res.data : []).catch(() => []),
+          getApiClient().get('/assets', { params: { limit: 10, search: query.trim() } }).then(res => Array.isArray(res.data) ? res.data : []).catch(() => []),
+          getApiClient().get('/tickets', { params: { limit: 10, search: query.trim() } }).then(res => Array.isArray(res.data) ? res.data : []).catch(() => []),
+          getApiClient().get('/users', { params: { limit: 10, search: query.trim() } }).then(res => Array.isArray(res.data) ? res.data : []).catch(() => []),
+          getApiClient().get('/travel', { params: { limit: 10, search: query.trim() } }).then(res => Array.isArray(res.data) ? res.data : []).catch(() => []),
         ]);
 
         // Filter assets by query
@@ -144,7 +150,7 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
       } finally {
         setIsSearching(false);
       }
-    }, 300); // Debounce 300ms
+    }, 600); // Debounce 600ms
 
     return () => clearTimeout(searchTimeout);
   }, [query]);
@@ -231,7 +237,7 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
               }
               // Let other keys work normally in the input for typing
             }}
-            placeholder="Search assets, tickets, trips, users..."
+            placeholder="Search assets, tickets, trips, users... (min 3 chars)"
             className="flex-1 bg-transparent text-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none"
             autoFocus
             autoComplete="off"
@@ -309,7 +315,7 @@ export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
                               : result.type === 'trip'
                               ? '#f97316'
                               : '#a855f7',
-                        }}
+                        } as React.CSSProperties}
                       />
                     </div>
                     <div className="flex-1 min-w-0">

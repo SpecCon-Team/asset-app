@@ -68,10 +68,14 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 export default function AdminDashboard() {
   const navigate = useNavigate();
   
-  // Zustand stores
-  const { assets, fetchAssets, bulkCreateAssets } = useAssetsStore();
-  const { tickets, fetchTickets } = useTicketsStore();
-  const { users, fetchUsers } = useUsersStore();
+  // Zustand stores - use selectors to prevent unnecessary re-renders
+  const assets = useAssetsStore(state => state.assets);
+  const fetchAssets = useAssetsStore(state => state.fetchAssets);
+  const bulkCreateAssets = useAssetsStore(state => state.bulkCreateAssets);
+  const tickets = useTicketsStore(state => state.tickets);
+  const fetchTickets = useTicketsStore(state => state.fetchTickets);
+  const users = useUsersStore(state => state.users);
+  const fetchUsers = useUsersStore(state => state.fetchUsers);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [uploading, setUploading] = useState(false);

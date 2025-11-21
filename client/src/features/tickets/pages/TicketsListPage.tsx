@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTicketsStore } from '../store';
 import { listUsers } from '@/features/users/api';
@@ -81,6 +81,57 @@ export default function TicketsListPage() {
     setCurrentPage(1);
   }, [statusFilter, priorityFilter, assigneeFilter, searchQuery]);
 
+  // ALL HOOKS MUST BE BEFORE EARLY RETURNS
+  const filteredTickets = useMemo(() => {
+    return tickets.filter((ticket) => {
+      const matchesSearch =
+        searchQuery === '' ||
+        ticket.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        ticket.number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        ticket.description?.toLowerCase().includes(searchQuery.toLowerCase());
+
+      const matchesAssignee =
+        assigneeFilter === '' ||
+        (assigneeFilter === 'unassigned' && !ticket.assignedToId) ||
+        ticket.assignedToId === assigneeFilter;
+
+      return matchesSearch && matchesAssignee;
+    });
+  }, [tickets, searchQuery, assigneeFilter]);
+
+  // Pagination calculations - memoized
+  const { totalPages, paginatedTickets, startIndex, endIndex } = useMemo(() => {
+    const totalPages = Math.ceil(filteredTickets.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedTickets = filteredTickets.slice(startIndex, endIndex);
+    return { totalPages, paginatedTickets, startIndex, endIndex };
+  }, [filteredTickets, currentPage, itemsPerPage]);
+
+  const clearFilters = useCallback(() => {
+    setStatusFilter('');
+    setPriorityFilter('');
+    setAssigneeFilter('');
+    setSearchQuery('');
+  }, []);
+
+  const handleStatusChange = useCallback(async (ticketId: string, newStatus: string) => {
+    try {
+      const client = getApiClient();
+      console.log('Updating ticket:', ticketId, 'to status:', newStatus);
+      const response = await client.patch(`/tickets/${ticketId}`, { status: newStatus });
+      console.log('Update response:', response.data);
+      await fetchTickets({ status: statusFilter, priority: priorityFilter });
+      showSuccess('Status updated successfully');
+    } catch (error: any) {
+      console.error('Status update error:', error);
+      const errorMsg = error.response?.data?.message || error.message || 'Unknown error';
+      showError('Failed to update ticket status', errorMsg);
+      throw error; // Re-throw so Kanban board knows it failed
+    }
+  }, [fetchTickets, statusFilter, priorityFilter]);
+
+  // Early returns AFTER all hooks
   if (isLoading) {
     return <PageLoader message="Loading tickets..." />;
   }
@@ -114,50 +165,6 @@ export default function TicketsListPage() {
         return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
       default:
         return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
-    }
-  };
-
-  const filteredTickets = tickets.filter((ticket) => {
-    const matchesSearch =
-      searchQuery === '' ||
-      ticket.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      ticket.number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      ticket.description?.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchesAssignee =
-      assigneeFilter === '' ||
-      (assigneeFilter === 'unassigned' && !ticket.assignedToId) ||
-      ticket.assignedToId === assigneeFilter;
-
-    return matchesSearch && matchesAssignee;
-  });
-
-  // Pagination calculations
-  const totalPages = Math.ceil(filteredTickets.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedTickets = filteredTickets.slice(startIndex, endIndex);
-
-  const clearFilters = () => {
-    setStatusFilter('');
-    setPriorityFilter('');
-    setAssigneeFilter('');
-    setSearchQuery('');
-  };
-
-  const handleStatusChange = async (ticketId: string, newStatus: string) => {
-    try {
-      const client = getApiClient();
-      console.log('Updating ticket:', ticketId, 'to status:', newStatus);
-      const response = await client.patch(`/tickets/${ticketId}`, { status: newStatus });
-      console.log('Update response:', response.data);
-      await fetchTickets({ status: statusFilter, priority: priorityFilter });
-      showSuccess('Status updated successfully');
-    } catch (error: any) {
-      console.error('Status update error:', error);
-      const errorMsg = error.response?.data?.message || error.message || 'Unknown error';
-      showError('Failed to update ticket status', errorMsg);
-      throw error; // Re-throw so Kanban board knows it failed
     }
   };
 
@@ -310,18 +317,13 @@ export default function TicketsListPage() {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch('http://localhost:4000/api/tickets/import-csv', {
-      method: 'POST',
-      headers,
-      body: formData,
+    const response = await getApiClient().post('/tickets/import-csv', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
     });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to import CSV');
-    }
-
-    const result = await response.json();
+    const result = response.data;
 
     // Refresh tickets list after import
     await fetchTickets({ status: statusFilter, priority: priorityFilter });

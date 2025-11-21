@@ -193,9 +193,8 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     root.style.setProperty('--color-primary-rgb', hexToRgb(theme.primary));
   }, [themeColor]);
 
-  // Listen for user changes (login/logout) and reload theme color
+  // Listen for user changes (login/logout) via storage events only
   useEffect(() => {
-    // Check periodically for user changes in the same tab
     const checkUserChange = () => {
       try {
         const userStr = localStorage.getItem('user');
@@ -220,13 +219,12 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
       }
     };
 
-    // Check immediately and then every 500ms
+    // Check only once on mount
     checkUserChange();
-    const interval = setInterval(checkUserChange, 500);
 
-    // Also listen for storage events (for cross-tab sync)
+    // Listen for storage events (for cross-tab sync and login/logout)
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'user') {
+      if (e.key === 'user' || e.key?.startsWith('themeColor_')) {
         checkUserChange();
       }
     };
@@ -234,7 +232,6 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     window.addEventListener('storage', handleStorageChange);
 
     return () => {
-      clearInterval(interval);
       window.removeEventListener('storage', handleStorageChange);
     };
   }, [themeColor]);

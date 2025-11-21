@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, lazy, Suspense } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { Package, Ticket, Home, FolderOpen, ClipboardList, Settings, Users, CheckSquare, Menu, X, Keyboard, Search, Shield, Lock, ChevronLeft, ChevronRight, Bell, HelpCircle, Download, ShieldCheck, UserCog, BarChart3, FileText, Plane, Workflow, Clock, GitBranch, History } from 'lucide-react';
 import NotificationBell from '@/features/notifications/NotificationBell';
@@ -6,8 +6,10 @@ import UserProfileDropdown from './UserProfileDropdown';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import KeyboardShortcutsModal from '@/components/KeyboardShortcutsModal';
 import GlobalSearch from '@/components/GlobalSearch';
-import AIChatWidget from '@/components/AIChatWidget';
 import ThemeSwitcher from '@/components/ThemeSwitcher';
+
+// Lazy load heavy components
+const AIChatWidget = lazy(() => import('@/components/AIChatWidget'));
 
 export default function AppLayout() {
   const navigate = useNavigate();
@@ -296,7 +298,7 @@ export default function AppLayout() {
                     <NavLink
                       key={link.to}
                       to={link.to}
-                      end={link.exact}
+                      end={(link as any).exact}
                       className={({ isActive }) =>
                         `flex items-center ${isCollapsed ? 'justify-center md:justify-center' : 'gap-3'}
                         px-3 py-2.5 md:py-3 rounded-lg text-sm font-medium
@@ -412,8 +414,10 @@ export default function AppLayout() {
         onClose={() => setShortcutsModalOpen(false)}
       />
 
-      {/* AI Chat Widget */}
-      <AIChatWidget />
+      {/* AI Chat Widget - Lazy loaded */}
+      <Suspense fallback={null}>
+        <AIChatWidget />
+      </Suspense>
     </div>
   );
 }

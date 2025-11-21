@@ -7,7 +7,7 @@ export function getApiClient(): AxiosInstance {
   client = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api',
     withCredentials: true,
-    timeout: 30000, // 30 seconds timeout (for email sending operations)
+    timeout: 10000, // 10 seconds timeout for faster failure
   });
 
   client.interceptors.request.use((config) => {
