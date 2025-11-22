@@ -104,26 +104,6 @@ export function useMinLoadingTime(isLoading: boolean, minDuration: number = 2000
   return showLoading;
 }
 
-/**
- * Full page loading component with animated dots - no text, just animation
- */
-export function PageLoader({ message = 'Loading' }: { message?: string }) {
-  return (
-    <div
-      role="status"
-      aria-live="polite"
-      aria-busy="true"
-      className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800"
-    >
-      <div className="flex items-center justify-center gap-3">
-        <div className="w-5 h-5 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-        <div className="w-5 h-5 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-        <div className="w-5 h-5 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-      </div>
-      <span className="sr-only">{message}</span>
-    </div>
-  );
-}
 
 /**
  * Inline loading state for buttons with smooth animation - no text

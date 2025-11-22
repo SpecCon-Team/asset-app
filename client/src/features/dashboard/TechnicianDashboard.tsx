@@ -3,10 +3,14 @@ import { useTicketsStore } from '@/features/tickets/store';
 import { useNavigate } from 'react-router-dom';
 import { ClipboardList, CheckCircle, Clock, AlertCircle, TrendingUp, Inbox } from 'lucide-react';
 import { formatDate } from '@/lib/dateFormatter';
+import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
 
 export default function TechnicianDashboard() {
   const navigate = useNavigate();
-  const { tickets, fetchTickets } = useTicketsStore();
+  const { tickets, fetchTickets, isLoading } = useTicketsStore();
+
+  // Combined loading state with minimum display time
+  const showLoading = useMinLoadingTime(isLoading, 2000);
 
   // Get current user
   const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
@@ -132,6 +136,11 @@ export default function TechnicianDashboard() {
     }
     return undefined;
   };
+
+  // Show loader while initial data is loading
+  if (showLoading) {
+    return <LoadingOverlay message="Loading dashboard..." />;
+  }
 
   return (
     <div className="space-y-8">

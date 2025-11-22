@@ -1,17 +1,10 @@
 import React, { lazy, Suspense } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import AppLayout from '@/app/layout/AppLayout';
+import { LoadingOverlay } from '@/components/LoadingSpinner';
 
-// Modern loading fallback component - 100% visual, no text
-const PageLoader = () => (
-  <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-    <div className="flex items-center justify-center gap-3">
-      <div className="w-5 h-5 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-      <div className="w-5 h-5 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-      <div className="w-5 h-5 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-    </div>
-  </div>
-);
+// Modern loading fallback component - circular spinner overlay
+const PageLoader = () => <LoadingOverlay message="Loading page" />;
 
 // Lazy load all pages for better performance
 const Dashboard = lazy(() => import('@/features/dashboard/Dashboard'));

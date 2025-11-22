@@ -2,7 +2,6 @@
 export {
   LoadingSpinner,
   LoadingOverlay,
-  PageLoader,
   ButtonLoader,
   SkeletonLoader,
   ListSkeleton,
