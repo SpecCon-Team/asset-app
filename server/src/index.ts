@@ -219,8 +219,22 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID']
 }));
 
-// 8. Response compression
-app.use(compression());
+// 8. Response compression - optimized for better performance
+app.use(compression({
+  // Only compress responses larger than 1KB
+  threshold: 1024,
+  // Compression level (0-9, 6 is good balance)
+  level: 6,
+  // Filter which responses to compress
+  filter: (req, res) => {
+    // Don't compress if client doesn't support it
+    if (req.headers['x-no-compression']) {
+      return false;
+    }
+    // Use compression for these types
+    return compression.filter(req, res);
+  }
+}));
 
 // 9. Data sanitization against NoSQL injection
 app.use(mongoSanitize());

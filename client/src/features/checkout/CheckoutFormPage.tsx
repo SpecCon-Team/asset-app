@@ -49,7 +49,7 @@ export default function CheckoutFormPage() {
       const apiClient = getApiClient();
       const response = await apiClient.get('/assets');
       // Only show available assets for new checkout
-      const assetsList = response.data;
+      const assetsList = Array.isArray(response.data) ? response.data : (response.data.assets || []);
       if (!isEditMode) {
         setAssets(assetsList.filter((a: Asset) => a.checkoutStatus === 'available'));
       } else {
@@ -124,7 +124,7 @@ export default function CheckoutFormPage() {
   };
 
   return (
-    <div className="flex flex-col p-4 md:p-6 lg:p-8">
+    <div className="flex flex-col p-4 md:p-6 lg:p-8 max-w-4xl mx-auto w-full">
       {/* Header */}
       <div className="mb-6">
         <button

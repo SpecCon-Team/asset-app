@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import api from '@/lib/api';
-import { showSuccessAlert, showErrorAlert, showConfirmDialog } from '@/lib/sweetalert';
+import { getApiClient } from '../assets/lib/apiClient';
+import { showSuccess, showError, showConfirmDialog } from '@/lib/sweetalert';
+import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
 
 interface DepreciationRecord {
   id: string;
@@ -71,6 +72,7 @@ const DepreciationDetailPage: React.FC = () => {
   const [record, setRecord] = useState<DepreciationRecord | null>(null);
   const [valuations, setValuations] = useState<Valuation[]>([]);
   const [loading, setLoading] = useState(true);
+  const showLoading = useMinLoadingTime(loading, 2000);
   const [activeTab, setActiveTab] = useState<'schedule' | 'valuations'>('schedule');
   const [showValuationForm, setShowValuationForm] = useState(false);
   const [valuationForm, setValuationForm] = useState({
@@ -92,18 +94,18 @@ const DepreciationDetailPage: React.FC = () => {
     try {
       setLoading(true);
       const [recordRes, valuationsRes] = await Promise.all([
-        api.get(`/api/depreciation/${id}`),
-        api.get(`/api/depreciation/valuations/${record?.asset?.id || ''}`)
+        getApiClient().get(`/depreciation/${id}`),
+        getApiClient().get(`/depreciation/valuations/${record?.asset?.id || ''}`)
       ]);
 
       setRecord(recordRes.data);
       if (recordRes.data.asset?.id) {
-        const vals = await api.get(`/api/depreciation/valuations/${recordRes.data.asset.id}`);
+        const vals = await getApiClient().get(`/depreciation/valuations/${recordRes.data.asset.id}`);
         setValuations(vals.data.valuations || []);
       }
     } catch (error: any) {
       console.error('Error loading depreciation:', error);
-      showErrorAlert('Failed to load depreciation details');
+      showError('Failed to load depreciation details');
     } finally {
       setLoading(false);
     }
@@ -118,12 +120,12 @@ const DepreciationDetailPage: React.FC = () => {
     if (!confirmed) return;
 
     try {
-      await api.post(`/api/depreciation/${id}/post`, { periodId });
-      showSuccessAlert('Depreciation posted successfully');
+      await getApiClient().post(`/depreciation/${id}/post`, { periodId });
+      showSuccess('Depreciation posted successfully');
       loadData();
     } catch (error: any) {
       console.error('Error posting depreciation:', error);
-      showErrorAlert(error.response?.data?.message || 'Failed to post depreciation');
+      showError(error.response?.data?.message || 'Failed to post depreciation');
     }
   };
 
@@ -131,12 +133,12 @@ const DepreciationDetailPage: React.FC = () => {
     e.preventDefault();
 
     if (!record?.asset?.id) {
-      showErrorAlert('Asset information is missing');
+      showError('Asset information is missing');
       return;
     }
 
     try {
-      await api.post('/api/depreciation/valuations', {
+      await getApiClient().post('/depreciation/valuations', {
         ...valuationForm,
         assetId: record.asset.id,
         bookValue: parseFloat(valuationForm.bookValue) || record.currentBookValue,
@@ -144,7 +146,7 @@ const DepreciationDetailPage: React.FC = () => {
         replacementValue: valuationForm.replacementValue ? parseFloat(valuationForm.replacementValue) : null
       });
 
-      showSuccessAlert('Valuation added successfully');
+      showSuccess('Valuation added successfully');
       setShowValuationForm(false);
       setValuationForm({
         valuationDate: new Date().toISOString().split('T')[0],
@@ -159,7 +161,7 @@ const DepreciationDetailPage: React.FC = () => {
       loadData();
     } catch (error: any) {
       console.error('Error adding valuation:', error);
-      showErrorAlert(error.response?.data?.message || 'Failed to add valuation');
+      showError(error.response?.data?.message || 'Failed to add valuation');
     }
   };
 
@@ -184,12 +186,8 @@ const DepreciationDetailPage: React.FC = () => {
     ).join(' ');
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
+  if (showLoading) {
+    return <LoadingOverlay message="Loading depreciation details" />;
   }
 
   if (!record) {

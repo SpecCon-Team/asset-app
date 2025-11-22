@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '@/lib/api';
-import { showSuccessAlert, showErrorAlert } from '@/lib/sweetalert';
+import { getApiClient } from '../assets/lib/apiClient';
+import { showSuccess, showError } from '@/lib/sweetalert';
 
 interface Category {
   id: string;
@@ -27,7 +27,7 @@ const DocumentUploadPage: React.FC = () => {
 
   const loadCategories = async () => {
     try {
-      const response = await api.get('/api/documents/categories/all');
+      const response = await getApiClient().get('/documents/categories/all');
       setCategories(response.data.categories || []);
     } catch (error) {
       console.error('Error loading categories:', error);
@@ -48,12 +48,12 @@ const DocumentUploadPage: React.FC = () => {
     e.preventDefault();
 
     if (!file) {
-      showErrorAlert('Please select a file to upload');
+      showError('Please select a file to upload');
       return;
     }
 
     if (!formData.title) {
-      showErrorAlert('Title is required');
+      showError('Title is required');
       return;
     }
 
@@ -67,17 +67,17 @@ const DocumentUploadPage: React.FC = () => {
       if (formData.categoryId) uploadData.append('categoryId', formData.categoryId);
       if (formData.tags) uploadData.append('tags', JSON.stringify(formData.tags.split(',').map(t => t.trim())));
 
-      const response = await api.post('/api/documents/upload', uploadData, {
+      const response = await getApiClient().post('/documents/upload', uploadData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       });
 
-      showSuccessAlert('Document uploaded successfully');
+      showSuccess('Document uploaded successfully');
       navigate(`/documents/${response.data.document.id}`);
     } catch (error: any) {
       console.error('Error uploading document:', error);
-      showErrorAlert(error.response?.data?.message || 'Failed to upload document');
+      showError(error.response?.data?.message || 'Failed to upload document');
     } finally {
       setLoading(false);
     }

@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, Area, AreaChart } from 'recharts';
 import SLAWidget from '@/features/workflows/components/SLAWidget';
 import WorkflowStatsWidget from '@/features/workflows/components/WorkflowStatsWidget';
+import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
 
 const COLORS = {
   blue: '#3B82F6',
@@ -67,21 +68,29 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
-  
+
   // Zustand stores - use selectors to prevent unnecessary re-renders
   const assets = useAssetsStore(state => state.assets);
   const fetchAssets = useAssetsStore(state => state.fetchAssets);
   const bulkCreateAssets = useAssetsStore(state => state.bulkCreateAssets);
+  const isLoadingAssets = useAssetsStore(state => state.isLoading);
   const tickets = useTicketsStore(state => state.tickets);
   const fetchTickets = useTicketsStore(state => state.fetchTickets);
+  const isLoadingTickets = useTicketsStore(state => state.isLoading);
   const users = useUsersStore(state => state.users);
   const fetchUsers = useUsersStore(state => state.fetchUsers);
+  const isLoadingUsers = useUsersStore(state => state.isLoading);
+
+  // Combined loading state with minimum display time
+  const isLoading = isLoadingAssets || isLoadingTickets || isLoadingUsers;
+  const showLoading = useMinLoadingTime(isLoading, 2000);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [liveData, setLiveData] = useState<any[]>([]);
   const [isAnimating, setIsAnimating] = useState(true);
+  const [isDarkMode, setIsDarkMode] = useState(document.documentElement.classList.contains('dark'));
 
   // Fetch data on mount
   useEffect(() => {
@@ -89,6 +98,18 @@ export default function AdminDashboard() {
     fetchTickets();
     fetchUsers();
   }, [fetchAssets, fetchTickets, fetchUsers]);
+
+  // Track dark mode changes
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'));
+    });
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+    return () => observer.disconnect();
+  }, []);
 
   // Initialize and update live chart data for ticket traffic - REAL DATA ONLY
   useEffect(() => {
@@ -288,6 +309,11 @@ export default function AdminDashboard() {
     }
   };
 
+  // Show loader while initial data is loading
+  if (showLoading) {
+    return <LoadingOverlay message="Loading dashboard..." />;
+  }
+
   return (
     <div className="space-y-4 sm:space-y-6 md:space-y-8">
       <div>
@@ -394,9 +420,9 @@ export default function AdminDashboard() {
           <h3 className="font-semibold mb-3 sm:mb-4 text-base sm:text-lg text-gray-900 dark:text-white">Tickets by Priority</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={ticketPriorityData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
+              <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? '#374151' : '#e5e7eb'} />
+              <XAxis dataKey="name" stroke={isDarkMode ? '#9CA3AF' : '#6B7280'} />
+              <YAxis stroke={isDarkMode ? '#9CA3AF' : '#6B7280'} />
               <Tooltip content={<CustomTooltip />} />
               <Bar dataKey="value" fill={COLORS.blue}>
                 {ticketPriorityData.map((entry, index) => (
@@ -467,17 +493,17 @@ export default function AdminDashboard() {
                     <stop offset="95%" stopColor="#10B981" stopOpacity={0.1}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" strokeOpacity={0.3} />
+                <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? '#374151' : '#e0e0e0'} strokeOpacity={0.3} />
                 <XAxis
                   dataKey="time"
-                  stroke="#9CA3AF"
+                  stroke={isDarkMode ? '#9CA3AF' : '#6B7280'}
                   style={{ fontSize: '11px' }}
                   angle={-45}
                   textAnchor="end"
                   height={70}
                 />
                 <YAxis
-                  stroke="#9CA3AF"
+                  stroke={isDarkMode ? '#9CA3AF' : '#6B7280'}
                   style={{ fontSize: '12px' }}
                 />
                 <Tooltip content={<CustomTooltip />} />

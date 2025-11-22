@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAssetsStore } from '../store';
 import { Pencil, Eye, Trash2, Download, FileSpreadsheet, Upload } from 'lucide-react';
-import { PageLoader } from '@/components/LoadingSpinner';
+import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
 import { ConfirmDialog, CSVImportModal } from '@/components';
 import toast from 'react-hot-toast';
 import { exportToCSV, ASSET_EXPORT_COLUMNS, generateFilename, downloadCSVTemplate, ASSET_IMPORT_TEMPLATE_COLUMNS } from '@/lib/exportUtils';
@@ -17,6 +17,9 @@ export default function AssetsListPage() {
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
   const { assets, isLoading, error, fetchAssets, deleteAsset } = useAssetsStore();
+
+  // Enforce minimum 2 second loading time
+  const loading = useMinLoadingTime(isLoading, 2000);
 
   // Redirect non-admin users
   useEffect(() => {
@@ -104,8 +107,8 @@ export default function AssetsListPage() {
     return result;
   };
 
-  if (isLoading) {
-    return <PageLoader message="Loading assets..." />;
+  if (loading) {
+    return <LoadingOverlay message="Loading assets..." />;
   }
 
   if (error) {

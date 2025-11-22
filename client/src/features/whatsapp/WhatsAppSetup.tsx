@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { MessageCircle, CheckCircle, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import axios from 'axios';
+import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api';
 
@@ -10,6 +11,7 @@ export default function WhatsAppSetup() {
   const [isConnected, setIsConnected] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
+  const showLoading = useMinLoadingTime(isChecking, 2000);
 
   useEffect(() => {
     checkWhatsAppStatus();
@@ -59,6 +61,11 @@ export default function WhatsAppSetup() {
       setIsTesting(false);
     }
   };
+
+  // Show full-page loader while checking WhatsApp status
+  if (showLoading) {
+    return <LoadingOverlay message="Checking WhatsApp status..." />;
+  }
 
   return (
     <div className="space-y-6">

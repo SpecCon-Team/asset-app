@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Shield, Download, Search, Filter, Activity, AlertCircle } from 'lucide-react';
 import { getApiClient } from '@/features/assets/lib/apiClient';
+import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
 
 interface AuditLog {
   id: string;
@@ -29,6 +30,7 @@ export default function AuditLogsPage() {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const showLoading = useMinLoadingTime(isLoading, 2000);
   const [searchQuery, setSearchQuery] = useState('');
   const [actionFilter, setActionFilter] = useState('');
   const [entityFilter, setEntityFilter] = useState('');
@@ -152,6 +154,11 @@ export default function AuditLogsPage() {
       log.ipAddress?.toLowerCase().includes(query)
     );
   });
+
+  // Show full-page loader on initial load
+  if (showLoading) {
+    return <LoadingOverlay message="Loading audit logs..." />;
+  }
 
   return (
     <div className="p-6">
@@ -338,18 +345,7 @@ export default function AuditLogsPage() {
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              {isLoading ? (
-                <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center">
-                    <div className="flex items-center justify-center gap-3">
-                      <div className="w-4 h-4 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                      <div className="w-4 h-4 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                      <div className="w-4 h-4 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-                    </div>
-                    <span className="sr-only">Loading audit logs</span>
-                  </td>
-                </tr>
-              ) : filteredLogs.length === 0 ? (
+              {filteredLogs.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                     No audit logs found

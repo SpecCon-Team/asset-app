@@ -6,7 +6,7 @@ import type { User } from '@/features/users/types';
 import { getApiClient } from '@/features/assets/lib/apiClient';
 import { showThemedAlert, showSuccess, showError, showConfirmation } from '@/lib/swal-config';
 import { formatDate } from '@/lib/dateFormatter';
-import { PageLoader } from '@/components/LoadingSpinner';
+import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
 import { exportToCSV, TICKET_EXPORT_COLUMNS, generateFilename, downloadCSVTemplate, TICKET_IMPORT_TEMPLATE_COLUMNS } from '@/lib/exportUtils';
 import { Download, FileSpreadsheet, Upload, LayoutGrid, List } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -48,6 +48,7 @@ export default function TicketsListPage() {
   const itemsPerPage = 10;
 
   const { tickets, isLoading, error, fetchTickets } = useTicketsStore();
+  const showLoading = useMinLoadingTime(isLoading, 2000);
 
   // Redirect non-admin users to My Tickets
   useEffect(() => {
@@ -132,8 +133,8 @@ export default function TicketsListPage() {
   }, [fetchTickets, statusFilter, priorityFilter]);
 
   // Early returns AFTER all hooks
-  if (isLoading) {
-    return <PageLoader message="Loading tickets..." />;
+  if (showLoading) {
+    return <LoadingOverlay message="Loading tickets..." />;
   }
 
   if (error) {

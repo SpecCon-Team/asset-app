@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma';
 import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
+import { cacheMiddleware, invalidateCache } from '../middleware/cache';
 
 const router = Router();
 
@@ -16,7 +17,7 @@ const createNotificationSchema = z.object({
 });
 
 // Get all notifications for a user
-router.get('/user/:userId', authenticate, async (req: AuthRequest, res) => {
+router.get('/user/:userId', authenticate, cacheMiddleware(15000), async (req: AuthRequest, res) => {
   try {
     // Users can only view their own notifications
     if (req.user?.id !== req.params.userId && req.user?.role !== 'ADMIN') {

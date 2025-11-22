@@ -14,9 +14,12 @@ import {
 import { getApiClient } from '@/features/assets/lib/apiClient';
 import toast from 'react-hot-toast';
 import PushNotificationSettings from '@/components/PushNotificationSettings';
+import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
 
 export default function GeneralSettingsPage() {
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const showLoading = useMinLoadingTime(isLoading, 2000);
   const [settings, setSettings] = useState({
     // Notification Settings
     emailNotifications: true,
@@ -65,6 +68,7 @@ export default function GeneralSettingsPage() {
         applyTheme(settings.theme);
       }
     }
+    setIsLoading(false);
   }, []);
 
   const applyTheme = (theme: string) => {
@@ -162,6 +166,10 @@ export default function GeneralSettingsPage() {
         </div>
       </div>
     );
+  }
+
+  if (showLoading || !currentUser) {
+    return <LoadingOverlay message="Loading settings..." />;
   }
 
   return (

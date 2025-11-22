@@ -17,6 +17,7 @@ import { getApiClient } from '../assets/lib/apiClient';
 import { formatDate } from '@/lib/dateFormatter';
 import { showSuccess, showError, showConfirm } from '@/lib/sweetalert';
 import toast from 'react-hot-toast';
+import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
 
 interface MaintenanceSchedule {
   id: string;
@@ -71,6 +72,7 @@ export default function MaintenanceDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [schedule, setSchedule] = useState<MaintenanceSchedule | null>(null);
   const [loading, setLoading] = useState(true);
+  const showLoading = useMinLoadingTime(loading, 2000);
 
   useEffect(() => {
     if (id) {
@@ -170,16 +172,8 @@ export default function MaintenanceDetailPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="flex items-center gap-3">
-          <div className="w-4 h-4 bg-blue-600 rounded-full animate-bounce"></div>
-          <div className="w-4 h-4 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-          <div className="w-4 h-4 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-        </div>
-      </div>
-    );
+  if (showLoading) {
+    return <LoadingOverlay message="Loading maintenance schedule" />;
   }
 
   if (!schedule) {
@@ -339,7 +333,7 @@ export default function MaintenanceDetailPage() {
                   <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Estimated Cost</label>
                   <div className="mt-1 text-gray-900 dark:text-white flex items-center gap-2">
                     <DollarSign className="w-4 h-4" />
-                    ${schedule.cost.toFixed(2)}
+                    R{schedule.cost.toFixed(2)}
                   </div>
                 </div>
               )}
@@ -416,7 +410,7 @@ export default function MaintenanceDetailPage() {
                         )}
                         {entry.actualCost && (
                           <div className="text-gray-600 dark:text-gray-400">
-                            Cost: ${entry.actualCost.toFixed(2)}
+                            Cost: R{entry.actualCost.toFixed(2)}
                           </div>
                         )}
                       </div>
@@ -464,7 +458,7 @@ export default function MaintenanceDetailPage() {
                   <div>
                     <div className="text-sm text-gray-500 dark:text-gray-400">Total Cost</div>
                     <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                      ${schedule.history.reduce((sum, h) => sum + (h.actualCost || 0), 0).toFixed(2)}
+                      R{schedule.history.reduce((sum, h) => sum + (h.actualCost || 0), 0).toFixed(2)}
                     </div>
                   </div>
 

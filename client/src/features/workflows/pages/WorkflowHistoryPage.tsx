@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { History, CheckCircle, XCircle, Clock, Filter, Search, Calendar } from 'lucide-react';
+import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
 
 interface WorkflowExecution {
   id: string;
@@ -19,6 +20,7 @@ interface WorkflowExecution {
 export default function WorkflowHistoryPage() {
   const [executions, setExecutions] = useState<WorkflowExecution[]>([]);
   const [loading, setLoading] = useState(true);
+  const showLoading = useMinLoadingTime(loading, 2000);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [entityTypeFilter, setEntityTypeFilter] = useState<string>('all');
@@ -129,17 +131,8 @@ export default function WorkflowHistoryPage() {
   const successRate =
     stats.total > 0 ? ((stats.successful / stats.total) * 100).toFixed(1) : '0';
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 rounded-lg">
-        <div className="flex items-center gap-3">
-          <div className="w-4 h-4 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-          <div className="w-4 h-4 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-          <div className="w-4 h-4 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-        </div>
-        <span className="sr-only">Loading workflow history</span>
-      </div>
-    );
+  if (showLoading) {
+    return <LoadingOverlay message="Loading workflow history..." />;
   }
 
   return (

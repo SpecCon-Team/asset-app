@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Loader2 } from 'lucide-react';
 
 interface LoadingSpinnerProps {
@@ -40,7 +40,8 @@ export function LoadingSpinner({ size = 'md', message = 'Loading', className = '
 }
 
 /**
- * Full page loading overlay with modern design - no text, just animation
+ * Full page loading overlay with modern design
+ * Shows with smooth animations - clean minimal design
  */
 export function LoadingOverlay({ message = 'Loading' }: { message?: string }) {
   return (
@@ -48,19 +49,59 @@ export function LoadingOverlay({ message = 'Loading' }: { message?: string }) {
       role="status"
       aria-live="polite"
       aria-busy="true"
-      className="fixed inset-0 bg-gradient-to-br from-black/60 to-black/40 flex items-center justify-center z-50 backdrop-blur-md"
+      className="fixed inset-0 flex items-center justify-center z-50 bg-gray-50 dark:bg-gray-900 animate-fade-in"
     >
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-10 shadow-2xl border border-gray-200 dark:border-gray-700 transform animate-scale-in">
-        {/* Animated circles loader */}
-        <div className="relative w-20 h-20">
-          <div className="absolute inset-0 rounded-full border-4 border-blue-200 dark:border-blue-900"></div>
-          <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-blue-600 border-r-purple-600 animate-spin"></div>
-          <div className="absolute inset-2 rounded-full border-4 border-transparent border-t-purple-500 border-r-blue-500 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1s' }}></div>
-        </div>
-        <span className="sr-only">{message}</span>
+      {/* Animated circles loader */}
+      <div className="relative w-20 h-20 animate-scale-in">
+        <div className="absolute inset-0 rounded-full border-4 border-blue-200 dark:border-blue-900"></div>
+        <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-blue-600 border-r-purple-600 animate-spin"></div>
+        <div className="absolute inset-2 rounded-full border-4 border-transparent border-t-purple-500 border-r-blue-500 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1s' }}></div>
       </div>
+      <span className="sr-only">{message}</span>
     </div>
   );
+}
+
+/**
+ * Custom hook to enforce minimum loading time
+ * Usage: const loading = useMinLoadingTime(isLoading, 2000);
+ */
+export function useMinLoadingTime(isLoading: boolean, minDuration: number = 2000): boolean {
+  const [showLoading, setShowLoading] = useState(isLoading);
+  const loadingStartTimeRef = useRef<number | null>(null);
+  const hasLoadedOnceRef = useRef(false);
+
+  useEffect(() => {
+    if (isLoading && !loadingStartTimeRef.current) {
+      // Started loading - record the time
+      loadingStartTimeRef.current = Date.now();
+      setShowLoading(true);
+      hasLoadedOnceRef.current = true;
+    } else if (!isLoading && loadingStartTimeRef.current && hasLoadedOnceRef.current) {
+      // Loading finished - check if minimum time has passed
+      const elapsed = Date.now() - loadingStartTimeRef.current;
+      const remaining = minDuration - elapsed;
+
+      if (remaining > 0) {
+        // Wait for remaining time before hiding loader
+        const timer = setTimeout(() => {
+          setShowLoading(false);
+          loadingStartTimeRef.current = null;
+        }, remaining);
+        return () => {
+          clearTimeout(timer);
+          // Clean up on unmount
+          loadingStartTimeRef.current = null;
+        };
+      } else {
+        // Minimum time already passed
+        setShowLoading(false);
+        loadingStartTimeRef.current = null;
+      }
+    }
+  }, [isLoading, minDuration]);
+
+  return showLoading;
 }
 
 /**

@@ -1,7 +1,20 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Smartphone, Download, Apple, PlayCircle, Tablet, QrCode } from 'lucide-react';
+import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
 
 export default function DownloadMobileApp() {
+  const [isLoading, setIsLoading] = useState(true);
+  const showLoading = useMinLoadingTime(isLoading, 2000);
+
+  useEffect(() => {
+    // Simulate initial load
+    setIsLoading(false);
+  }, []);
+
+  if (showLoading) {
+    return <LoadingOverlay message="Loading mobile app info..." />;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
       <div className="max-w-4xl mx-auto">

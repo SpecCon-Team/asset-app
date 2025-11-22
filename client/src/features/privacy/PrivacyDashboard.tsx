@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Download, Trash2, Shield, AlertTriangle, FileText, Database, Clock } from 'lucide-react';
 import { getApiClient } from '@/features/assets/lib/apiClient';
 import { showSuccess, showError, showCustom } from '@/lib/sweetalert';
-import LoadingSpinner from '@/components/LoadingSpinner';
+import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
 
 interface RetentionSummary {
   accountCreated: string;
@@ -14,6 +14,7 @@ interface RetentionSummary {
 export default function PrivacyDashboard() {
   const [retentionSummary, setRetentionSummary] = useState<RetentionSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const showLoading = useMinLoadingTime(isLoading, 2000);
   const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
@@ -150,17 +151,8 @@ export default function PrivacyDashboard() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px] bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 rounded-lg">
-        <div className="flex items-center gap-3">
-          <div className="w-5 h-5 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-          <div className="w-5 h-5 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-          <div className="w-5 h-5 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-        </div>
-        <span className="sr-only">Loading privacy dashboard</span>
-      </div>
-    );
+  if (showLoading) {
+    return <LoadingOverlay message="Loading privacy dashboard..." />;
   }
 
   return (

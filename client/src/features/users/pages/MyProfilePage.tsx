@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Camera, Mail, User as UserIcon, Phone, MapPin, Building, Save, X } from 'lucide-react';
 import { getApiClient } from '@/features/assets/lib/apiClient';
 import toast from 'react-hot-toast';
+import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
 
 export default function MyProfilePage() {
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -14,7 +15,8 @@ export default function MyProfilePage() {
     bio: '',
     profilePicture: '',
   });
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const showLoading = useMinLoadingTime(isLoading, 2000);
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
@@ -32,6 +34,7 @@ export default function MyProfilePage() {
         profilePicture: user.profilePicture ?? '',
       });
     }
+    setIsLoading(false);
   }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -116,16 +119,8 @@ export default function MyProfilePage() {
       : 'User';
   };
 
-  if (!currentUser) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-        <div className="flex items-center justify-center gap-3">
-          <div className="w-5 h-5 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-          <div className="w-5 h-5 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-          <div className="w-5 h-5 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-        </div>
-      </div>
-    );
+  if (showLoading || !currentUser) {
+    return <LoadingOverlay message="Loading profile..." />;
   }
 
   return (

@@ -16,6 +16,7 @@ import { getApiClient } from '../assets/lib/apiClient';
 import { formatDate } from '@/lib/dateFormatter';
 import { showSuccess, showError, showConfirm } from '@/lib/sweetalert';
 import toast from 'react-hot-toast';
+import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
 
 interface MaintenanceSchedule {
   id: string;
@@ -59,6 +60,7 @@ export default function MaintenancePage() {
   const [schedules, setSchedules] = useState<MaintenanceSchedule[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
+  const showLoading = useMinLoadingTime(loading, 2000);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
@@ -277,7 +279,7 @@ export default function MaintenancePage() {
               <div>
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Cost (30d)</p>
                 <p className="text-3xl font-bold text-purple-600 dark:text-purple-400 mt-2">
-                  ${stats.totalCostLast30Days.toFixed(2)}
+                  R{stats.totalCostLast30Days.toFixed(2)}
                 </p>
               </div>
               <DollarSign className="w-10 h-10 text-purple-600 dark:text-purple-400" />
@@ -377,17 +379,11 @@ export default function MaintenancePage() {
       </div>
 
       {/* Schedules List */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-        {loading ? (
-          <div className="p-12 text-center">
-            <div className="flex items-center justify-center gap-3">
-              <div className="w-4 h-4 bg-blue-600 rounded-full animate-bounce"></div>
-              <div className="w-4 h-4 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-              <div className="w-4 h-4 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-            </div>
-            <span className="sr-only">Loading maintenance schedules</span>
-          </div>
-        ) : filteredSchedules.length === 0 ? (
+      {showLoading ? (
+        <LoadingOverlay message="Loading maintenance schedules" />
+      ) : (
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+        {filteredSchedules.length === 0 ? (
           <div className="p-12 text-center">
             <Wrench className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
@@ -534,7 +530,8 @@ export default function MaintenancePage() {
             </table>
           </div>
         )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

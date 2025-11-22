@@ -8,6 +8,7 @@ import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { formatDate, formatDateTime } from '@/lib/dateFormatter';
 import toast from 'react-hot-toast';
+import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
 
 const COLORS = {
   blue: '#3B82F6',
@@ -69,8 +70,12 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 export default function AnalyticsPage() {
-  const { assets, fetchAssets } = useAssetsStore();
-  const { tickets, fetchTickets } = useTicketsStore();
+  const { assets, fetchAssets, isLoading: isLoadingAssets } = useAssetsStore();
+  const { tickets, fetchTickets, isLoading: isLoadingTickets } = useTicketsStore();
+
+  // Combined loading state with minimum display time
+  const isLoading = isLoadingAssets || isLoadingTickets;
+  const showLoading = useMinLoadingTime(isLoading, 2000);
 
   // Date range state
   const [startDate, setStartDate] = useState(() => {
@@ -331,6 +336,11 @@ export default function AnalyticsPage() {
     setStartDate(start.toISOString().split('T')[0]);
     setEndDate(end.toISOString().split('T')[0]);
   };
+
+  // Show loader while initial data is loading
+  if (showLoading) {
+    return <LoadingOverlay message="Loading analytics..." />;
+  }
 
   return (
     <div className="p-8 max-w-7xl mx-auto">

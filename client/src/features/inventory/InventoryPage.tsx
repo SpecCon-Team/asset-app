@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { getApiClient } from '../assets/lib/apiClient';
 import { showSuccess, showError, showConfirm } from '@/lib/sweetalert';
+import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
 
 interface InventoryItem {
   id: string;
@@ -40,6 +41,7 @@ interface Stats {
 export default function InventoryPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const showLoading = useMinLoadingTime(loading, 2000);
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [search, setSearch] = useState('');
@@ -124,17 +126,8 @@ export default function InventoryPage() {
     return matchesSearch;
   });
 
-  if (loading && items.length === 0) {
-    return (
-      <div className="flex flex-col p-4 md:p-6 lg:p-8">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-600 dark:text-gray-300">Loading inventory...</p>
-          </div>
-        </div>
-      </div>
-    );
+  if (showLoading && items.length === 0) {
+    return <LoadingOverlay message="Loading inventory" />;
   }
 
   return (
@@ -168,7 +161,7 @@ export default function InventoryPage() {
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Total Value</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  ${Number(stats.totalValue).toLocaleString()}
+                  R{Number(stats.totalValue).toLocaleString()}
                 </p>
               </div>
               <DollarSign className="w-10 h-10 text-green-600 dark:text-green-400 opacity-50" />

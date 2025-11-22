@@ -1,18 +1,43 @@
 import { Router } from 'express';
 import { prisma } from '../lib/prisma';
+import { Prisma } from '@prisma/client';
 import { authenticate, requireRole } from '../middleware/auth';
+import { cacheMiddleware } from '../middleware/cache';
+
+// Helper function to convert BigInt values to numbers recursively
+function convertBigIntsToNumbers(obj: any): any {
+  if (obj === null || obj === undefined) return obj;
+
+  if (typeof obj === 'bigint') {
+    return Number(obj);
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(convertBigIntsToNumbers);
+  }
+
+  if (typeof obj === 'object') {
+    const converted: any = {};
+    for (const [key, value] of Object.entries(obj)) {
+      converted[key] = convertBigIntsToNumbers(value);
+    }
+    return converted;
+  }
+
+  return obj;
+}
 
 const router = Router();
 
 // GET /api/analytics/overview - System-wide overview
-router.get('/overview', authenticate, async (req: any, res) => {
+router.get('/overview', authenticate, cacheMiddleware(60000), async (req: any, res) => {
   try {
     const { startDate, endDate } = req.query;
 
     const dateFilter = startDate && endDate ? {
       createdAt: {
-        gte: new Date(startDate),
-        lte: new Date(endDate)
+        gte: new Date(startDate as string),
+        lte: new Date(endDate as string)
       }
     } : {};
 
@@ -26,42 +51,73 @@ router.get('/overview', authenticate, async (req: any, res) => {
       ticketsByPriority,
       recentActivity
     ] = await Promise.all([
-      prisma.asset.count({ where: dateFilter }),
-      prisma.ticket.count({ where: dateFilter }),
-      prisma.user.count({ where: dateFilter }),
-      prisma.document.count({ where: { ...dateFilter, isLatestVersion: true } }),
+      prisma.asset.count({ where: dateFilter }).catch(err => {
+        console.error('Error counting assets:', err);
+        return 0;
+      }),
+      prisma.ticket.count({ where: dateFilter }).catch(err => {
+        console.error('Error counting tickets:', err);
+        return 0;
+      }),
+      prisma.user.count({ where: dateFilter }).catch(err => {
+        console.error('Error counting users:', err);
+        return 0;
+      }),
+      prisma.document.count({ where: { ...dateFilter, isLatestVersion: true } }).catch(err => {
+        console.error('Error counting documents:', err);
+        return 0;
+      }),
 
       prisma.asset.groupBy({
         by: ['asset_type'],
         _count: true,
         where: dateFilter
+      }).catch(err => {
+        console.error('Error grouping assets by type:', err);
+        return [];
       }),
 
       prisma.ticket.groupBy({
         by: ['status'],
         _count: true,
         where: dateFilter
+      }).catch(err => {
+        console.error('Error grouping tickets by status:', err);
+        return [];
       }),
 
       prisma.ticket.groupBy({
         by: ['priority'],
         _count: true,
         where: dateFilter
+      }).catch(err => {
+        console.error('Error grouping tickets by priority:', err);
+        return [];
       }),
 
       prisma.auditLog.findMany({
         where: dateFilter,
         orderBy: { createdAt: 'desc' },
         take: 10,
-        include: {
-          user: {
-            select: { name: true }
-          }
+        select: {
+          id: true,
+          action: true,
+          entityType: true,
+          entityId: true,
+          userId: true,
+          userName: true,
+          userEmail: true,
+          createdAt: true,
+          status: true
         }
+      }).catch(err => {
+        console.error('Error fetching recent activity:', err);
+        return [];
       })
     ]);
 
-    res.json({
+    // Convert BigInt values to numbers for JSON serialization
+    const response = {
       overview: {
         totalAssets,
         totalTickets,
@@ -69,12 +125,14 @@ router.get('/overview', authenticate, async (req: any, res) => {
         totalDocuments
       },
       distribution: {
-        assetsByType,
-        ticketsByStatus,
-        ticketsByPriority
+        assetsByType: convertBigIntsToNumbers(assetsByType),
+        ticketsByStatus: convertBigIntsToNumbers(ticketsByStatus),
+        ticketsByPriority: convertBigIntsToNumbers(ticketsByPriority)
       },
-      recentActivity
-    });
+      recentActivity: convertBigIntsToNumbers(recentActivity)
+    };
+
+    res.json(response);
   } catch (error: any) {
     console.error('Error fetching overview:', error);
     res.status(500).json({
@@ -85,7 +143,7 @@ router.get('/overview', authenticate, async (req: any, res) => {
 });
 
 // GET /api/analytics/assets - Asset analytics
-router.get('/assets', authenticate, async (req: any, res) => {
+router.get('/assets', authenticate, cacheMiddleware(60000), async (req: any, res) => {
   try {
     const [
       totalValue,
@@ -95,28 +153,40 @@ router.get('/assets', authenticate, async (req: any, res) => {
       topAssets
     ] = await Promise.all([
       prisma.$queryRaw`
-        SELECT SUM("currentBookValue") as total
+        SELECT COALESCE(SUM("currentBookValue"), 0) as total
         FROM "Asset"
         WHERE "currentBookValue" IS NOT NULL
-      `,
+      `.catch(err => {
+        console.error('Error in totalValue query:', err);
+        return [{ total: 0 }];
+      }),
 
       prisma.asset.groupBy({
         by: ['status'],
         _count: true
+      }).catch(err => {
+        console.error('Error in byStatus query:', err);
+        return [];
       }),
 
       prisma.asset.groupBy({
-        by: ['location'],
+        by: ['office_location'],
         _count: true
+      }).catch(err => {
+        console.error('Error in byLocation query:', err);
+        return [];
       }),
 
       prisma.$queryRaw`
         SELECT
-          SUM("currentBookValue") as total_value,
-          SUM("accumulatedDepreciation") as total_depreciation
+          COALESCE(SUM("currentBookValue"), 0) as total_value,
+          COALESCE(SUM("accumulatedDepreciation"), 0) as total_depreciation
         FROM "AssetDepreciation"
         WHERE "isActive" = true
-      `,
+      `.catch(err => {
+        console.error('Error in depreciation query:', err);
+        return [{ total_value: 0, total_depreciation: 0 }];
+      }),
 
       prisma.asset.findMany({
         where: { currentBookValue: { not: null } },
@@ -128,16 +198,22 @@ router.get('/assets', authenticate, async (req: any, res) => {
           asset_code: true,
           currentBookValue: true
         }
+      }).catch(err => {
+        console.error('Error in topAssets query:', err);
+        return [];
       })
     ]);
 
-    res.json({
-      totalValue: totalValue[0]?.total || 0,
-      byStatus,
-      byLocation,
-      depreciation: depreciation[0] || {},
-      topAssets
-    });
+    // Convert BigInt values to numbers for JSON serialization
+    const response = {
+      totalValue: Number(totalValue[0]?.total || 0),
+      byStatus: convertBigIntsToNumbers(byStatus),
+      byLocation: convertBigIntsToNumbers(byLocation),
+      depreciation: convertBigIntsToNumbers(depreciation[0] || { total_value: 0, total_depreciation: 0 }),
+      topAssets: convertBigIntsToNumbers(topAssets)
+    };
+
+    res.json(response);
   } catch (error: any) {
     console.error('Error fetching asset analytics:', error);
     res.status(500).json({
@@ -148,14 +224,14 @@ router.get('/assets', authenticate, async (req: any, res) => {
 });
 
 // GET /api/analytics/tickets - Ticket analytics
-router.get('/tickets', authenticate, async (req: any, res) => {
+router.get('/tickets', authenticate, cacheMiddleware(60000), async (req: any, res) => {
   try {
     const { startDate, endDate } = req.query;
 
     const dateFilter = startDate && endDate ? {
       createdAt: {
-        gte: new Date(startDate),
-        lte: new Date(endDate)
+        gte: new Date(startDate as string),
+        lte: new Date(endDate as string)
       }
     } : {};
 
@@ -170,60 +246,112 @@ router.get('/tickets', authenticate, async (req: any, res) => {
         by: ['status'],
         _count: true,
         where: dateFilter
+      }).catch(err => {
+        console.error('Error grouping tickets by status:', err);
+        return [];
       }),
 
       prisma.ticket.groupBy({
         by: ['priority'],
         _count: true,
         where: dateFilter
+      }).catch(err => {
+        console.error('Error grouping tickets by priority:', err);
+        return [];
       }),
 
       prisma.ticket.groupBy({
-        by: ['assigned_to'],
+        by: ['assignedToId'],
         _count: true,
-        where: { ...dateFilter, assigned_to: { not: null } }
+        where: { ...dateFilter, assignedToId: { not: null } }
+      }).catch(err => {
+        console.error('Error grouping tickets by assignee:', err);
+        return [];
       }),
 
-      prisma.$queryRaw`
-        SELECT AVG(EXTRACT(EPOCH FROM ("updatedAt" - "createdAt"))/3600) as avg_hours
-        FROM "Ticket"
-        WHERE status = 'closed'
-        ${startDate && endDate ? prisma.raw(`AND "createdAt" BETWEEN '${startDate}' AND '${endDate}'`) : prisma.raw('')}
-      `,
+      (async () => {
+        try {
+          if (startDate && endDate) {
+            return await prisma.$queryRaw<Array<{ avg_hours: number }>>`
+              SELECT COALESCE(AVG(EXTRACT(EPOCH FROM ("updatedAt" - "createdAt"))/3600), 0) as avg_hours
+              FROM "Ticket"
+              WHERE status = 'closed'
+              AND "createdAt" BETWEEN ${new Date(startDate as string)}::timestamp AND ${new Date(endDate as string)}::timestamp
+            `;
+          } else {
+            return await prisma.$queryRaw<Array<{ avg_hours: number }>>`
+              SELECT COALESCE(AVG(EXTRACT(EPOCH FROM ("updatedAt" - "createdAt"))/3600), 0) as avg_hours
+              FROM "Ticket"
+              WHERE status = 'closed'
+            `;
+          }
+        } catch (err) {
+          console.error('Error calculating avg resolution time:', err);
+          return [{ avg_hours: 0 }];
+        }
+      })(),
 
-      prisma.$queryRaw`
-        SELECT
-          DATE("createdAt") as date,
-          COUNT(*) as count,
-          status
-        FROM "Ticket"
-        ${startDate && endDate ? prisma.raw(`WHERE "createdAt" BETWEEN '${startDate}' AND '${endDate}'`) : prisma.raw('')}
-        GROUP BY DATE("createdAt"), status
-        ORDER BY date DESC
-        LIMIT 30
-      `
+      (async () => {
+        try {
+          if (startDate && endDate) {
+            return await prisma.$queryRaw<Array<{ date: Date; count: number; status: string }>>`
+              SELECT
+                DATE("createdAt") as date,
+                COUNT(*) as count,
+                status
+              FROM "Ticket"
+              WHERE "createdAt" BETWEEN ${new Date(startDate as string)}::timestamp AND ${new Date(endDate as string)}::timestamp
+              GROUP BY DATE("createdAt"), status
+              ORDER BY date DESC
+              LIMIT 30
+            `;
+          } else {
+            return await prisma.$queryRaw<Array<{ date: Date; count: number; status: string }>>`
+              SELECT
+                DATE("createdAt") as date,
+                COUNT(*) as count,
+                status
+              FROM "Ticket"
+              GROUP BY DATE("createdAt"), status
+              ORDER BY date DESC
+              LIMIT 30
+            `;
+          }
+        } catch (err) {
+          console.error('Error fetching trends over time:', err);
+          return [];
+        }
+      })()
     ]);
 
     // Enrich assignee data
-    const assigneeIds = byAssignee.map(a => a.assigned_to).filter(Boolean);
-    const users = await prisma.user.findMany({
+    const assigneeIds = byAssignee.map((a: any) => a.assignedToId).filter(Boolean);
+    const users = assigneeIds.length > 0 ? await prisma.user.findMany({
       where: { id: { in: assigneeIds as string[] } },
       select: { id: true, name: true }
-    });
+    }).catch(err => {
+      console.error('Error fetching user data:', err);
+      return [];
+    }) : [];
 
     const userMap = new Map(users.map(u => [u.id, u]));
-    const enrichedAssignees = byAssignee.map(a => ({
+
+    // Enrich assignees with user data
+    const enrichedAssignees = byAssignee.map((a: any) => ({
       ...a,
-      user: a.assigned_to ? userMap.get(a.assigned_to) : null
+      user: a.assignedToId ? userMap.get(a.assignedToId) : null
     }));
 
-    res.json({
-      byStatus,
-      byPriority,
-      byAssignee: enrichedAssignees,
-      avgResolutionTime: avgResolutionTime[0]?.avg_hours || 0,
-      trendsOverTime
-    });
+    // Convert BigInt values to numbers for JSON serialization
+    const response = {
+      byStatus: convertBigIntsToNumbers(byStatus),
+      byPriority: convertBigIntsToNumbers(byPriority),
+      byAssignee: convertBigIntsToNumbers(enrichedAssignees),
+      avgResolutionTime: Number(avgResolutionTime[0]?.avg_hours || 0),
+      trendsOverTime: convertBigIntsToNumbers(trendsOverTime)
+    };
+
+    res.json(response);
   } catch (error: any) {
     console.error('Error fetching ticket analytics:', error);
     res.status(500).json({
@@ -274,11 +402,14 @@ router.get('/users', authenticate, requireRole(['ADMIN']), async (req: any, res)
       `
     ]);
 
-    res.json({
-      byRole,
-      mostActive,
-      loginActivity
-    });
+    // Convert BigInt values to numbers for JSON serialization
+    const response = {
+      byRole: convertBigIntsToNumbers(byRole),
+      mostActive: convertBigIntsToNumbers(mostActive),
+      loginActivity: convertBigIntsToNumbers(loginActivity)
+    };
+
+    res.json(response);
   } catch (error: any) {
     console.error('Error fetching user analytics:', error);
     res.status(500).json({
@@ -318,12 +449,15 @@ router.get('/maintenance', authenticate, async (req: any, res) => {
       `
     ]);
 
-    res.json({
+    // Convert BigInt values to numbers for JSON serialization
+    const response = {
       totalScheduled,
-      completionRate: completionRate[0]?.rate || 0,
-      byType,
-      costAnalysis: costAnalysis[0] || {}
-    });
+      completionRate: Number(completionRate[0]?.rate || 0),
+      byType: convertBigIntsToNumbers(byType),
+      costAnalysis: convertBigIntsToNumbers(costAnalysis[0] || { total_cost: 0, avg_cost: 0 })
+    };
+
+    res.json(response);
   } catch (error: any) {
     console.error('Error fetching maintenance analytics:', error);
     res.status(500).json({
@@ -378,13 +512,16 @@ router.get('/inventory', authenticate, async (req: any, res) => {
       })
     ]);
 
-    res.json({
+    // Convert BigInt values to numbers for JSON serialization
+    const response = {
       totalItems,
-      totalValue: totalValue[0]?.total || 0,
+      totalValue: Number(totalValue[0]?.total || 0),
       lowStockItems: lowStock,
-      topMoving,
-      byCategory
-    });
+      topMoving: convertBigIntsToNumbers(topMoving),
+      byCategory: convertBigIntsToNumbers(byCategory)
+    };
+
+    res.json(response);
   } catch (error: any) {
     console.error('Error fetching inventory analytics:', error);
     res.status(500).json({
@@ -438,19 +575,22 @@ router.get('/export', authenticate, requireRole(['ADMIN']), async (req: any, res
         return res.status(400).json({ error: 'Invalid export type' });
     }
 
+    // Convert BigInt values to numbers for JSON serialization
+    const serializedData = convertBigIntsToNumbers(data);
+
     if (format === 'csv') {
       // Basic CSV conversion
-      const keys = Object.keys(data[0] || {});
+      const keys = Object.keys(serializedData[0] || {});
       const csv = [
         keys.join(','),
-        ...data.map((row: any) => keys.map(key => JSON.stringify(row[key])).join(','))
+        ...serializedData.map((row: any) => keys.map(key => JSON.stringify(row[key])).join(','))
       ].join('\n');
 
       res.setHeader('Content-Type', 'text/csv');
       res.setHeader('Content-Disposition', `attachment; filename="${type}_${Date.now()}.csv"`);
       res.send(csv);
     } else {
-      res.json({ data });
+      res.json({ data: serializedData });
     }
   } catch (error: any) {
     console.error('Error exporting analytics:', error);

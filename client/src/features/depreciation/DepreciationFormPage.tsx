@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import api from '@/lib/api';
-import { showSuccessAlert, showErrorAlert } from '@/lib/sweetalert';
+import { getApiClient } from '../assets/lib/apiClient';
+import { showSuccess, showError } from '@/lib/sweetalert';
+import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
 
 interface Asset {
   id: string;
@@ -16,6 +17,7 @@ const DepreciationFormPage: React.FC = () => {
   const isEditing = !!id;
 
   const [loading, setLoading] = useState(false);
+  const showLoading = useMinLoadingTime(loading, 2000);
   const [assets, setAssets] = useState<Asset[]>([]);
   const [formData, setFormData] = useState({
     assetId: '',
@@ -39,20 +41,20 @@ const DepreciationFormPage: React.FC = () => {
 
   const loadAssets = async () => {
     try {
-      const response = await api.get('/api/assets', {
+      const response = await getApiClient().get('/assets', {
         params: { status: 'active', limit: 1000 }
       });
       setAssets(response.data.assets || []);
     } catch (error) {
       console.error('Error loading assets:', error);
-      showErrorAlert('Failed to load assets');
+      showError('Failed to load assets');
     }
   };
 
   const loadDepreciation = async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/api/depreciation/${id}`);
+      const response = await getApiClient().get(`/depreciation/${id}`);
       const record = response.data;
 
       setFormData({
@@ -69,7 +71,7 @@ const DepreciationFormPage: React.FC = () => {
       });
     } catch (error) {
       console.error('Error loading depreciation:', error);
-      showErrorAlert('Failed to load depreciation record');
+      showError('Failed to load depreciation record');
     } finally {
       setLoading(false);
     }
@@ -81,12 +83,12 @@ const DepreciationFormPage: React.FC = () => {
     // Validation
     if (!formData.assetId || !formData.purchasePrice || !formData.usefulLifeYears ||
         !formData.purchaseDate || !formData.depreciationStartDate) {
-      showErrorAlert('Please fill in all required fields');
+      showError('Please fill in all required fields');
       return;
     }
 
     if (formData.depreciationMethod === 'declining_balance' && !formData.annualDepreciationRate) {
-      showErrorAlert('Annual depreciation rate is required for declining balance method');
+      showError('Annual depreciation rate is required for declining balance method');
       return;
     }
 
@@ -94,17 +96,17 @@ const DepreciationFormPage: React.FC = () => {
       setLoading(true);
 
       if (isEditing) {
-        await api.put(`/api/depreciation/${id}`, formData);
-        showSuccessAlert('Depreciation record updated successfully');
+        await getApiClient().put(`/depreciation/${id}`, formData);
+        showSuccess('Depreciation record updated successfully');
       } else {
-        await api.post('/api/depreciation', formData);
-        showSuccessAlert('Depreciation record created successfully');
+        await getApiClient().post('/depreciation', formData);
+        showSuccess('Depreciation record created successfully');
       }
 
       navigate('/depreciation');
     } catch (error: any) {
       console.error('Error saving depreciation:', error);
-      showErrorAlert(error.response?.data?.message || 'Failed to save depreciation record');
+      showError(error.response?.data?.message || 'Failed to save depreciation record');
     } finally {
       setLoading(false);
     }
@@ -115,12 +117,8 @@ const DepreciationFormPage: React.FC = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  if (loading && isEditing) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
+  if (showLoading && isEditing) {
+    return <LoadingOverlay message="Loading depreciation record" />;
   }
 
   return (

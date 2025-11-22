@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { getApiClient } from '../assets/lib/apiClient';
 import { showSuccess, showError, showConfirm } from '@/lib/sweetalert';
+import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
 
 interface InventoryItemDetail {
   id: string;
@@ -55,6 +56,7 @@ export default function InventoryDetailPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [loading, setLoading] = useState(true);
+  const showLoading = useMinLoadingTime(loading, 2000);
   const [item, setItem] = useState<InventoryItemDetail | null>(null);
   const [showTransactionForm, setShowTransactionForm] = useState(false);
   const [transactionData, setTransactionData] = useState({
@@ -122,17 +124,8 @@ export default function InventoryDetailPage() {
     }
   };
 
-  if (loading || !item) {
-    return (
-      <div className="flex flex-col p-4 md:p-6 lg:p-8">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-600 dark:text-gray-300">Loading item details...</p>
-          </div>
-        </div>
-      </div>
-    );
+  if (showLoading || !item) {
+    return <LoadingOverlay message="Loading inventory item details" />;
   }
 
   const getStockStatusColor = (status: string) => {

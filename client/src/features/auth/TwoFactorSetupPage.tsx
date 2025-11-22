@@ -3,6 +3,7 @@ import { Shield, Check, Copy, Download, AlertTriangle, Smartphone } from 'lucide
 import { getApiClient } from '@/features/assets/lib/apiClient';
 import { useNavigate } from 'react-router-dom';
 import { showSuccess, showError, showWarning, showCustom } from '@/lib/sweetalert';
+import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
 
 export default function TwoFactorSetupPage() {
   const [step, setStep] = useState<'status' | 'setup' | 'verify' | 'complete'>('status');
@@ -11,6 +12,8 @@ export default function TwoFactorSetupPage() {
   const [backupCodes, setBackupCodes] = useState<string[]>([]);
   const [verificationCode, setVerificationCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isCheckingStatus, setIsCheckingStatus] = useState(true);
+  const showLoading = useMinLoadingTime(isCheckingStatus, 2000);
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
   const [backupCodesRemaining, setBackupCodesRemaining] = useState(0);
   const navigate = useNavigate();
@@ -21,11 +24,14 @@ export default function TwoFactorSetupPage() {
 
   const checkStatus = async () => {
     try {
+      setIsCheckingStatus(true);
       const response = await getApiClient().get('/2fa/status');
       setTwoFactorEnabled(response.data.enabled);
       setBackupCodesRemaining(response.data.backupCodesRemaining);
     } catch (error) {
       console.error('Failed to check 2FA status:', error);
+    } finally {
+      setIsCheckingStatus(false);
     }
   };
 
@@ -108,6 +114,10 @@ export default function TwoFactorSetupPage() {
     link.click();
     URL.revokeObjectURL(url);
   };
+
+  if (showLoading) {
+    return <LoadingOverlay message="Loading 2FA settings..." />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4">

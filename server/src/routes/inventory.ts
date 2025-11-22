@@ -3,6 +3,29 @@ import { prisma } from '../lib/prisma';
 import { authenticate, requireRole } from '../middleware/auth';
 import { logAudit } from '../lib/auditLog';
 
+// Helper function to convert BigInt values to numbers recursively
+function convertBigIntsToNumbers(obj: any): any {
+  if (obj === null || obj === undefined) return obj;
+
+  if (typeof obj === 'bigint') {
+    return Number(obj);
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(convertBigIntsToNumbers);
+  }
+
+  if (typeof obj === 'object') {
+    const converted: any = {};
+    for (const [key, value] of Object.entries(obj)) {
+      converted[key] = convertBigIntsToNumbers(value);
+    }
+    return converted;
+  }
+
+  return obj;
+}
+
 const router = Router();
 
 // =====================================================
@@ -125,8 +148,9 @@ router.get('/stats', authenticate, async (req: any, res) => {
       prisma.inventoryItem.count({ where: { isActive: true } }),
 
       prisma.$queryRaw`
-        SELECT SUM("totalValue") as total
-        FROM "InventoryValuation"
+        SELECT COALESCE(SUM("currentStock" * "unitPrice"), 0) as total
+        FROM "InventoryItem"
+        WHERE "isActive" = true AND "unitPrice" IS NOT NULL
       `,
 
       prisma.inventoryItem.count({
@@ -158,14 +182,17 @@ router.get('/stats', authenticate, async (req: any, res) => {
       })
     ]);
 
-    res.json({
+    // Convert BigInt values to numbers for JSON serialization
+    const response = {
       totalItems,
-      totalValue: totalValue[0]?.total || 0,
+      totalValue: Number(totalValue[0]?.total || 0),
       lowStockCount,
       outOfStockCount,
-      categories,
-      recentTransactions
-    });
+      categories: convertBigIntsToNumbers(categories),
+      recentTransactions: convertBigIntsToNumbers(recentTransactions)
+    };
+
+    res.json(response);
   } catch (error: any) {
     console.error('Error fetching inventory stats:', error);
     res.status(500).json({

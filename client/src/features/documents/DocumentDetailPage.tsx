@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import api from '@/lib/api';
-import { showSuccessAlert, showErrorAlert, showConfirmDialog } from '@/lib/sweetalert';
+import { getApiClient } from '../assets/lib/apiClient';
+import { showSuccess, showError, showConfirmDialog } from '@/lib/sweetalert';
+import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
 
 interface Document {
   id: string;
@@ -28,6 +29,7 @@ const DocumentDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const [document, setDocument] = useState<Document | null>(null);
   const [loading, setLoading] = useState(true);
+  const showLoading = useMinLoadingTime(loading, 2000);
   const [newComment, setNewComment] = useState('');
 
   useEffect(() => {
@@ -37,11 +39,11 @@ const DocumentDetailPage: React.FC = () => {
   const loadDocument = async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/api/documents/${id}`);
+      const response = await getApiClient().get(`/documents/${id}`);
       setDocument(response.data);
     } catch (error: any) {
       console.error('Error loading document:', error);
-      showErrorAlert('Failed to load document');
+      showError('Failed to load document');
     } finally {
       setLoading(false);
     }
@@ -51,7 +53,7 @@ const DocumentDetailPage: React.FC = () => {
     try {
       window.open(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api/documents/${id}/download`, '_blank');
     } catch (error) {
-      showErrorAlert('Failed to download document');
+      showError('Failed to download document');
     }
   };
 
@@ -64,12 +66,12 @@ const DocumentDetailPage: React.FC = () => {
     if (!confirmed) return;
 
     try {
-      await api.delete(`/api/documents/${id}`);
-      showSuccessAlert('Document deleted successfully');
+      await getApiClient().delete(`/documents/${id}`);
+      showSuccess('Document deleted successfully');
       navigate('/documents');
     } catch (error: any) {
       console.error('Error deleting document:', error);
-      showErrorAlert(error.response?.data?.message || 'Failed to delete document');
+      showError(error.response?.data?.message || 'Failed to delete document');
     }
   };
 
@@ -79,16 +81,16 @@ const DocumentDetailPage: React.FC = () => {
     if (!newComment.trim()) return;
 
     try {
-      await api.post(`/api/documents/${id}/comments`, {
+      await getApiClient().post(`/documents/${id}/comments`, {
         comment: newComment
       });
 
       setNewComment('');
       loadDocument();
-      showSuccessAlert('Comment added successfully');
+      showSuccess('Comment added successfully');
     } catch (error: any) {
       console.error('Error adding comment:', error);
-      showErrorAlert('Failed to add comment');
+      showError('Failed to add comment');
     }
   };
 
@@ -103,12 +105,8 @@ const DocumentDetailPage: React.FC = () => {
     return `${size.toFixed(2)} ${units[unitIndex]}`;
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
+  if (showLoading) {
+    return <LoadingOverlay message="Loading document details" />;
   }
 
   if (!document) {

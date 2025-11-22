@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { MapPin, Plus, X, Users, Edit2, Trash2, Search, Download, BarChart3, List, Map as MapIcon, Phone, Mail, Navigation } from 'lucide-react';
 import { showSuccess, showError, showConfirm } from '@/lib/sweetalert';
 import { getApiClient } from '@/features/assets/lib/apiClient';
+import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
 
 // South African Provinces
 const provinces = [
@@ -37,6 +38,7 @@ export default function MyPEGPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [loading, setLoading] = useState(true);
+  const showLoading = useMinLoadingTime(loading, 2000);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
   const [showStats, setShowStats] = useState(false);
@@ -235,16 +237,8 @@ export default function MyPEGPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-        <div className="flex items-center justify-center gap-3">
-          <div className="w-5 h-5 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-          <div className="w-5 h-5 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-          <div className="w-5 h-5 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-        </div>
-      </div>
-    );
+  if (showLoading) {
+    return <LoadingOverlay message="Loading PEG clients..." />;
   }
 
   return (

@@ -3,6 +3,7 @@ import { Shield, AlertTriangle, Users, Key, Calendar, RefreshCw } from 'lucide-r
 import { getApiClient } from '@/features/assets/lib/apiClient';
 import { showSuccess, showError, showConfirmation, showTextarea } from '@/lib/sweetalert';
 import { formatDateTime } from '@/lib/dateFormatter';
+import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
 
 interface UserWith2FA {
   id: string;
@@ -17,6 +18,7 @@ interface UserWith2FA {
 export default function TwoFactorManagementPage() {
   const [users, setUsers] = useState<UserWith2FA[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const showLoading = useMinLoadingTime(isLoading, 2000);
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
@@ -84,6 +86,11 @@ export default function TwoFactorManagementPage() {
       user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (user.name && user.name.toLowerCase().includes(searchTerm.toLowerCase()))
   );
+
+  // Show full-page loader on initial load
+  if (showLoading) {
+    return <LoadingOverlay message="Loading 2FA management..." />;
+  }
 
   return (
     <div className="p-8 max-w-7xl mx-auto">
@@ -168,16 +175,7 @@ export default function TwoFactorManagementPage() {
       {/* Users List */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
-          {isLoading ? (
-            <div className="p-8 text-center">
-              <div className="flex items-center justify-center gap-3">
-                <div className="w-4 h-4 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                <div className="w-4 h-4 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                <div className="w-4 h-4 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-              </div>
-              <span className="sr-only">Loading users</span>
-            </div>
-          ) : filteredUsers.length === 0 ? (
+          {filteredUsers.length === 0 ? (
             <div className="p-8 text-center">
               <Shield className="w-12 h-12 text-gray-400 mx-auto mb-3" />
               <p className="text-gray-500 dark:text-gray-400">

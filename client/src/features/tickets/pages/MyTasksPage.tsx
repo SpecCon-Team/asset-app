@@ -5,10 +5,12 @@ import { Ticket, Clock, CheckCircle, Activity, Wifi } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getApiClient } from '@/features/assets/lib/apiClient';
 import { formatDate } from '@/lib/dateFormatter';
+import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
 
 export default function MyTasksPage() {
   const navigate = useNavigate();
   const { tickets, isLoading, error, fetchTickets } = useTicketsStore();
+  const showLoading = useMinLoadingTime(isLoading, 2000);
 
   // Initialize user data immediately from localStorage
   const getUserData = () => {
@@ -324,16 +326,8 @@ export default function MyTasksPage() {
     }
   };
 
-  if (isLoading || !userId) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-        <div className="flex items-center justify-center gap-3">
-          <div className="w-5 h-5 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-          <div className="w-5 h-5 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-          <div className="w-5 h-5 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-        </div>
-      </div>
-    );
+  if (showLoading || !userId) {
+    return <LoadingOverlay message="Loading tasks..." />;
   }
 
   if (error) {

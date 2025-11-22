@@ -3,11 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { useTicketsStore } from '../store';
 import { Ticket, AlertCircle, Archive } from 'lucide-react';
 import { formatDate } from '@/lib/dateFormatter';
-import { PageLoader } from '@/components/LoadingSpinner';
+import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
 
 export default function MyTicketsPage() {
   const navigate = useNavigate();
   const { tickets, isLoading, error, fetchTickets } = useTicketsStore();
+  const showLoading = useMinLoadingTime(isLoading, 2000);
   const [user] = useState(() => {
     const userStr = localStorage.getItem('user');
     if (userStr) {
@@ -72,8 +73,8 @@ export default function MyTicketsPage() {
   // Use active or archived tickets based on toggle
   const displayTickets = showArchived ? archivedTickets : activeTickets;
 
-  if (isLoading) {
-    return <PageLoader message="Loading your tickets..." />;
+  if (showLoading) {
+    return <LoadingOverlay message="Loading your tickets..." />;
   }
 
   if (error) {

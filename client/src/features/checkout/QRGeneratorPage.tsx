@@ -38,7 +38,8 @@ export default function QRGeneratorPage() {
     try {
       const apiClient = getApiClient();
       const response = await apiClient.get('/assets');
-      setAssets(response.data);
+      const assetsList = Array.isArray(response.data) ? response.data : (response.data.assets || []);
+      setAssets(assetsList);
     } catch (error) {
       console.error('Failed to fetch assets:', error);
       await showError('Error', 'Failed to load assets');

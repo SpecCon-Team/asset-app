@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   HelpCircle,
   BookOpen,
@@ -12,10 +12,18 @@ import {
   ChevronRight,
   Search
 } from 'lucide-react';
+import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
 
 export default function HelpAndResources() {
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const showLoading = useMinLoadingTime(isLoading, 2000);
+
+  useEffect(() => {
+    // Simulate initial load
+    setIsLoading(false);
+  }, []);
 
   const faqs = [
     {
@@ -84,6 +92,10 @@ export default function HelpAndResources() {
       faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
       faq.answer.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  if (showLoading) {
+    return <LoadingOverlay message="Loading help resources..." />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">

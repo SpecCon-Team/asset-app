@@ -51,8 +51,9 @@ export default function MaintenanceFormPage() {
   const fetchAssets = async () => {
     try {
       const apiClient = getApiClient();
-      const response = await apiClient.get('/assets');
-      setAssets(response.data);
+      const response = await apiClient.get('/assets?limit=-1');
+      const assetsArray = Array.isArray(response.data) ? response.data : (response.data.data || []);
+      setAssets(assetsArray);
     } catch (error) {
       console.error('Failed to fetch assets:', error);
     }
@@ -135,7 +136,7 @@ export default function MaintenanceFormPage() {
   };
 
   return (
-    <div className="flex flex-col p-4 md:p-6 lg:p-8">
+    <div className="flex flex-col p-4 md:p-6 lg:p-8 max-w-4xl mx-auto w-full">
       {/* Header */}
       <div className="mb-6">
         <button
@@ -302,7 +303,7 @@ export default function MaintenanceFormPage() {
           {/* Estimated Cost */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Estimated Cost ($)
+              Estimated Cost (R)
             </label>
             <input
               type="number"

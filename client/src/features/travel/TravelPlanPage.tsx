@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { showSuccess, showError, showConfirm, showInfo } from '@/lib/sweetalert';
 import { getApiClient } from '@/features/assets/lib/apiClient';
+import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
 
 interface Trip {
   id: string;
@@ -140,6 +141,7 @@ export default function TravelPlanPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showStats, setShowStats] = useState(true);
   const [loading, setLoading] = useState(true);
+  const showLoading = useMinLoadingTime(loading, 2000);
 
   const [formData, setFormData] = useState({
     destination: '',
@@ -440,14 +442,8 @@ export default function TravelPlanPage() {
       )}
 
       {/* Trips Grid */}
-      {loading ? (
-        <div className="flex items-center justify-center py-20 bg-gray-50 dark:bg-gray-800 rounded-lg">
-          <div className="flex items-center gap-3">
-            <div className="w-5 h-5 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-            <div className="w-5 h-5 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-            <div className="w-5 h-5 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-          </div>
-        </div>
+      {showLoading ? (
+        <LoadingOverlay message="Loading trips..." />
       ) : filteredTrips.length === 0 ? (
         <div className="text-center py-16 px-4">
           <div className="max-w-md mx-auto bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-700 rounded-2xl p-8 shadow-lg border-2 border-dashed border-blue-300 dark:border-gray-600">

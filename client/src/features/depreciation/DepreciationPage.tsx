@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import api from '@/lib/api';
-import { showSuccessAlert, showErrorAlert } from '@/lib/sweetalert';
+import { getApiClient } from '../assets/lib/apiClient';
+import { showSuccess, showError } from '@/lib/sweetalert';
+import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
 
 interface DepreciationRecord {
   id: string;
@@ -42,6 +43,7 @@ const DepreciationPage: React.FC = () => {
   const [records, setRecords] = useState<DepreciationRecord[]>([]);
   const [stats, setStats] = useState<DepreciationStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const showLoading = useMinLoadingTime(loading, 2000);
   const [filter, setFilter] = useState({
     status: 'all',
     method: 'all',
@@ -56,23 +58,23 @@ const DepreciationPage: React.FC = () => {
   const loadData = async () => {
     try {
       setLoading(true);
+      const apiClient = getApiClient();
+      const params = new URLSearchParams();
+      if (filter.status !== 'all') params.append('status', filter.status);
+      if (filter.method !== 'all') params.append('method', filter.method);
+      params.append('page', filter.page.toString());
+      params.append('limit', filter.limit.toString());
+
       const [recordsRes, statsRes] = await Promise.all([
-        api.get('/api/depreciation', {
-          params: {
-            status: filter.status !== 'all' ? filter.status : undefined,
-            method: filter.method !== 'all' ? filter.method : undefined,
-            page: filter.page,
-            limit: filter.limit
-          }
-        }),
-        api.get('/api/depreciation/stats')
+        apiClient.get(`/depreciation?${params.toString()}`),
+        apiClient.get('/depreciation/stats')
       ]);
 
       setRecords(recordsRes.data.records || []);
       setStats(statsRes.data);
     } catch (error: any) {
       console.error('Error loading depreciation data:', error);
-      showErrorAlert('Failed to load depreciation data');
+      await showError('Error', 'Failed to load depreciation data');
     } finally {
       setLoading(false);
     }
@@ -105,12 +107,8 @@ const DepreciationPage: React.FC = () => {
       : 'bg-gray-100 text-gray-800';
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
+  if (showLoading) {
+    return <LoadingOverlay message="Loading depreciation records" />;
   }
 
   return (

@@ -6,6 +6,7 @@ import { prisma } from '../lib/prisma';
 import { authenticate, requireRole, requireSelfOrAdmin, AuthRequest } from '../middleware/auth';
 import { applyFieldVisibility } from '../middleware/fieldVisibility';
 import { filterFieldsByPermission, Role as PermRole } from '../lib/permissions';
+import { cacheMiddleware, invalidateCache } from '../middleware/cache';
 
 const router = Router();
 
@@ -32,7 +33,7 @@ const updatePasswordSchema = z.object({
 });
 
 // Get all users - requires authentication, admins see all fields
-router.get('/', authenticate, applyFieldVisibility('user'), async (req: AuthRequest, res) => {
+router.get('/', authenticate, cacheMiddleware(30000), applyFieldVisibility('user'), async (req: AuthRequest, res) => {
   const { type, page = '1', limit = '100' } = req.query;
 
   let whereClause: any = {};

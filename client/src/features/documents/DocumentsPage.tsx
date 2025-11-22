@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import api from '@/lib/api';
-import { showSuccessAlert, showErrorAlert } from '@/lib/sweetalert';
+import { getApiClient } from '../assets/lib/apiClient';
+import { showSuccess, showError } from '@/lib/sweetalert';
+import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
 
 interface Document {
   id: string;
@@ -26,6 +27,7 @@ const DocumentsPage: React.FC = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
+  const showLoading = useMinLoadingTime(loading, 2000);
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
 
@@ -36,21 +38,21 @@ const DocumentsPage: React.FC = () => {
   const loadData = async () => {
     try {
       setLoading(true);
+      const apiClient = getApiClient();
+      const params = new URLSearchParams();
+      if (search) params.append('search', search);
+      if (categoryFilter !== 'all') params.append('categoryId', categoryFilter);
+
       const [docsRes, statsRes] = await Promise.all([
-        api.get('/api/documents', {
-          params: {
-            search: search || undefined,
-            categoryId: categoryFilter !== 'all' ? categoryFilter : undefined
-          }
-        }),
-        api.get('/api/documents/stats')
+        apiClient.get(`/documents?${params.toString()}`),
+        apiClient.get('/documents/stats')
       ]);
 
       setDocuments(docsRes.data.documents || []);
       setStats(statsRes.data);
     } catch (error: any) {
       console.error('Error loading documents:', error);
-      showErrorAlert('Failed to load documents');
+      await showError('Error', 'Failed to load documents');
     } finally {
       setLoading(false);
     }
@@ -75,12 +77,8 @@ const DocumentsPage: React.FC = () => {
     return '📎';
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
+  if (showLoading) {
+    return <LoadingOverlay message="Loading documents" />;
   }
 
   return (

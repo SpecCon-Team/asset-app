@@ -19,7 +19,11 @@ let backupClient: PrismaClient | null = null;
 function addConnectionPoolParams(url: string): string {
   if (!url) return url;
   const separator = url.includes('?') ? '&' : '?';
-  return `${url}${separator}connection_limit=20&pool_timeout=30`;
+  // Optimized connection pooling for better performance
+  // connection_limit: max connections per pool
+  // pool_timeout: seconds to wait for connection
+  // connect_timeout: seconds to wait for initial connection
+  return `${url}${separator}connection_limit=10&pool_timeout=20&connect_timeout=10`;
 }
 
 // Use local Docker first in development, Neon for production
@@ -28,12 +32,14 @@ const primaryUrl = process.env.NODE_ENV === 'production'
   : (localUrl || neonUrl || process.env.DATABASE_URL || '');
 
 export const prisma = globalForPrisma.prisma ?? new PrismaClient({
-  log: ['error', 'warn'],
+  log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
   datasources: {
     db: {
       url: addConnectionPoolParams(primaryUrl),
     },
   },
+  // Performance optimizations
+  errorFormat: 'minimal',
 });
 
 if (process.env.NODE_ENV !== 'production') {

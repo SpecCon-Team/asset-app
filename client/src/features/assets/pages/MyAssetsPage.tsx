@@ -2,11 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAssetsStore } from '../store';
 import { Package, AlertCircle } from 'lucide-react';
-import { PageLoader } from '@/components/LoadingSpinner';
+import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
 
 export default function MyAssetsPage() {
   const navigate = useNavigate();
   const { assets, isLoading, error, fetchAssets } = useAssetsStore();
+  const showLoading = useMinLoadingTime(isLoading, 2000);
   const [user] = useState(() => {
     const userStr = localStorage.getItem('user');
     if (userStr) {
@@ -33,8 +34,8 @@ export default function MyAssetsPage() {
     setCurrentPage(1);
   }, [searchTerm]);
 
-  if (isLoading) {
-    return <PageLoader message="Loading your assets..." />;
+  if (showLoading) {
+    return <LoadingOverlay message="Loading your assets..." />;
   }
 
   if (error) {

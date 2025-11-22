@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Play, Pause, Trash2, Edit, Activity } from 'lucide-react';
 import WorkflowForm from '../components/WorkflowForm';
 import { showDeleteConfirm, showSuccess, showError } from '@/lib/sweetalert';
+import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
 
 interface Workflow {
   id: string;
@@ -19,6 +20,7 @@ interface Workflow {
 export default function WorkflowsPage() {
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [loading, setLoading] = useState(true);
+  const showLoading = useMinLoadingTime(loading, 2000);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingWorkflow, setEditingWorkflow] = useState<Workflow | null>(null);
   const [accessDenied, setAccessDenied] = useState(false);
@@ -149,17 +151,8 @@ export default function WorkflowsPage() {
     return type === 'ticket' ? 'Ticket' : 'Asset';
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 rounded-lg">
-        <div className="flex items-center gap-3">
-          <div className="w-4 h-4 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-          <div className="w-4 h-4 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-          <div className="w-4 h-4 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-        </div>
-        <span className="sr-only">Loading workflows</span>
-      </div>
-    );
+  if (showLoading) {
+    return <LoadingOverlay message="Loading workflows..." />;
   }
 
   if (accessDenied) {

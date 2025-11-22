@@ -4,6 +4,29 @@ import { authenticate, requireRole } from '../middleware/auth';
 import { logAudit } from '../lib/auditLog';
 import QRCode from 'qrcode';
 
+// Helper function to convert BigInt values to numbers recursively
+function convertBigIntsToNumbers(obj: any): any {
+  if (obj === null || obj === undefined) return obj;
+
+  if (typeof obj === 'bigint') {
+    return Number(obj);
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(convertBigIntsToNumbers);
+  }
+
+  if (typeof obj === 'object') {
+    const converted: any = {};
+    for (const [key, value] of Object.entries(obj)) {
+      converted[key] = convertBigIntsToNumbers(value);
+    }
+    return converted;
+  }
+
+  return obj;
+}
+
 const router = Router();
 
 // =====================================================
@@ -274,15 +297,17 @@ router.get('/stats', authenticate, async (req: any, res) => {
       `
     ]);
 
-    res.json({
+    const response = {
       totalCheckouts,
       currentCheckouts,
       overdueCheckouts,
       totalReturned,
-      avgCheckoutDays: avgCheckoutDays[0]?.avg_days || 0,
-      topAssets,
-      topUsers
-    });
+      avgCheckoutDays: Number(avgCheckoutDays[0]?.avg_days || 0),
+      topAssets: convertBigIntsToNumbers(topAssets),
+      topUsers: convertBigIntsToNumbers(topUsers)
+    };
+
+    res.json(convertBigIntsToNumbers(response));
   } catch (error: any) {
     console.error('Error fetching checkout stats:', error);
     res.status(500).json({

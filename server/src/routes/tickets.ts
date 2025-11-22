@@ -12,6 +12,7 @@ import { createNotificationIfNotExists } from '../lib/notificationHelper';
 import { workflowEngine } from '../lib/workflowEngine';
 import { autoAssignmentEngine } from '../lib/autoAssignment';
 import { slaEngine } from '../lib/slaEngine';
+import { cacheMiddleware, invalidateCache } from '../middleware/cache';
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -24,7 +25,7 @@ const createSchema = z.object({
   assetId: z.string().nullable().optional(),
 });
 
-router.get('/', authenticate, applyFieldVisibility('ticket'), async (req: AuthRequest, res) => {
+router.get('/', authenticate, cacheMiddleware(20000), applyFieldVisibility('ticket'), async (req: AuthRequest, res) => {
   try {
     const { page = '1', limit = '100' } = req.query;
 
@@ -174,6 +175,10 @@ router.post('/', authenticate, async (req: AuthRequest, res) => {
       console.error('Auto-assignment error:', err);
     });
 
+    // Invalidate cache
+    invalidateCache('/api/tickets');
+    invalidateCache('/api/notifications');
+
     res.json(ticket);
   } catch (error) {
     console.error('Failed to create ticket:', error);
@@ -208,6 +213,9 @@ router.patch('/bulk', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (r
         asset: true,
       },
     });
+
+    // Invalidate cache
+    invalidateCache('/api/tickets');
 
     res.json(updatedTickets);
   } catch (error) {

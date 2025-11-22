@@ -97,7 +97,7 @@ export default function InventoryFormPage() {
   };
 
   return (
-    <div className="flex flex-col p-4 md:p-6 lg:p-8">
+    <div className="flex flex-col p-4 md:p-6 lg:p-8 max-w-4xl mx-auto w-full">
       {/* Header */}
       <div className="mb-6">
         <button

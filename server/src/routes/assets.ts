@@ -7,6 +7,7 @@ import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
 import { applyFieldVisibility } from '../middleware/fieldVisibility';
 import { validateFieldUpdates, Role } from '../lib/permissions';
 import { logAudit } from '../lib/auditLog';
+import { cacheMiddleware, invalidateCache } from '../middleware/cache';
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -60,7 +61,7 @@ const createSchema = z.object({
 const updateSchema = createSchema.partial();
 
 // GET /api/assets - List all assets
-router.get('/', authenticate, applyFieldVisibility('asset'), async (req: AuthRequest, res) => {
+router.get('/', authenticate, cacheMiddleware(30000), applyFieldVisibility('asset'), async (req: AuthRequest, res) => {
   try {
     console.log('Assets GET request received');
     const search = (req.query.search as string) || undefined;
@@ -175,6 +176,9 @@ router.post('/', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: A
       name: asset.name,
     });
 
+    // Invalidate cache
+    invalidateCache('/api/assets');
+
     console.log('Asset created:', asset);
     res.status(201).json(asset);
   } catch (error) {
@@ -220,6 +224,9 @@ router.put('/:id', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req:
       where: { id: req.params.id },
       data: validatedData,
     });
+
+    // Invalidate cache
+    invalidateCache('/api/assets');
 
     // Log audit trail
     await logAudit(req, 'UPDATE', 'Asset', asset.id, validatedData, {

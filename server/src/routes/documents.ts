@@ -7,6 +7,29 @@ import path from 'path';
 import fs from 'fs/promises';
 import { v4 as uuidv4 } from 'uuid';
 
+// Helper function to convert BigInt values to numbers recursively
+function convertBigIntsToNumbers(obj: any): any {
+  if (obj === null || obj === undefined) return obj;
+
+  if (typeof obj === 'bigint') {
+    return Number(obj);
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(convertBigIntsToNumbers);
+  }
+
+  if (typeof obj === 'object') {
+    const converted: any = {};
+    for (const [key, value] of Object.entries(obj)) {
+      converted[key] = convertBigIntsToNumbers(value);
+    }
+    return converted;
+  }
+
+  return obj;
+}
+
 const router = Router();
 
 // Configure multer for file uploads
@@ -177,12 +200,14 @@ router.get('/stats', authenticate, async (req: any, res) => {
       category: cat.categoryId ? categoryMap.get(cat.categoryId) : null
     }));
 
-    res.json({
+    const response = {
       totalDocuments: totalDocs,
-      totalSize: totalSize[0]?.total || 0,
+      totalSize: Number(totalSize[0]?.total || 0),
       recentUploads,
-      byCategory: enrichedCategories
-    });
+      byCategory: convertBigIntsToNumbers(enrichedCategories)
+    };
+
+    res.json(convertBigIntsToNumbers(response));
   } catch (error: any) {
     console.error('Error fetching document stats:', error);
     res.status(500).json({

@@ -4,6 +4,7 @@ import { ArrowLeft, Plus, Edit2, Trash2, Phone, Mail, MapPin, User, Building2, C
 import { showSuccess, showError, showConfirm } from '@/lib/sweetalert';
 import { getApiClient } from '@/features/assets/lib/apiClient';
 import { formatDate } from '@/lib/dateFormatter';
+import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
 
 // South African Provinces
 const provinces = [
@@ -36,6 +37,7 @@ export default function ProvinceDetailsPage() {
   const navigate = useNavigate();
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
+  const showLoading = useMinLoadingTime(loading, 2000);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [formData, setFormData] = useState({
@@ -233,14 +235,8 @@ export default function ProvinceDetailsPage() {
       </div>
 
       {/* Clients List */}
-      {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <div className="flex items-center gap-3">
-            <div className="w-4 h-4 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-            <div className="w-4 h-4 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-            <div className="w-4 h-4 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-          </div>
-        </div>
+      {showLoading ? (
+        <LoadingOverlay message="Loading province details..." />
       ) : clients.length === 0 ? (
         <div className="bg-white dark:bg-gray-800 p-12 rounded-lg shadow-sm text-center border border-gray-200 dark:border-gray-700">
           <Building2 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
