@@ -42,6 +42,7 @@ model User {
   tickets             Ticket[]       @relation("UserTickets")
   assigned            Ticket[]       @relation("AssignedTickets")
   assets              Asset[]
+  currentAssets       Asset[]        @relation("AssetCurrentHolder")
   comments            Comment[]
   notifications       Notification[] @relation("NotificationRecipient")
   sentNotifications   Notification[] @relation("NotificationSender")
@@ -52,6 +53,11 @@ model User {
   createdTemplates    TicketTemplate[] @relation("TemplateCreator")
   assignedTemplates   TicketTemplate[] @relation("TemplateAssignee")
   replyTemplates      ReplyTemplate[] @relation("ReplyTemplateCreator")
+  checkouts           AssetCheckout[] @relation("CheckoutUser")
+  checkedOutBy        AssetCheckout[] @relation("CheckedOutBy")
+  checkedInBy         AssetCheckout[] @relation("CheckedInBy")
+  qrCodesGenerated    AssetQRCode[]
+  locationMoves       AssetLocationHistory[]
   createdAt           DateTime       @default(now())
   updatedAt           DateTime       @updatedAt
 }
@@ -77,19 +83,33 @@ model Asset {
   keyboard        String?
   department      String?
   notes           String?
+  image_url       String?
+
+  // Check-in/Check-out fields
+  checkoutStatus  String?        @default("available")
+  currentHolderId String?
+  currentLocation String?
+  lastCheckoutDate DateTime?
+  checkoutCount   Int            @default(0)
 
   // Relations
   owner           User?          @relation(fields: [ownerId], references: [id], onDelete: SetNull)
   ownerId         String?
+  currentHolder   User?          @relation("AssetCurrentHolder", fields: [currentHolderId], references: [id], onDelete: SetNull)
   tickets         Ticket[]
   history         AssetHistory[]
   maintenance     MaintenanceSchedule[]
+  checkouts       AssetCheckout[]
+  qrCodes         AssetQRCode[]
+  locationHistory AssetLocationHistory[]
 
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
 
   @@index([status])
   @@index([ownerId])
+  @@index([checkoutStatus])
+  @@index([currentHolderId])
 }
 
 model Ticket {
@@ -528,6 +548,107 @@ model ReplyTemplate {
   @@index([createdById])
   @@index([category])
   @@index([isActive])
+}
+
+model AssetCheckout {
+  id                  String                    @id @default(cuid())
+  assetId             String
+  userId              String
+  checkedOutById      String
+  checkoutDate        DateTime                  @default(now())
+  expectedReturnDate  DateTime?
+  actualReturnDate    DateTime?
+  checkedInById       String?
+  checkinDate         DateTime?
+  status              String                    @default("checked_out")
+  location            String?
+  purpose             String?
+  notes               String?
+  condition           String?
+  returnCondition     String?
+  returnNotes         String?
+  overdueNotificationSent Boolean               @default(false)
+
+  asset               Asset                     @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  user                User                      @relation("CheckoutUser", fields: [userId], references: [id], onDelete: Restrict)
+  checkedOutBy        User                      @relation("CheckedOutBy", fields: [checkedOutById], references: [id], onDelete: Restrict)
+  checkedInBy         User?                     @relation("CheckedInBy", fields: [checkedInById], references: [id], onDelete: SetNull)
+  reminders           CheckoutReminder[]
+  locationHistory     AssetLocationHistory[]
+
+  createdAt           DateTime                  @default(now())
+  updatedAt           DateTime                  @updatedAt
+
+  @@index([assetId])
+  @@index([userId])
+  @@index([status])
+  @@index([checkoutDate])
+  @@index([expectedReturnDate])
+  @@index([actualReturnDate])
+}
+
+model AssetQRCode {
+  id              String    @id @default(cuid())
+  assetId         String
+  qrCode          String    @unique
+  qrCodeUrl       String?
+  generatedAt     DateTime  @default(now())
+  generatedById   String
+  lastScannedAt   DateTime?
+  scanCount       Int       @default(0)
+  isActive        Boolean   @default(true)
+
+  asset           Asset     @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  generatedBy     User      @relation(fields: [generatedById], references: [id], onDelete: Restrict)
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([assetId])
+  @@index([qrCode])
+  @@index([isActive])
+}
+
+model AssetLocationHistory {
+  id                String          @id @default(cuid())
+  assetId           String
+  checkoutId        String?
+  location          String
+  previousLocation  String?
+  movedById         String
+  movedAt           DateTime        @default(now())
+  reason            String?
+  notes             String?
+
+  asset             Asset           @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  checkout          AssetCheckout?  @relation(fields: [checkoutId], references: [id], onDelete: SetNull)
+  movedBy           User            @relation(fields: [movedById], references: [id], onDelete: Restrict)
+
+  createdAt         DateTime        @default(now())
+
+  @@index([assetId])
+  @@index([checkoutId])
+  @@index([movedAt])
+}
+
+model CheckoutReminder {
+  id            String          @id @default(cuid())
+  checkoutId    String
+  reminderDate  DateTime
+  reminderType  String
+  sent          Boolean         @default(false)
+  sentAt        DateTime?
+  emailSent     Boolean         @default(false)
+  whatsappSent  Boolean         @default(false)
+
+  checkout      AssetCheckout   @relation(fields: [checkoutId], references: [id], onDelete: Cascade)
+
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@index([checkoutId])
+  @@index([reminderDate])
+  @@index([sent])
 }
 
 enum Role {
