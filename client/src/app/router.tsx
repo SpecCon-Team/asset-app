@@ -61,6 +61,7 @@ const DepreciationDetailPage = lazy(() => import('@/features/depreciation/Deprec
 const DocumentsPage = lazy(() => import('@/features/documents/DocumentsPage'));
 const DocumentUploadPage = lazy(() => import('@/features/documents/DocumentUploadPage'));
 const DocumentDetailPage = lazy(() => import('@/features/documents/DocumentDetailPage'));
+const AdvancedAnalyticsPage = lazy(() => import('@/features/analytics/AdvancedAnalyticsPage'));
 const DownloadMobileApp = lazy(() => import('@/pages/DownloadMobileApp'));
 const HelpAndResources = lazy(() => import('@/pages/HelpAndResources'));
 
@@ -139,6 +140,7 @@ export const router = createBrowserRouter([
       { path: 'documents', element: <LazyPage><DocumentsPage /></LazyPage> },
       { path: 'documents/upload', element: <LazyPage><DocumentUploadPage /></LazyPage> },
       { path: 'documents/:id', element: <LazyPage><DocumentDetailPage /></LazyPage> },
+      { path: 'advanced-analytics', element: <LazyPage><AdvancedAnalyticsPage /></LazyPage> },
       { path: 'whatsapp-setup', element: <LazyPage><WhatsAppSetup /></LazyPage> },
       { path: 'download-mobile-app', element: <LazyPage><DownloadMobileApp /></LazyPage> },
       { path: 'help', element: <LazyPage><HelpAndResources /></LazyPage> },
