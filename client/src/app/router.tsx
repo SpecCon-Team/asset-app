@@ -44,6 +44,9 @@ const WorkflowsPage = lazy(() => import('@/features/workflows/pages/WorkflowsPag
 const SLAPoliciesPage = lazy(() => import('@/features/workflows/pages/SLAPoliciesPage'));
 const AssignmentRulesPage = lazy(() => import('@/features/workflows/pages/AssignmentRulesPage'));
 const WorkflowHistoryPage = lazy(() => import('@/features/workflows/pages/WorkflowHistoryPage'));
+const MaintenancePage = lazy(() => import('@/features/maintenance/MaintenancePage'));
+const MaintenanceFormPage = lazy(() => import('@/features/maintenance/MaintenanceFormPage'));
+const MaintenanceDetailPage = lazy(() => import('@/features/maintenance/MaintenanceDetailPage'));
 const DownloadMobileApp = lazy(() => import('@/pages/DownloadMobileApp'));
 const HelpAndResources = lazy(() => import('@/pages/HelpAndResources'));
 
@@ -102,6 +105,10 @@ export const router = createBrowserRouter([
       { path: 'sla-policies', element: <LazyPage><SLAPoliciesPage /></LazyPage> },
       { path: 'assignment-rules', element: <LazyPage><AssignmentRulesPage /></LazyPage> },
       { path: 'workflow-history', element: <LazyPage><WorkflowHistoryPage /></LazyPage> },
+      { path: 'maintenance', element: <LazyPage><MaintenancePage /></LazyPage> },
+      { path: 'maintenance/new', element: <LazyPage><MaintenanceFormPage /></LazyPage> },
+      { path: 'maintenance/:id', element: <LazyPage><MaintenanceDetailPage /></LazyPage> },
+      { path: 'maintenance/:id/edit', element: <LazyPage><MaintenanceFormPage /></LazyPage> },
       { path: 'whatsapp-setup', element: <LazyPage><WhatsAppSetup /></LazyPage> },
       { path: 'download-mobile-app', element: <LazyPage><DownloadMobileApp /></LazyPage> },
       { path: 'help', element: <LazyPage><HelpAndResources /></LazyPage> },
