@@ -52,6 +52,9 @@ const CheckoutFormPage = lazy(() => import('@/features/checkout/CheckoutFormPage
 const CheckoutDetailPage = lazy(() => import('@/features/checkout/CheckoutDetailPage'));
 const QRScannerPage = lazy(() => import('@/features/checkout/QRScannerPage'));
 const QRGeneratorPage = lazy(() => import('@/features/checkout/QRGeneratorPage'));
+const InventoryPage = lazy(() => import('@/features/inventory/InventoryPage'));
+const InventoryFormPage = lazy(() => import('@/features/inventory/InventoryFormPage'));
+const InventoryDetailPage = lazy(() => import('@/features/inventory/InventoryDetailPage'));
 const DownloadMobileApp = lazy(() => import('@/pages/DownloadMobileApp'));
 const HelpAndResources = lazy(() => import('@/pages/HelpAndResources'));
 
@@ -120,6 +123,10 @@ export const router = createBrowserRouter([
       { path: 'checkout/qr/generate', element: <LazyPage><QRGeneratorPage /></LazyPage> },
       { path: 'checkout/:id', element: <LazyPage><CheckoutDetailPage /></LazyPage> },
       { path: 'checkout/:id/edit', element: <LazyPage><CheckoutFormPage /></LazyPage> },
+      { path: 'inventory', element: <LazyPage><InventoryPage /></LazyPage> },
+      { path: 'inventory/new', element: <LazyPage><InventoryFormPage /></LazyPage> },
+      { path: 'inventory/:id', element: <LazyPage><InventoryDetailPage /></LazyPage> },
+      { path: 'inventory/:id/edit', element: <LazyPage><InventoryFormPage /></LazyPage> },
       { path: 'whatsapp-setup', element: <LazyPage><WhatsAppSetup /></LazyPage> },
       { path: 'download-mobile-app', element: <LazyPage><DownloadMobileApp /></LazyPage> },
       { path: 'help', element: <LazyPage><HelpAndResources /></LazyPage> },
