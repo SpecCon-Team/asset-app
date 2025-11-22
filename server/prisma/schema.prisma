@@ -66,6 +66,11 @@ model User {
   purchaseOrdersApproved PurchaseOrder[] @relation("POApprovedBy")
   purchaseOrdersReceived PurchaseOrder[] @relation("POReceivedBy")
   alertsAcknowledged  StockAlert[]
+  depreciationsCreated AssetDepreciation[]
+  depreciationSchedules DepreciationSchedule[]
+  valuationsPerformed AssetValuation[]
+  disposalsCreated    AssetDisposal[] @relation("DisposalCreatedBy")
+  disposalsApproved   AssetDisposal[] @relation("DisposalApprovedBy")
   createdAt           DateTime       @default(now())
   updatedAt           DateTime       @updatedAt
 }
@@ -100,6 +105,13 @@ model Asset {
   lastCheckoutDate DateTime?
   checkoutCount   Int            @default(0)
 
+  // Depreciation fields
+  purchasePrice   Decimal?       @db.Decimal(12,2)
+  purchaseDate    DateTime?
+  currentBookValue Decimal?      @db.Decimal(12,2)
+  depreciationStatus String?     @default("not_started")
+  isDepreciable   Boolean        @default(false)
+
   // Relations
   owner           User?          @relation(fields: [ownerId], references: [id], onDelete: SetNull)
   ownerId         String?
@@ -111,6 +123,9 @@ model Asset {
   qrCodes         AssetQRCode[]
   locationHistory AssetLocationHistory[]
   stockTransactions StockTransaction[]
+  depreciation    AssetDepreciation[]
+  valuations      AssetValuation[]
+  disposals       AssetDisposal[]
 
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
@@ -119,6 +134,9 @@ model Asset {
   @@index([ownerId])
   @@index([checkoutStatus])
   @@index([currentHolderId])
+  @@index([purchaseDate])
+  @@index([depreciationStatus])
+  @@index([isDepreciable])
 }
 
 model Ticket {
@@ -857,6 +875,118 @@ model StockAlert {
   @@index([alertType])
   @@index([acknowledged])
   @@index([resolved])
+}
+
+model AssetDepreciation {
+  id                    String                  @id @default(cuid())
+  assetId               String
+  depreciationMethod    String
+  purchasePrice         Decimal                 @db.Decimal(12,2)
+  salvageValue          Decimal                 @default(0) @db.Decimal(12,2)
+  usefulLifeYears       Int
+  usefulLifeMonths      Int                     @default(0)
+  purchaseDate          DateTime
+  depreciationStartDate DateTime
+  currentBookValue      Decimal                 @db.Decimal(12,2)
+  accumulatedDepreciation Decimal               @default(0) @db.Decimal(12,2)
+  annualDepreciationRate Decimal?              @db.Decimal(5,2)
+  monthlyDepreciationAmount Decimal?            @db.Decimal(12,2)
+  isActive              Boolean                 @default(true)
+  notes                 String?
+  lastCalculatedAt      DateTime?
+  createdById           String
+
+  asset                 Asset                   @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  createdBy             User                    @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  schedule              DepreciationSchedule[]
+
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+
+  @@index([assetId])
+  @@index([depreciationMethod])
+  @@index([isActive])
+  @@index([depreciationStartDate])
+}
+
+model DepreciationSchedule {
+  id                    String              @id @default(cuid())
+  depreciationId        String
+  periodNumber          Int
+  periodStartDate       DateTime
+  periodEndDate         DateTime
+  openingBookValue      Decimal             @db.Decimal(12,2)
+  depreciationAmount    Decimal             @db.Decimal(12,2)
+  accumulatedDepreciation Decimal           @db.Decimal(12,2)
+  closingBookValue      Decimal             @db.Decimal(12,2)
+  isPosted              Boolean             @default(false)
+  postedAt              DateTime?
+  postedById            String?
+  fiscalYear            Int
+  fiscalMonth           Int
+  notes                 String?
+
+  depreciation          AssetDepreciation   @relation(fields: [depreciationId], references: [id], onDelete: Cascade)
+  postedBy              User?               @relation(fields: [postedById], references: [id], onDelete: SetNull)
+
+  createdAt             DateTime            @default(now())
+
+  @@index([depreciationId])
+  @@index([fiscalYear])
+  @@index([fiscalMonth])
+  @@index([isPosted])
+  @@index([periodEndDate])
+}
+
+model AssetValuation {
+  id                String      @id @default(cuid())
+  assetId           String
+  valuationDate     DateTime
+  valuationType     String
+  bookValue         Decimal     @db.Decimal(12,2)
+  marketValue       Decimal?    @db.Decimal(12,2)
+  replacementValue  Decimal?    @db.Decimal(12,2)
+  condition         String?
+  valuedById        String
+  appraisedBy       String?
+  appraisalDocument String?
+  notes             String?
+
+  asset             Asset       @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  valuedBy          User        @relation(fields: [valuedById], references: [id], onDelete: Restrict)
+
+  createdAt         DateTime    @default(now())
+
+  @@index([assetId])
+  @@index([valuationDate])
+  @@index([valuationType])
+}
+
+model AssetDisposal {
+  id                    String      @id @default(cuid())
+  assetId               String
+  disposalDate          DateTime
+  disposalMethod        String
+  reason                String
+  bookValueAtDisposal   Decimal     @db.Decimal(12,2)
+  disposalProceeds      Decimal     @default(0) @db.Decimal(12,2)
+  gainLoss              Decimal     @default(0) @db.Decimal(12,2)
+  disposedToParty       String?
+  authorizationDocument String?
+  approvedById          String?
+  approvedAt            DateTime?
+  notes                 String?
+  createdById           String
+
+  asset                 Asset       @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  approvedBy            User?       @relation("DisposalApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+  createdBy             User        @relation("DisposalCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+
+  createdAt             DateTime    @default(now())
+
+  @@index([assetId])
+  @@index([disposalDate])
+  @@index([disposalMethod])
 }
 
 enum Role {
