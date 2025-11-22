@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authenticate, requireRole } from '../middleware/auth.js';
-import { logAuditEvent } from '../lib/auditLog.js';
+import { logAudit } from '../lib/auditLog.js';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -220,15 +220,7 @@ router.post('/', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req:
       },
     });
 
-    await logAuditEvent({
-      action: 'CREATE',
-      entityType: 'MaintenanceSchedule',
-      entityId: schedule.id,
-      userId: req.user.id,
-      changes: { created: schedule },
-      ipAddress: req.ip,
-      userAgent: req.get('user-agent'),
-    });
+    await logAudit(req.user.id, 'CREATE', 'MaintenanceSchedule', schedule.id, { created: schedule });
 
     res.status(201).json(schedule);
   } catch (error) {
@@ -287,15 +279,7 @@ router.put('/:id', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (re
       },
     });
 
-    await logAuditEvent({
-      action: 'UPDATE',
-      entityType: 'MaintenanceSchedule',
-      entityId: schedule.id,
-      userId: req.user.id,
-      changes: { old: oldSchedule, new: schedule },
-      ipAddress: req.ip,
-      userAgent: req.get('user-agent'),
-    });
+    await logAudit(req.user.id, 'UPDATE', 'MaintenanceSchedule', schedule.id, { old: oldSchedule, new: schedule });
 
     res.json(schedule);
   } catch (error) {
@@ -319,15 +303,7 @@ router.delete('/:id', authenticate, requireRole(['ADMIN']), async (req: any, res
       where: { id: req.params.id },
     });
 
-    await logAuditEvent({
-      action: 'DELETE',
-      entityType: 'MaintenanceSchedule',
-      entityId: req.params.id,
-      userId: req.user.id,
-      changes: { deleted: schedule },
-      ipAddress: req.ip,
-      userAgent: req.get('user-agent'),
-    });
+    await logAudit(req.user.id, 'DELETE', 'MaintenanceSchedule', req.params.id, { deleted: schedule });
 
     res.json({ message: 'Maintenance schedule deleted successfully' });
   } catch (error) {
@@ -403,15 +379,7 @@ router.post('/:id/complete', authenticate, requireRole(['ADMIN', 'TECHNICIAN']),
       },
     });
 
-    await logAuditEvent({
-      action: 'UPDATE',
-      entityType: 'MaintenanceSchedule',
-      entityId: schedule.id,
-      userId: req.user.id,
-      changes: { action: 'completed', history },
-      ipAddress: req.ip,
-      userAgent: req.get('user-agent'),
-    });
+    await logAudit(req.user.id, 'UPDATE', 'MaintenanceSchedule', schedule.id, { action: 'completed', history });
 
     res.json({ schedule: updatedSchedule, history });
   } catch (error) {
