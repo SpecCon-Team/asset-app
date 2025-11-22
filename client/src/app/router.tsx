@@ -47,6 +47,11 @@ const WorkflowHistoryPage = lazy(() => import('@/features/workflows/pages/Workfl
 const MaintenancePage = lazy(() => import('@/features/maintenance/MaintenancePage'));
 const MaintenanceFormPage = lazy(() => import('@/features/maintenance/MaintenanceFormPage'));
 const MaintenanceDetailPage = lazy(() => import('@/features/maintenance/MaintenanceDetailPage'));
+const CheckoutPage = lazy(() => import('@/features/checkout/CheckoutPage'));
+const CheckoutFormPage = lazy(() => import('@/features/checkout/CheckoutFormPage'));
+const CheckoutDetailPage = lazy(() => import('@/features/checkout/CheckoutDetailPage'));
+const QRScannerPage = lazy(() => import('@/features/checkout/QRScannerPage'));
+const QRGeneratorPage = lazy(() => import('@/features/checkout/QRGeneratorPage'));
 const DownloadMobileApp = lazy(() => import('@/pages/DownloadMobileApp'));
 const HelpAndResources = lazy(() => import('@/pages/HelpAndResources'));
 
@@ -109,6 +114,12 @@ export const router = createBrowserRouter([
       { path: 'maintenance/new', element: <LazyPage><MaintenanceFormPage /></LazyPage> },
       { path: 'maintenance/:id', element: <LazyPage><MaintenanceDetailPage /></LazyPage> },
       { path: 'maintenance/:id/edit', element: <LazyPage><MaintenanceFormPage /></LazyPage> },
+      { path: 'checkout', element: <LazyPage><CheckoutPage /></LazyPage> },
+      { path: 'checkout/new', element: <LazyPage><CheckoutFormPage /></LazyPage> },
+      { path: 'checkout/scan', element: <LazyPage><QRScannerPage /></LazyPage> },
+      { path: 'checkout/qr/generate', element: <LazyPage><QRGeneratorPage /></LazyPage> },
+      { path: 'checkout/:id', element: <LazyPage><CheckoutDetailPage /></LazyPage> },
+      { path: 'checkout/:id/edit', element: <LazyPage><CheckoutFormPage /></LazyPage> },
       { path: 'whatsapp-setup', element: <LazyPage><WhatsAppSetup /></LazyPage> },
       { path: 'download-mobile-app', element: <LazyPage><DownloadMobileApp /></LazyPage> },
       { path: 'help', element: <LazyPage><HelpAndResources /></LazyPage> },
