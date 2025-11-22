@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, lazy, Suspense } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { Package, Ticket, Home, FolderOpen, ClipboardList, Settings, Users, CheckSquare, Menu, X, Keyboard, Search, Shield, Lock, ChevronLeft, ChevronRight, Bell, HelpCircle, Download, ShieldCheck, UserCog, BarChart3, FileText, Plane, Workflow, Clock, GitBranch, History } from 'lucide-react';
+import { Package, Ticket, Home, FolderOpen, ClipboardList, Settings, Users, CheckSquare, Menu, X, Keyboard, Search, Shield, Lock, ChevronLeft, ChevronRight, Bell, HelpCircle, Download, ShieldCheck, UserCog, BarChart3, FileText, Plane, Workflow, Clock, GitBranch, History, Wrench, QrCode, Archive, TrendingDown, FolderArchive, LineChart } from 'lucide-react';
 import NotificationBell from '@/features/notifications/NotificationBell';
 import UserProfileDropdown from './UserProfileDropdown';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
@@ -137,7 +137,18 @@ export default function AppLayout() {
         { to: '/assets', label: 'All Assets', icon: Package, roles: ['ADMIN'] },
         { to: '/tickets', label: 'All Tickets', icon: Ticket, roles: ['ADMIN', 'TECHNICIAN'] },
         { to: '/analytics', label: 'Analytics & Reports', icon: BarChart3, roles: ['ADMIN', 'TECHNICIAN'] },
+        { to: '/advanced-analytics', label: 'Advanced Analytics', icon: LineChart, roles: ['ADMIN'] },
         { to: '/my-clients', label: 'User Management', icon: Users, roles: ['ADMIN'] },
+      ]
+    },
+    {
+      label: 'Operations',
+      links: [
+        { to: '/maintenance', label: 'Maintenance', icon: Wrench, roles: ['ADMIN', 'TECHNICIAN'] },
+        { to: '/checkout', label: 'Asset Check-in/Out', icon: QrCode, roles: ['ADMIN', 'TECHNICIAN'] },
+        { to: '/inventory', label: 'Inventory', icon: Archive, roles: ['ADMIN', 'TECHNICIAN'] },
+        { to: '/depreciation', label: 'Depreciation', icon: TrendingDown, roles: ['ADMIN'] },
+        { to: '/documents', label: 'Documents', icon: FolderArchive, roles: ['ADMIN', 'TECHNICIAN', 'USER'] },
       ]
     },
     {
