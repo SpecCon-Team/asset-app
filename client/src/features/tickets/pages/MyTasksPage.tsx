@@ -245,7 +245,8 @@ export default function MyTasksPage() {
             throw new Error('Upload response not ok');
           }
         } catch (uploadErr) {
-          console.warn('Cloudflare upload failed, trying alternative method:', uploadErr);
+          // Cloudflare upload failed, silently trying alternative method
+          // This is expected behavior due to CORS or network restrictions
 
           // Alternative: Use smaller test with FormData
           const smallUploadSize = 1000000; // 1MB
@@ -268,20 +269,18 @@ export default function MyTasksPage() {
             totalUploadTime = altUploadTime;
             uploadSpeedMbps = (totalBytesUploaded * 8) / (totalUploadTime * 1000000);
           } catch (altErr) {
-            console.warn('Alternative upload also failed:', altErr);
+            // Both upload methods failed, using estimation
             // Use estimated upload based on download speed (typical ratio is 1:10)
             uploadSpeedMbps = downloadSpeedMbps * 0.1;
-            console.log('Using estimated upload speed based on download:', uploadSpeedMbps);
           }
         }
 
         setTestProgress(95);
 
       } catch (err) {
-        console.error('Upload test error:', err);
+        // Upload test error, using estimation
         // Estimate upload speed as 10% of download speed (common asymmetric ratio)
         uploadSpeedMbps = downloadSpeedMbps * 0.1;
-        console.log('Upload test failed, estimated speed:', uploadSpeedMbps);
       }
 
       setTestProgress(100);
@@ -342,10 +341,10 @@ export default function MyTasksPage() {
   }
 
   return (
-    <div className="h-screen overflow-hidden flex flex-col p-8">
+    <div className="flex flex-col p-4 md:p-6 lg:p-8">
       {/* Header */}
-      <div className="mb-6 flex-shrink-0">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">My Tasks</h1>
+      <div className="mb-4 sm:mb-6 flex-shrink-0">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">My Tasks</h1>
         <p className="text-gray-600 dark:text-gray-300 mt-2">Tickets assigned to you</p>
       </div>
 
@@ -494,7 +493,7 @@ export default function MyTasksPage() {
       </div>
 
       {/* Tasks List */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="pb-4">
         {myTasks.length === 0 ? (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-12 text-center">
             <Ticket className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
@@ -509,18 +508,18 @@ export default function MyTasksPage() {
                 className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer"
                 onClick={() => navigate(`/tickets/${ticket.id}`)}
               >
-                <div className="flex justify-between items-start mb-4">
-                  <div>
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex-1 min-w-0">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{ticket.title}</h3>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
                       Ticket #{ticket.number || ticket.id}
                     </p>
                   </div>
-                  <div className="flex gap-2">
-                    <span className={`px-3 py-1 text-xs rounded-full ${getStatusColor(ticket.status || '')}`}>
+                  <div className="flex gap-2 flex-shrink-0">
+                    <span className={`px-3 py-1 text-xs rounded-full whitespace-nowrap ${getStatusColor(ticket.status || '')}`}>
                       {ticket.status?.replace('_', ' ')}
                     </span>
-                    <span className={`px-3 py-1 text-xs rounded-full ${getPriorityColor(ticket.priority || '')}`}>
+                    <span className={`px-3 py-1 text-xs rounded-full whitespace-nowrap ${getPriorityColor(ticket.priority || '')}`}>
                       {ticket.priority}
                     </span>
                   </div>
@@ -530,19 +529,13 @@ export default function MyTasksPage() {
                   {ticket.description || 'No description'}
                 </p>
 
-                <div className="flex justify-between items-center text-sm text-gray-500 dark:text-gray-400">
-                  <div className="space-x-4">
-                    <span>
-                      Created by: {
-                        ticket.createdBy
-                          ? (ticket.createdBy.name || ticket.createdBy.email)
-                          : 'User'
-                      }
-                    </span>
-                    {ticket.createdAt && (
-                      <span>Created: {formatDate(ticket.createdAt)}</span>
-                    )}
-                  </div>
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-500 dark:text-gray-400">
+                  <span className="truncate">
+                    Created by: {ticket.createdBy ? (ticket.createdBy.name || ticket.createdBy.email) : 'User'}
+                  </span>
+                  {ticket.createdAt && (
+                    <span className="whitespace-nowrap">Created: {formatDate(ticket.createdAt)}</span>
+                  )}
                 </div>
               </div>
             ))}

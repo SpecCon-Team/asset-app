@@ -36,9 +36,13 @@ export default function SLAPolicyForm({ policy, onSave, onCancel }: SLAPolicyFor
         },
       });
       const data = await response.json();
-      setUsers(data.filter((u: any) => u.role === 'ADMIN' || u.role === 'TECHNICIAN'));
+
+      // Handle both array response and object with users property
+      const usersArray = Array.isArray(data) ? data : (data.users || []);
+      setUsers(usersArray.filter((u: any) => u.role === 'ADMIN' || u.role === 'TECHNICIAN'));
     } catch (error) {
       console.error('Failed to fetch users:', error);
+      setUsers([]);
     }
   };
 

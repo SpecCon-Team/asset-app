@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Workflow, Play, Pause, Activity } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { getApiClient } from '@/features/assets/lib/apiClient';
 
 interface WorkflowStats {
   total: number;
@@ -29,23 +30,9 @@ export default function WorkflowStatsWidget() {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch('http://localhost:4000/api/workflows/templates', {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
+      const response = await getApiClient().get('/workflows/templates');
 
-      if (response.status === 403) {
-        setAccessDenied(true);
-        setLoading(false);
-        return;
-      }
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const workflows = await response.json();
+      const workflows = response.data;
 
       // Ensure workflows is an array before using filter
       if (Array.isArray(workflows)) {
@@ -64,8 +51,12 @@ export default function WorkflowStatsWidget() {
           recentExecutions: 0,
         });
       }
-    } catch (error) {
-      console.error('Failed to fetch workflow stats:', error);
+    } catch (error: any) {
+      if (error.response?.status === 403) {
+        setAccessDenied(true);
+      } else {
+        console.error('Failed to fetch workflow stats:', error);
+      }
       // Keep default empty stats on error
       setStats({
         total: 0,

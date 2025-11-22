@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, Edit2, Trash2, Phone, Mail, MapPin, User, Building2, Calendar } from 'lucide-react';
-import Swal from 'sweetalert2';
+import { showSuccess, showError, showConfirm } from '@/lib/sweetalert';
 import { getApiClient } from '@/features/assets/lib/apiClient';
 import { formatDate } from '@/lib/dateFormatter';
 
@@ -61,12 +61,7 @@ export default function ProvinceDetailsPage() {
       setClients(provinceClients);
     } catch (error) {
       console.error('Error loading clients:', error);
-      Swal.fire({
-        title: 'Error',
-        text: 'Failed to load clients',
-        icon: 'error',
-        confirmButtonColor: '#3b82f6',
-      });
+      showError('Error', 'Failed to load clients');
     } finally {
       setLoading(false);
     }
@@ -100,12 +95,7 @@ export default function ProvinceDetailsPage() {
     e.preventDefault();
 
     if (!formData.name || !formData.location) {
-      Swal.fire({
-        title: 'Validation Error',
-        text: 'Name and Location are required',
-        icon: 'error',
-        confirmButtonColor: '#3b82f6',
-      });
+      showError('Validation Error', 'Name and Location are required');
       return;
     }
 
@@ -118,68 +108,37 @@ export default function ProvinceDetailsPage() {
 
       if (editingClient) {
         await api.put(`/peg/${editingClient.id}`, clientData);
-        Swal.fire({
-          title: 'Success',
-          text: 'Client updated successfully',
-          icon: 'success',
-          confirmButtonColor: '#3b82f6',
-          timer: 2000,
-        });
+        showSuccess('Success', 'Client updated successfully', 2000);
       } else {
         await api.post('/peg', clientData);
-        Swal.fire({
-          title: 'Success',
-          text: 'Client added successfully',
-          icon: 'success',
-          confirmButtonColor: '#3b82f6',
-          timer: 2000,
-        });
+        showSuccess('Success', 'Client added successfully', 2000);
       }
 
       setShowAddModal(false);
       loadClients();
     } catch (error) {
       console.error('Error saving client:', error);
-      Swal.fire({
-        title: 'Error',
-        text: 'Failed to save client',
-        icon: 'error',
-        confirmButtonColor: '#3b82f6',
-      });
+      showError('Error', 'Failed to save client');
     }
   };
 
   const handleDeleteClient = async (client: Client) => {
-    const result = await Swal.fire({
-      title: 'Delete Client',
-      text: `Are you sure you want to delete ${client.name}?`,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#ef4444',
-      cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Yes, delete it',
-    });
+    const result = await showConfirm(
+      'Delete Client',
+      `Are you sure you want to delete ${client.name}?`,
+      'Yes, delete it',
+      'Cancel'
+    );
 
     if (result.isConfirmed) {
       try {
         const api = getApiClient();
         await api.delete(`/peg/${client.id}`);
-        Swal.fire({
-          title: 'Deleted',
-          text: 'Client deleted successfully',
-          icon: 'success',
-          confirmButtonColor: '#3b82f6',
-          timer: 2000,
-        });
+        showSuccess('Deleted', 'Client deleted successfully', 2000);
         loadClients();
       } catch (error) {
         console.error('Error deleting client:', error);
-        Swal.fire({
-          title: 'Error',
-          text: 'Failed to delete client',
-          icon: 'error',
-          confirmButtonColor: '#3b82f6',
-        });
+        showError('Error', 'Failed to delete client');
       }
     }
   };

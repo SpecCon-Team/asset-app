@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import Swal from 'sweetalert2';
+import { showSuccess, showError } from '@/lib/sweetalert';
 
 interface BulkUpdateData {
   ticketIds: string[];
@@ -69,20 +69,10 @@ export function useBulkTicketOperations() {
         ? 'priority'
         : 'assignment';
 
-      Swal.fire({
-        icon: 'success',
-        title: 'Success!',
-        text: `Successfully updated ${variables.ticketIds.length} ticket(s)`,
-        timer: 3000,
-        showConfirmButton: false,
-      });
+      showSuccess('Success!', `Successfully updated ${variables.ticketIds.length} ticket(s)`, 3000);
     },
     onError: (error: any) => {
-      Swal.fire({
-        icon: 'error',
-        title: 'Update Failed',
-        text: error.response?.data?.message || 'Failed to update tickets',
-      });
+      showError('Update Failed', error.response?.data?.message || 'Failed to update tickets');
     },
   });
 
@@ -95,20 +85,10 @@ export function useBulkTicketOperations() {
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
 
-      Swal.fire({
-        icon: 'success',
-        title: 'Tickets Closed',
-        text: `Successfully closed ${variables.ticketIds.length} ticket(s)`,
-        timer: 3000,
-        showConfirmButton: false,
-      });
+      showSuccess('Tickets Closed', `Successfully closed ${variables.ticketIds.length} ticket(s)`, 3000);
     },
     onError: (error: any) => {
-      Swal.fire({
-        icon: 'error',
-        title: 'Close Failed',
-        text: error.response?.data?.message || 'Failed to close tickets',
-      });
+      showError('Close Failed', error.response?.data?.message || 'Failed to close tickets');
     },
   });
 
@@ -133,13 +113,7 @@ export function useBulkTicketOperations() {
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
 
-        Swal.fire({
-          icon: 'success',
-          title: 'Export Complete',
-          text: `Exported ${data.ticketIds.length} ticket(s) to CSV`,
-          timer: 3000,
-          showConfirmButton: false,
-        });
+        showSuccess('Export Complete', `Exported ${data.ticketIds.length} ticket(s) to CSV`, 3000);
       } else {
         // Download JSON file
         const jsonStr = JSON.stringify(response.data, null, 2);
@@ -153,20 +127,10 @@ export function useBulkTicketOperations() {
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
 
-        Swal.fire({
-          icon: 'success',
-          title: 'Export Complete',
-          text: `Exported ${response.data.count} ticket(s) to JSON`,
-          timer: 3000,
-          showConfirmButton: false,
-        });
+        showSuccess('Export Complete', `Exported ${response.data.count} ticket(s) to JSON`, 3000);
       }
     } catch (error: any) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Export Failed',
-        text: error.response?.data?.message || 'Failed to export tickets',
-      });
+      showError('Export Failed', error.response?.data?.message || 'Failed to export tickets');
     } finally {
       setIsExporting(false);
     }
@@ -181,20 +145,10 @@ export function useBulkTicketOperations() {
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
 
-      Swal.fire({
-        icon: 'success',
-        title: 'Tickets Deleted',
-        text: `Successfully deleted ${variables.ticketIds.length} ticket(s)`,
-        timer: 3000,
-        showConfirmButton: false,
-      });
+      showSuccess('Tickets Deleted', `Successfully deleted ${variables.ticketIds.length} ticket(s)`, 3000);
     },
     onError: (error: any) => {
-      Swal.fire({
-        icon: 'error',
-        title: 'Delete Failed',
-        text: error.response?.data?.message || 'Failed to delete tickets',
-      });
+      showError('Delete Failed', error.response?.data?.message || 'Failed to delete tickets');
     },
   });
 

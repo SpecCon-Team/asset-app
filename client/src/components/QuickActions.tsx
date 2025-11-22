@@ -1,7 +1,7 @@
 import React from 'react';
 import { Plus, Ticket, Package, Users, MapPin, TrendingUp, FileText, Bell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import Swal from 'sweetalert2';
+import { showInfo } from '@/lib/sweetalert';
 
 const quickActions = [
   {
@@ -63,20 +63,15 @@ const quickActions = [
 export default function QuickActions() {
   const navigate = useNavigate();
 
-  const handleAction = (action: typeof quickActions[0]) => {
+  const handleAction = async (action: typeof quickActions[0]) => {
     if (action.action === 'create') {
-      Swal.fire({
-        title: action.label,
-        text: `Navigate to ${action.label} page to create new item`,
-        icon: 'info',
-        confirmButtonColor: '#3b82f6',
-        confirmButtonText: 'Go',
-        showCancelButton: true,
-      }).then((result) => {
-        if (result.isConfirmed) {
-          navigate(action.path);
-        }
-      });
+      const result = await showInfo(
+        `Navigate to ${action.label} page to create new item`,
+        action.label
+      );
+      if (result.isConfirmed) {
+        navigate(action.path);
+      }
     } else {
       navigate(action.path);
     }

@@ -35,6 +35,36 @@ export default function AuditLogsPage() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
+  // Load date filters from localStorage on mount
+  useEffect(() => {
+    const savedStartDate = localStorage.getItem('auditLogs_startDate');
+    const savedEndDate = localStorage.getItem('auditLogs_endDate');
+
+    if (savedStartDate) {
+      setStartDate(savedStartDate);
+    }
+    if (savedEndDate) {
+      setEndDate(savedEndDate);
+    }
+  }, []);
+
+  // Save date filters to localStorage whenever they change
+  useEffect(() => {
+    if (startDate) {
+      localStorage.setItem('auditLogs_startDate', startDate);
+    } else {
+      localStorage.removeItem('auditLogs_startDate');
+    }
+  }, [startDate]);
+
+  useEffect(() => {
+    if (endDate) {
+      localStorage.setItem('auditLogs_endDate', endDate);
+    } else {
+      localStorage.removeItem('auditLogs_endDate');
+    }
+  }, [endDate]);
+
   useEffect(() => {
     fetchLogs();
     fetchStats();

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapPin, Plus, X, Users, Edit2, Trash2, Search, Download, BarChart3, List, Map as MapIcon, Phone, Mail, Navigation } from 'lucide-react';
-import Swal from 'sweetalert2';
+import { showSuccess, showError, showConfirm } from '@/lib/sweetalert';
 import { getApiClient } from '@/features/assets/lib/apiClient';
 
 // South African Provinces
@@ -62,12 +62,7 @@ export default function MyPEGPage() {
       setClients(response.data);
     } catch (error) {
       console.error('Error loading PEG clients:', error);
-      Swal.fire({
-        title: 'Error',
-        text: 'Failed to load clients',
-        icon: 'error',
-        confirmButtonColor: '#3b82f6',
-      });
+      showError('Error', 'Failed to load clients');
     } finally {
       setLoading(false);
     }
@@ -79,12 +74,7 @@ export default function MyPEGPage() {
 
   const handleAddClient = () => {
     if (!selectedProvince) {
-      Swal.fire({
-        title: 'No Province Selected',
-        text: 'Please select a province first',
-        icon: 'error',
-        confirmButtonColor: '#3b82f6',
-      });
+      showError('No Province Selected', 'Please select a province first');
       return;
     }
     setShowAddModal(true);
@@ -119,12 +109,7 @@ export default function MyPEGPage() {
       await loadClients();
     } catch (error) {
       console.error('Error deleting client:', error);
-      Swal.fire({
-        title: 'Error',
-        text: 'Failed to delete client',
-        icon: 'error',
-        confirmButtonColor: '#3b82f6',
-      });
+      showError('Error', 'Failed to delete client');
     }
   };
 
@@ -132,12 +117,7 @@ export default function MyPEGPage() {
     e.preventDefault();
 
     if (!formData.name || !formData.location) {
-      Swal.fire({
-        title: 'Missing Fields',
-        text: 'Please fill in all required fields',
-        icon: 'error',
-        confirmButtonColor: '#3b82f6',
-      });
+      showError('Missing Fields', 'Please fill in all required fields');
       return;
     }
 
@@ -151,25 +131,11 @@ export default function MyPEGPage() {
       if (editingClient) {
         // Update existing client
         await api.put(`/peg/${editingClient.id}`, payload);
-
-        await Swal.fire({
-          title: 'Updated!',
-          text: 'Client updated successfully',
-          icon: 'success',
-          timer: 1500,
-          showConfirmButton: false,
-        });
+        showSuccess('Updated!', 'Client updated successfully', 1500);
       } else {
         // Add new client
         await api.post('/peg', payload);
-
-        await Swal.fire({
-          title: 'Added!',
-          text: 'Client added successfully',
-          icon: 'success',
-          timer: 1500,
-          showConfirmButton: false,
-        });
+        showSuccess('Added!', 'Client added successfully', 1500);
       }
 
       await loadClients();
@@ -185,12 +151,7 @@ export default function MyPEGPage() {
       });
     } catch (error) {
       console.error('Error saving client:', error);
-      Swal.fire({
-        title: 'Error',
-        text: editingClient ? 'Failed to update client' : 'Failed to create client',
-        icon: 'error',
-        confirmButtonColor: '#3b82f6',
-      });
+      showError('Error', editingClient ? 'Failed to update client' : 'Failed to create client');
     }
   };
 
@@ -254,37 +215,22 @@ export default function MyPEGPage() {
   };
 
   const clearAllData = async () => {
-    const result = await Swal.fire({
-      title: 'Are you sure?',
-      text: 'Do you want to clear all client data?',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#dc2626',
-      cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Yes, clear all!',
-      cancelButtonText: 'Cancel',
-    });
+    const result = await showConfirm(
+      'Are you sure?',
+      'Do you want to clear all client data?',
+      'Yes, clear all!',
+      'Cancel'
+    );
 
     if (result.isConfirmed) {
       try {
         const api = getApiClient();
         await api.delete('/peg');
         await loadClients();
-        Swal.fire({
-          title: 'Cleared!',
-          text: 'All data has been cleared.',
-          icon: 'success',
-          timer: 2000,
-          showConfirmButton: false,
-        });
+        showSuccess('Cleared!', 'All data has been cleared.', 2000);
       } catch (error) {
         console.error('Error clearing data:', error);
-        Swal.fire({
-          title: 'Error',
-          text: 'Failed to clear data',
-          icon: 'error',
-          confirmButtonColor: '#3b82f6',
-        });
+        showError('Error', 'Failed to clear data');
       }
     }
   };
@@ -516,27 +462,17 @@ export default function MyPEGPage() {
                         </button>
                         <button
                           onClick={async () => {
-                            const result = await Swal.fire({
-                              title: 'Are you sure?',
-                              text: `Do you want to delete ${client.name}?`,
-                              icon: 'warning',
-                              showCancelButton: true,
-                              confirmButtonColor: '#dc2626',
-                              cancelButtonColor: '#6b7280',
-                              confirmButtonText: 'Yes, delete!',
-                              cancelButtonText: 'Cancel',
-                            });
+                            const result = await showConfirm(
+                              'Are you sure?',
+                              `Do you want to delete ${client.name}?`,
+                              'Yes, delete!',
+                              'Cancel'
+                            );
 
                             if (result.isConfirmed) {
                               await handleDeleteClient(client.id);
                               await loadClients();
-                              Swal.fire({
-                                title: 'Deleted!',
-                                text: `${client.name} has been deleted.`,
-                                icon: 'success',
-                                timer: 2000,
-                                showConfirmButton: false,
-                              });
+                              showSuccess('Deleted!', `${client.name} has been deleted.`, 2000);
                             }
                           }}
                           className="p-2 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
@@ -744,26 +680,16 @@ export default function MyPEGPage() {
                           </button>
                           <button
                             onClick={async () => {
-                              const result = await Swal.fire({
-                                title: 'Are you sure?',
-                                text: `Do you want to delete ${client.name}?`,
-                                icon: 'warning',
-                                showCancelButton: true,
-                                confirmButtonColor: '#dc2626',
-                                cancelButtonColor: '#6b7280',
-                                confirmButtonText: 'Yes, delete!',
-                                cancelButtonText: 'Cancel',
-                              });
+                              const result = await showConfirm(
+                                'Are you sure?',
+                                `Do you want to delete ${client.name}?`,
+                                'Yes, delete!',
+                                'Cancel'
+                              );
 
                               if (result.isConfirmed) {
                                 handleDeleteClient(client.id);
-                                Swal.fire({
-                                  title: 'Deleted!',
-                                  text: `${client.name} has been deleted.`,
-                                  icon: 'success',
-                                  timer: 2000,
-                                  showConfirmButton: false,
-                                });
+                                showSuccess('Deleted!', `${client.name} has been deleted.`, 2000);
                               }
                             }}
                             className="p-2 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"

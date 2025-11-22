@@ -1,4 +1,4 @@
-/* Import modern animations - must be first */
+/* Import animations - must be first */
 @import './animations.css';
 
 @tailwind base;

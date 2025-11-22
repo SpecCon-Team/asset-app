@@ -5,7 +5,7 @@ import {
   Filter, ChevronDown, ChevronUp, Briefcase, Users, Heart,
   TrendingUp, Globe, Hotel, Car, Camera, Sparkles, Cross
 } from 'lucide-react';
-import Swal from 'sweetalert2';
+import { showSuccess, showError, showConfirm, showInfo } from '@/lib/sweetalert';
 import { getApiClient } from '@/features/assets/lib/apiClient';
 
 interface Trip {
@@ -166,12 +166,7 @@ export default function TravelPlanPage() {
       setTrips(response.data);
     } catch (error) {
       console.error('Error loading trips:', error);
-      Swal.fire({
-        title: 'Error',
-        text: 'Failed to load trips',
-        icon: 'error',
-        confirmButtonColor: '#3b82f6',
-      });
+      showError('Error', 'Failed to load trips');
     } finally {
       setLoading(false);
     }
@@ -239,37 +234,22 @@ export default function TravelPlanPage() {
   };
 
   const handleDeleteTrip = async (tripId: string) => {
-    const result = await Swal.fire({
-      title: 'Are you sure?',
-      text: 'Do you want to delete this trip?',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#dc2626',
-      cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Yes, delete!',
-      cancelButtonText: 'Cancel',
-    });
+    const result = await showConfirm(
+      'Are you sure?',
+      'Do you want to delete this trip?',
+      'Yes, delete!',
+      'Cancel'
+    );
 
     if (result.isConfirmed) {
       try {
         const api = getApiClient();
         await api.delete(`/travel/${tripId}`);
         setTrips(trips.filter(t => t.id !== tripId));
-        Swal.fire({
-          title: 'Deleted!',
-          text: 'Trip has been deleted.',
-          icon: 'success',
-          timer: 2000,
-          showConfirmButton: false,
-        });
+        showSuccess('Deleted!', 'Trip has been deleted.', 2000);
       } catch (error) {
         console.error('Error deleting trip:', error);
-        Swal.fire({
-          title: 'Error',
-          text: 'Failed to delete trip',
-          icon: 'error',
-          confirmButtonColor: '#3b82f6',
-        });
+        showError('Error', 'Failed to delete trip');
       }
     }
   };
@@ -278,12 +258,7 @@ export default function TravelPlanPage() {
     e.preventDefault();
 
     if (!formData.destination || !formData.startDate || !formData.endDate) {
-      Swal.fire({
-        title: 'Missing Fields',
-        text: 'Please fill in all required fields',
-        icon: 'error',
-        confirmButtonColor: '#3b82f6',
-      });
+      showError('Missing Fields', 'Please fill in all required fields');
       return;
     }
 
@@ -305,44 +280,22 @@ export default function TravelPlanPage() {
       if (editingTrip) {
         const response = await api.put(`/travel/${editingTrip.id}`, tripData);
         setTrips(trips.map(t => t.id === editingTrip.id ? response.data : t));
-        Swal.fire({
-          title: 'Updated!',
-          text: 'Trip updated successfully',
-          icon: 'success',
-          timer: 1500,
-          showConfirmButton: false,
-        });
+        showSuccess('Updated!', 'Trip updated successfully', 1500);
       } else {
         const response = await api.post('/travel', tripData);
         setTrips([...trips, response.data]);
-        Swal.fire({
-          title: 'Added!',
-          text: 'Trip added successfully',
-          icon: 'success',
-          timer: 1500,
-          showConfirmButton: false,
-        });
+        showSuccess('Added!', 'Trip added successfully', 1500);
       }
 
       setShowAddModal(false);
     } catch (error) {
       console.error('Error saving trip:', error);
-      Swal.fire({
-        title: 'Error',
-        text: 'Failed to save trip',
-        icon: 'error',
-        confirmButtonColor: '#3b82f6',
-      });
+      showError('Error', 'Failed to save trip');
     }
   };
 
   const exportToPDF = (trip: Trip) => {
-    Swal.fire({
-      title: 'Export Trip',
-      text: 'PDF export functionality coming soon!',
-      icon: 'info',
-      confirmButtonColor: '#3b82f6',
-    });
+    showInfo('PDF export functionality coming soon!', 'Export Trip');
   };
 
   const getDaysDifference = (start: string, end: string) => {

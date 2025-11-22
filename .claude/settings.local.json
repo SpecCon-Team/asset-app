@@ -67,7 +67,11 @@
       "Bash(do echo \"Request $i:\")",
       "Bash(done)",
       "Bash(do time curl -s -o /dev/null http://localhost:4000/)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git pull:*)",
+      "Bash(git stash:*)",
+      "Bash(git stash pop:*)",
+      "Bash(timeout 10 npm run dev:*)"
     ],
     "deny": [],
     "ask": []

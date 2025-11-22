@@ -21,6 +21,7 @@ export default function AssetDetailsPage() {
   const [showQRCode, setShowQRCode] = useState(false);
 
   const [formData, setFormData] = useState<CreateAssetDto>({
+    asset_code: '',
     name: '',
     serial_number: '',
     remote_id: '',

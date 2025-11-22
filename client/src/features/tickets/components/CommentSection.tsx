@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { listUsers } from '@/features/users/api';
 import type { User } from '@/features/users/types';
 import { getCurrentUserEmail, isAdmin, isTechnician } from '@/features/auth/hooks';
-import Swal from 'sweetalert2';
+import { showWarning, showError, showSuccess, showConfirm } from '@/lib/sweetalert';
 import { formatDateTime } from '@/lib/dateFormatter';
 
 interface Comment {
@@ -43,13 +43,22 @@ export default function CommentSection({ ticketId }: CommentSectionProps) {
   const isProcessingRef = useRef<boolean>(false); // Track if this component is processing
 
   useEffect(() => {
+    // Only fetch if we have a valid ticketId
+    if (!ticketId) {
+      console.warn('CommentSection: No ticketId provided');
+      setIsLoadingComments(false);
+      return;
+    }
+
     fetchComments();
     fetchUsers();
     findCurrentUser();
 
     // Auto-refresh comments every 10 seconds so users see new admin replies
     const interval = setInterval(() => {
-      fetchComments();
+      if (ticketId) {
+        fetchComments();
+      }
     }, 10000);
 
     return () => clearInterval(interval);
@@ -81,6 +90,13 @@ export default function CommentSection({ ticketId }: CommentSectionProps) {
   };
 
   const fetchComments = async () => {
+    // Validate ticketId before making the request
+    if (!ticketId || ticketId === 'undefined' || ticketId === 'null') {
+      console.warn('CommentSection.fetchComments: Invalid ticketId:', ticketId);
+      setIsLoadingComments(false);
+      return;
+    }
+
     try {
       const token = localStorage.getItem('token');
       const headers: HeadersInit = {
@@ -97,6 +113,20 @@ export default function CommentSection({ ticketId }: CommentSectionProps) {
       });
 
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Failed to fetch comments for ticket ${ticketId}:`, {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText
+        });
+
+        // Don't throw for 404 (ticket not found) - just log it
+        if (response.status === 404) {
+          console.warn('Ticket not found or no access to comments');
+          setComments([]);
+          return;
+        }
+
         throw new Error(`Failed to fetch comments: ${response.status}`);
       }
 
@@ -115,16 +145,9 @@ export default function CommentSection({ ticketId }: CommentSectionProps) {
       e.stopPropagation();
     }
 
-    console.log('[SUBMIT START] Checking locks...');
-    console.log('  - isGloballySubmitting:', isGloballySubmitting);
-    console.log('  - isProcessingRef.current:', isProcessingRef.current);
-    console.log('  - isSubmitting:', isSubmitting);
-    console.log('  - isLoading:', isLoading);
-
     // CRITICAL: Set ALL locks IMMEDIATELY before any other checks
     // This prevents race conditions where two clicks both pass the checks
     if (isGloballySubmitting || isProcessingRef.current || isSubmitting || isLoading) {
-      console.log('[BLOCKED] ❌ Submission in progress - ignoring request');
       return;
     }
 
@@ -134,30 +157,18 @@ export default function CommentSection({ ticketId }: CommentSectionProps) {
     setIsSubmitting(true);
     setIsLoading(true);
 
-    console.log('[SUBMIT] ✅ All locks set - proceeding with submission');
-
     try {
       // For regular users, use their own ID; for admins, use selected user
       const authorId = userIsAdmin ? selectedUserId : currentUserId;
 
       // Validate inputs first
       if (!newComment.trim()) {
-        await Swal.fire({
-          title: 'Missing Comment',
-          text: 'Please enter a comment',
-          icon: 'warning',
-          confirmButtonColor: '#3B82F6',
-        });
+        await showWarning('Missing Comment', 'Please enter a comment');
         return;
       }
 
       if (!authorId) {
-        await Swal.fire({
-          title: 'Authentication Error',
-          text: 'Unable to identify user. Please try logging in again.',
-          icon: 'error',
-          confirmButtonColor: '#EF4444',
-        });
+        await showError('Authentication Error', 'Unable to identify user. Please try logging in again.');
         return;
       }
 
@@ -172,13 +183,7 @@ export default function CommentSection({ ticketId }: CommentSectionProps) {
 
           // If same content within 30 seconds, block it
           if (content === newComment.trim() && timeSinceLastComment < 30000) {
-            console.log('[BLOCKED] Identical comment in localStorage - preventing duplicate');
-            await Swal.fire({
-              title: 'Duplicate Comment',
-              text: 'You already submitted this exact comment. Please wait 30 seconds to submit it again.',
-              icon: 'warning',
-              confirmButtonColor: '#3B82F6',
-            });
+            await showWarning('Duplicate Comment', 'You already submitted this exact comment. Please wait 30 seconds to submit it again.');
             return;
           }
         } catch (error) {
@@ -188,19 +193,11 @@ export default function CommentSection({ ticketId }: CommentSectionProps) {
 
       // Count submit attempts
       submitCountRef.current += 1;
-      console.log(`[SUBMIT] Attempt #${submitCountRef.current}`);
 
       // Prevent rapid double-clicks (5 seconds debounce)
       const now = Date.now();
       if (now - lastSubmitTimeRef.current < 5000) {
-        console.log('[BLOCKED] Too soon - must wait 5 seconds between comments');
-        await Swal.fire({
-          title: 'Please Wait',
-          text: 'Please wait 5 seconds between comments',
-          icon: 'warning',
-          confirmButtonColor: '#3B82F6',
-          timer: 2000,
-        });
+        await showWarning('Please Wait', 'Please wait 5 seconds between comments');
         return;
       }
       lastSubmitTimeRef.current = now;
@@ -215,8 +212,6 @@ export default function CommentSection({ ticketId }: CommentSectionProps) {
 
       // Generate unique request ID to help backend detect duplicates
       const requestId = `${authorId}-${ticketId}-${Date.now()}`;
-
-      console.log('[API] Sending comment to server...');
 
       const response = await fetch('http://localhost:4000/api/comments', {
         method: 'POST',
@@ -235,7 +230,6 @@ export default function CommentSection({ ticketId }: CommentSectionProps) {
       if (!response.ok) throw new Error('Failed to create comment');
 
       const newCommentData = await response.json();
-      console.log('[API] Comment created successfully:', newCommentData.id);
 
       // Store in localStorage to prevent duplicates (reuse localStorageKey from above)
       localStorage.setItem(localStorageKey, JSON.stringify({
@@ -268,42 +262,25 @@ export default function CommentSection({ ticketId }: CommentSectionProps) {
       // Refresh comments from server
       await fetchComments();
 
-      await Swal.fire({
-        title: 'Success!',
-        text: 'Comment added successfully!',
-        icon: 'success',
-        confirmButtonColor: '#10B981',
-        timer: 1500,
-        showConfirmButton: false,
-      });
+      await showSuccess('Success!', 'Comment added successfully!', 1500);
     } catch (error) {
-      await Swal.fire({
-        title: 'Error',
-        text: 'Failed to add comment',
-        icon: 'error',
-        confirmButtonColor: '#EF4444',
-      });
+      await showError('Error', 'Failed to add comment');
       console.error('Error creating comment:', error);
     } finally {
       setIsLoading(false);
       setIsSubmitting(false);
       isProcessingRef.current = false;
       isGloballySubmitting = false;
-      console.log('[UNLOCKED] All locks released');
     }
   };
 
   const handleDelete = async (commentId: string) => {
-    const result = await Swal.fire({
-      title: 'Delete Comment?',
-      text: 'Are you sure you want to delete this comment? This action cannot be undone.',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#EF4444',
-      cancelButtonColor: '#6B7280',
-      confirmButtonText: 'Yes, delete it',
-      cancelButtonText: 'Cancel',
-    });
+    const result = await showConfirm(
+      'Delete Comment?',
+      'Are you sure you want to delete this comment? This action cannot be undone.',
+      'Yes, delete it',
+      'Cancel'
+    );
 
     if (!result.isConfirmed) return;
 
@@ -326,24 +303,17 @@ export default function CommentSection({ ticketId }: CommentSectionProps) {
       if (!response.ok) throw new Error('Failed to delete comment');
 
       setComments(comments.filter((c) => c.id !== commentId));
-      await Swal.fire({
-        title: 'Deleted!',
-        text: 'Comment deleted successfully!',
-        icon: 'success',
-        confirmButtonColor: '#10B981',
-        timer: 1500,
-        showConfirmButton: false,
-      });
+      await showSuccess('Deleted!', 'Comment deleted successfully!', 1500);
     } catch (error) {
-      await Swal.fire({
-        title: 'Error',
-        text: 'Failed to delete comment',
-        icon: 'error',
-        confirmButtonColor: '#EF4444',
-      });
+      await showError('Error', 'Failed to delete comment');
       console.error('Error deleting comment:', error);
     }
   };
+
+  // Don't render if no ticketId
+  if (!ticketId) {
+    return <div className="p-4 text-gray-500">No ticket selected</div>;
+  }
 
   if (isLoadingComments) {
     return <div className="p-4">Loading comments...</div>;
@@ -462,7 +432,6 @@ export default function CommentSection({ ticketId }: CommentSectionProps) {
             e.stopPropagation();
             // Extra check at onClick level
             if (isGloballySubmitting || isProcessingRef.current || isSubmitting || isLoading) {
-              console.log('[BUTTON BLOCKED] Already submitting');
               return;
             }
             handleSubmit(e as any);

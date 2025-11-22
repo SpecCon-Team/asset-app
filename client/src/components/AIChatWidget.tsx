@@ -144,8 +144,8 @@ export default function AIChatWidget() {
     setMessages([]);
     setHasShownWelcome(false);
     if (userId) {
-      localStorage.removeItem(getChatHistoryKey());
-      localStorage.removeItem(getWelcomeShownKey());
+      localStorage.removeItem(chatHistoryKey);
+      localStorage.removeItem(welcomeShownKey);
     }
   };
 

@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Shield, AlertTriangle, Users, Key, Calendar, RefreshCw } from 'lucide-react';
 import { getApiClient } from '@/features/assets/lib/apiClient';
-import { showSuccess, showError, showConfirmation } from '@/lib/swal-config';
+import { showSuccess, showError, showConfirmation, showTextarea } from '@/lib/sweetalert';
 import { formatDateTime } from '@/lib/dateFormatter';
-import Swal from 'sweetalert2';
 
 interface UserWith2FA {
   id: string;
@@ -49,16 +48,12 @@ export default function TwoFactorManagementPage() {
     if (!result.isConfirmed) return;
 
     // Ask for reason
-    const { value: reason } = await Swal.fire({
-      title: 'Reset Reason',
-      input: 'textarea',
-      inputLabel: 'Please provide a reason for this 2FA reset (optional)',
-      inputPlaceholder: 'e.g., User lost phone and backup codes',
-      showCancelButton: true,
-      confirmButtonText: 'Reset 2FA',
-      confirmButtonColor: '#dc2626',
-      inputValidator: undefined,
-    });
+    const { value: reason } = await showTextarea(
+      'Reset Reason',
+      'Please provide a reason for this 2FA reset (optional)',
+      'e.g., User lost phone and backup codes',
+      false
+    );
 
     try {
       const apiClient = getApiClient();

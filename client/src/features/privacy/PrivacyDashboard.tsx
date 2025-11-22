@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Download, Trash2, Shield, AlertTriangle, FileText, Database, Clock } from 'lucide-react';
 import { getApiClient } from '@/features/assets/lib/apiClient';
-import Swal from 'sweetalert2';
+import { showSuccess, showError, showCustom } from '@/lib/sweetalert';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
 interface RetentionSummary {
@@ -26,11 +26,7 @@ export default function PrivacyDashboard() {
       setRetentionSummary(response.data);
     } catch (error) {
       console.error('Failed to fetch retention summary:', error);
-      Swal.fire({
-        title: 'Error',
-        text: 'Failed to load privacy data',
-        icon: 'error',
-      });
+      showError('Error', 'Failed to load privacy data');
     } finally {
       setIsLoading(false);
     }
@@ -53,18 +49,10 @@ export default function PrivacyDashboard() {
       link.click();
       window.URL.revokeObjectURL(url);
 
-      Swal.fire({
-        title: 'Success!',
-        text: 'Your data has been exported successfully',
-        icon: 'success',
-      });
+      showSuccess('Success!', 'Your data has been exported successfully');
     } catch (error) {
       console.error('Export error:', error);
-      Swal.fire({
-        title: 'Error',
-        text: 'Failed to export your data',
-        icon: 'error',
-      });
+      showError('Error', 'Failed to export your data');
     } finally {
       setIsExporting(false);
     }
@@ -75,7 +63,7 @@ export default function PrivacyDashboard() {
       const response = await getApiClient().get('/gdpr/privacy-report');
       const report = response.data;
 
-      Swal.fire({
+      showCustom({
         title: 'Privacy Report',
         html: `
           <div class="text-left">
@@ -109,16 +97,12 @@ export default function PrivacyDashboard() {
       });
     } catch (error) {
       console.error('Privacy report error:', error);
-      Swal.fire({
-        title: 'Error',
-        text: 'Failed to generate privacy report',
-        icon: 'error',
-      });
+      showError('Error', 'Failed to generate privacy report');
     }
   };
 
   const handleAnonymizeAccount = async () => {
-    const result = await Swal.fire({
+    const result = await showCustom({
       title: 'Anonymize Your Account?',
       html: `
         <div class="text-left mb-4">
@@ -139,10 +123,9 @@ export default function PrivacyDashboard() {
       confirmButtonColor: '#EF4444',
       confirmButtonText: 'Anonymize My Account',
       cancelButtonText: 'Cancel',
-      preConfirm: async (password) => {
+      preConfirm: async (password: string) => {
         if (!password) {
-          Swal.showValidationMessage('Password is required');
-          return false;
+          return { isConfirmed: false, error: 'Password is required' };
         }
 
         try {
@@ -150,22 +133,15 @@ export default function PrivacyDashboard() {
             password,
             confirmation: 'I understand this action cannot be undone',
           });
-          return true;
+          return { isConfirmed: true };
         } catch (error: any) {
-          Swal.showValidationMessage(error.response?.data?.message || 'Failed to anonymize account');
-          return false;
+          return { isConfirmed: false, error: error.response?.data?.message || 'Failed to anonymize account' };
         }
       },
     });
 
     if (result.isConfirmed) {
-      Swal.fire({
-        title: 'Account Anonymized',
-        text: 'Your account has been anonymized. You will be logged out now.',
-        icon: 'success',
-        timer: 3000,
-        showConfirmButton: false,
-      }).then(() => {
+      showSuccess('Account Anonymized', 'Your account has been anonymized. You will be logged out now.', 3000).then(() => {
         // Log out user
         localStorage.removeItem('user');
         localStorage.removeItem('token');

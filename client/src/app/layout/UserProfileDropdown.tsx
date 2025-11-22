@@ -188,22 +188,6 @@ export default function UserProfileDropdown({ user }: UserProfileDropdownProps) 
         navigate('/2fa-setup');
       }
     },
-    {
-      icon: Smartphone,
-      label: 'Download Mobile app',
-      onClick: () => {
-        setIsOpen(false);
-        navigate('/download-mobile-app');
-      }
-    },
-    {
-      icon: HelpCircle,
-      label: 'Help and resources',
-      onClick: () => {
-        setIsOpen(false);
-        navigate('/help');
-      }
-    },
   ];
 
   return (

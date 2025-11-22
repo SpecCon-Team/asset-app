@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Shield, Check, Copy, Download, AlertTriangle, Smartphone } from 'lucide-react';
 import { getApiClient } from '@/features/assets/lib/apiClient';
 import { useNavigate } from 'react-router-dom';
-import Swal from 'sweetalert2';
+import { showSuccess, showError, showWarning, showCustom } from '@/lib/sweetalert';
 
 export default function TwoFactorSetupPage() {
   const [step, setStep] = useState<'status' | 'setup' | 'verify' | 'complete'>('status');
@@ -38,11 +38,7 @@ export default function TwoFactorSetupPage() {
       setBackupCodes(response.data.backupCodes);
       setStep('setup');
     } catch (error: any) {
-      Swal.fire({
-        title: 'Error',
-        text: error.response?.data?.message || 'Failed to setup 2FA',
-        icon: 'error',
-      });
+      showError('Error', error.response?.data?.message || 'Failed to setup 2FA');
     } finally {
       setIsLoading(false);
     }
@@ -50,11 +46,7 @@ export default function TwoFactorSetupPage() {
 
   const handleVerify = async () => {
     if (verificationCode.length !== 6) {
-      Swal.fire({
-        title: 'Invalid Code',
-        text: 'Please enter a 6-digit code',
-        icon: 'warning',
-      });
+      showWarning('Invalid Code', 'Please enter a 6-digit code');
       return;
     }
 
@@ -63,24 +55,16 @@ export default function TwoFactorSetupPage() {
       await getApiClient().post('/2fa/verify-setup', { token: verificationCode });
       setStep('complete');
       setTwoFactorEnabled(true);
-      Swal.fire({
-        title: 'Success!',
-        text: '2FA has been enabled successfully',
-        icon: 'success',
-      });
+      showSuccess('Success!', '2FA has been enabled successfully');
     } catch (error: any) {
-      Swal.fire({
-        title: 'Verification Failed',
-        text: error.response?.data?.message || 'Invalid verification code',
-        icon: 'error',
-      });
+      showError('Verification Failed', error.response?.data?.message || 'Invalid verification code');
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleDisable = async () => {
-    const result = await Swal.fire({
+    const result = await showCustom({
       title: 'Disable 2FA?',
       text: 'Enter your 6-digit code to disable two-factor authentication',
       input: 'text',
@@ -92,14 +76,12 @@ export default function TwoFactorSetupPage() {
       confirmButtonColor: '#EF4444',
       confirmButtonText: 'Disable 2FA',
       showLoaderOnConfirm: true,
-      preConfirm: async (code) => {
+      preConfirm: async (code: string) => {
         try {
           await getApiClient().post('/2fa/disable', { token: code });
           return true;
         } catch (error: any) {
-          Swal.showValidationMessage(
-            error.response?.data?.message || 'Invalid code'
-          );
+          return error.response?.data?.message || 'Invalid code';
         }
       },
     });
@@ -107,23 +89,13 @@ export default function TwoFactorSetupPage() {
     if (result.isConfirmed) {
       setTwoFactorEnabled(false);
       setStep('status');
-      Swal.fire({
-        title: 'Disabled',
-        text: '2FA has been disabled',
-        icon: 'success',
-      });
+      showSuccess('Disabled', '2FA has been disabled');
     }
   };
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    Swal.fire({
-      title: 'Copied!',
-      text: 'Copied to clipboard',
-      icon: 'success',
-      timer: 1500,
-      showConfirmButton: false,
-    });
+    showSuccess('Copied!', 'Copied to clipboard', 1500);
   };
 
   const downloadBackupCodes = () => {
