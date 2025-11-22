@@ -25,6 +25,7 @@ import attachmentsRouter from './routes/attachments';
 import travelRouter from './routes/travel';
 import workflowsRouter from './routes/workflows';
 import sessionsRouter from './routes/sessions';
+import maintenanceRouter from './routes/maintenance';
 import path from 'path';
 import {
   securityLogger,
@@ -292,6 +293,7 @@ app.use('/api/attachments', attachmentsRouter);
 app.use('/api/travel', travelRouter);
 app.use('/api/workflows', workflowsRouter);
 app.use('/api/sessions', sessionsRouter);
+app.use('/api/maintenance', maintenanceRouter);
 app.use('/api', wooalertsRouter); // WooAlerts webhook at /api/wooalerts-webhook
 
 app.get('/api', (_req, res) => {
