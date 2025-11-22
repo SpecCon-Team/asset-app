@@ -58,6 +58,9 @@ const InventoryDetailPage = lazy(() => import('@/features/inventory/InventoryDet
 const DepreciationPage = lazy(() => import('@/features/depreciation/DepreciationPage'));
 const DepreciationFormPage = lazy(() => import('@/features/depreciation/DepreciationFormPage'));
 const DepreciationDetailPage = lazy(() => import('@/features/depreciation/DepreciationDetailPage'));
+const DocumentsPage = lazy(() => import('@/features/documents/DocumentsPage'));
+const DocumentUploadPage = lazy(() => import('@/features/documents/DocumentUploadPage'));
+const DocumentDetailPage = lazy(() => import('@/features/documents/DocumentDetailPage'));
 const DownloadMobileApp = lazy(() => import('@/pages/DownloadMobileApp'));
 const HelpAndResources = lazy(() => import('@/pages/HelpAndResources'));
 
@@ -133,6 +136,9 @@ export const router = createBrowserRouter([
       { path: 'depreciation', element: <LazyPage><DepreciationPage /></LazyPage> },
       { path: 'depreciation/new', element: <LazyPage><DepreciationFormPage /></LazyPage> },
       { path: 'depreciation/:id', element: <LazyPage><DepreciationDetailPage /></LazyPage> },
+      { path: 'documents', element: <LazyPage><DocumentsPage /></LazyPage> },
+      { path: 'documents/upload', element: <LazyPage><DocumentUploadPage /></LazyPage> },
+      { path: 'documents/:id', element: <LazyPage><DocumentDetailPage /></LazyPage> },
       { path: 'whatsapp-setup', element: <LazyPage><WhatsAppSetup /></LazyPage> },
       { path: 'download-mobile-app', element: <LazyPage><DownloadMobileApp /></LazyPage> },
       { path: 'help', element: <LazyPage><HelpAndResources /></LazyPage> },

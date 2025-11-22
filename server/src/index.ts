@@ -29,6 +29,7 @@ import maintenanceRouter from './routes/maintenance';
 import checkoutRouter from './routes/checkout';
 import inventoryRouter from './routes/inventory';
 import depreciationRouter from './routes/depreciation';
+import documentsRouter from './routes/documents';
 import path from 'path';
 import {
   securityLogger,
@@ -300,6 +301,7 @@ app.use('/api/maintenance', maintenanceRouter);
 app.use('/api/checkout', checkoutRouter);
 app.use('/api/inventory', inventoryRouter);
 app.use('/api/depreciation', depreciationRouter);
+app.use('/api/documents', documentsRouter);
 app.use('/api', wooalertsRouter); // WooAlerts webhook at /api/wooalerts-webhook
 
 app.get('/api', (_req, res) => {

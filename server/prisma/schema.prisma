@@ -71,6 +71,15 @@ model User {
   valuationsPerformed AssetValuation[]
   disposalsCreated    AssetDisposal[] @relation("DisposalCreatedBy")
   disposalsApproved   AssetDisposal[] @relation("DisposalApprovedBy")
+
+  // Document Management
+  documentsUploaded   Document[]
+  documentAccessLogs  DocumentAccessLog[]
+  documentSharedBy    DocumentShare[] @relation("SharedBy")
+  documentSharedWith  DocumentShare[] @relation("SharedWith")
+  documentComments    DocumentComment[]
+  documentAssociations DocumentAssociation[]
+
   createdAt           DateTime       @default(now())
   updatedAt           DateTime       @updatedAt
 }
@@ -987,6 +996,153 @@ model AssetDisposal {
   @@index([assetId])
   @@index([disposalDate])
   @@index([disposalMethod])
+}
+
+// =====================================================
+// DOCUMENT MANAGEMENT MODELS
+// =====================================================
+
+model DocumentCategory {
+  id                String     @id @default(cuid())
+  name              String
+  description       String?
+  icon              String?
+  color             String?
+  parentCategoryId  String?
+  isActive          Boolean    @default(true)
+  sortOrder         Int        @default(0)
+
+  parentCategory    DocumentCategory?  @relation("CategoryHierarchy", fields: [parentCategoryId], references: [id], onDelete: SetNull)
+  subCategories     DocumentCategory[] @relation("CategoryHierarchy")
+  documents         Document[]
+
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  @@index([parentCategoryId])
+  @@index([isActive])
+}
+
+model Document {
+  id                String     @id @default(cuid())
+  title             String
+  description       String?
+  categoryId        String?
+  fileName          String
+  originalFileName  String
+  filePath          String
+  fileSize          BigInt
+  mimeType          String
+  version           Int        @default(1)
+  versionLabel      String?
+  isLatestVersion   Boolean    @default(true)
+  parentDocumentId  String?
+  status            String     @default("active")
+  tags              String[]
+  metadata          Json?
+  uploadedById      String
+
+  category          DocumentCategory?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  parentDocument    Document?          @relation("DocumentVersions", fields: [parentDocumentId], references: [id], onDelete: Cascade)
+  versions          Document[]         @relation("DocumentVersions")
+  uploadedBy        User               @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+  associations      DocumentAssociation[]
+  accessLogs        DocumentAccessLog[]
+  shares            DocumentShare[]
+  comments          DocumentComment[]
+
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  @@index([categoryId])
+  @@index([uploadedById])
+  @@index([parentDocumentId])
+  @@index([status])
+  @@index([isLatestVersion])
+  @@index([createdAt])
+}
+
+model DocumentAssociation {
+  id               String     @id @default(cuid())
+  documentId       String
+  entityType       String
+  entityId         String
+  relationshipType String?
+  notes            String?
+  createdById      String
+
+  document         Document   @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  createdBy        User       @relation(fields: [createdById], references: [id], onDelete: Restrict)
+
+  createdAt        DateTime   @default(now())
+
+  @@index([documentId])
+  @@index([entityType, entityId])
+  @@index([createdById])
+}
+
+model DocumentAccessLog {
+  id          String     @id @default(cuid())
+  documentId  String
+  userId      String
+  action      String
+  ipAddress   String?
+  userAgent   String?
+  metadata    Json?
+
+  document    Document   @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime   @default(now())
+
+  @@index([documentId])
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+model DocumentShare {
+  id                String     @id @default(cuid())
+  documentId        String
+  sharedWithUserId  String?
+  sharedWithRole    String?
+  permissions       String[]   @default(["view"])
+  expiresAt         DateTime?
+  sharedById        String
+  message           String?
+  isActive          Boolean    @default(true)
+
+  document          Document   @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  sharedWithUser    User?      @relation("SharedWith", fields: [sharedWithUserId], references: [id], onDelete: Cascade)
+  sharedBy          User       @relation("SharedBy", fields: [sharedById], references: [id], onDelete: Cascade)
+
+  createdAt         DateTime   @default(now())
+
+  @@index([documentId])
+  @@index([sharedWithUserId])
+  @@index([sharedWithRole])
+  @@index([isActive])
+  @@index([expiresAt])
+}
+
+model DocumentComment {
+  id              String     @id @default(cuid())
+  documentId      String
+  userId          String
+  comment         String
+  parentCommentId String?
+
+  document        Document   @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parentComment   DocumentComment? @relation("CommentReplies", fields: [parentCommentId], references: [id], onDelete: Cascade)
+  replies         DocumentComment[] @relation("CommentReplies")
+
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  @@index([documentId])
+  @@index([userId])
+  @@index([parentCommentId])
 }
 
 enum Role {
