@@ -66,35 +66,12 @@ export default function AppLayout() {
     };
   }, [navigate]);
 
-  // Apply user-specific theme
+  // Apply user-specific theme (now handled by ThemeContext)
   const applyUserTheme = (userId: string) => {
-    try {
-      const userSettingsKey = `appSettings_${userId}`;
-      const savedSettings = localStorage.getItem(userSettingsKey);
-
-      if (savedSettings) {
-        const settings = JSON.parse(savedSettings);
-        const theme = settings.theme || 'light';
-
-        if (theme === 'dark') {
-          document.documentElement.classList.add('dark');
-        } else if (theme === 'light') {
-          document.documentElement.classList.remove('dark');
-        } else if (theme === 'auto') {
-          const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-          if (isDark) {
-            document.documentElement.classList.add('dark');
-          } else {
-            document.documentElement.classList.remove('dark');
-          }
-        }
-      } else {
-        // Default to light theme if no settings
-        document.documentElement.classList.remove('dark');
-      }
-    } catch (error) {
-      console.error('Failed to apply user theme:', error);
-    }
+    // Theme is now managed by ThemeContext with role-based storage
+    // This function is kept for compatibility but theme application
+    // is handled automatically by ThemeProvider
+    // The ThemeContext will load theme based on user's role
   };
 
   // Close mobile menu when clicking outside

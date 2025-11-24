@@ -71,7 +71,10 @@
       "Bash(git pull:*)",
       "Bash(git stash:*)",
       "Bash(git stash pop:*)",
-      "Bash(timeout 10 npm run dev:*)"
+      "Bash(timeout 10 npm run dev:*)",
+      "Bash(mkdir:*)",
+      "Bash(mv:*)",
+      "Bash(for dir in docs/*/)"
     ],
     "deny": [],
     "ask": []

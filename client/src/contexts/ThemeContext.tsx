@@ -56,31 +56,51 @@ interface ThemeProviderProps {
 }
 
 export function ThemeProvider({ children }: ThemeProviderProps) {
-  const [themeColor, setThemeColorState] = useState<ThemeColor>(() => {
-    // Get user-specific theme color
+  // Track current user role to detect role changes
+  const [currentUserRole, setCurrentUserRole] = useState<string | null>(() => {
     try {
       const userStr = localStorage.getItem('user');
       if (userStr) {
         const user = JSON.parse(userStr);
-        const userThemeKey = `themeColor_${user.id}`;
-        const savedColor = localStorage.getItem(userThemeKey);
+        return user.role;
+      }
+    } catch (e) {
+      // Ignore errors
+    }
+    return null;
+  });
+
+  const [themeColor, setThemeColorState] = useState<ThemeColor>(() => {
+    // Get role-specific theme color
+    try {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        const roleThemeKey = `themeColor_${user.role}`;
+        const savedColor = localStorage.getItem(roleThemeKey);
         if (savedColor) return savedColor as ThemeColor;
       }
     } catch (e) {
       // Ignore errors
     }
 
-    // Fallback to global or default
-    const saved = localStorage.getItem('themeColor');
-    return (saved as ThemeColor) || 'blue';
+    // Fallback to default
+    return 'blue';
   });
 
   const [themeMode, setThemeModeState] = useState<ThemeMode>(() => {
-    // Check user-specific settings first
+    // Get user-specific theme mode by role
     try {
       const userStr = localStorage.getItem('user');
       if (userStr) {
         const user = JSON.parse(userStr);
+
+        // Use role-based theme storage
+        const roleThemeModeKey = `themeMode_${user.role}`;
+        const savedRoleMode = localStorage.getItem(roleThemeModeKey);
+        if (savedRoleMode) return savedRoleMode as ThemeMode;
+
+        // Fallback to user-specific settings
         const userSettingsKey = `appSettings_${user.id}`;
         const savedSettings = localStorage.getItem(userSettingsKey);
         if (savedSettings) {
@@ -93,27 +113,23 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
       // Ignore errors
     }
 
-    // Fallback to standalone themeMode
-    const saved = localStorage.getItem('themeMode');
-    if (saved) return saved as ThemeMode;
-
-    // Check system preference
-    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      return 'dark';
-    }
+    // Default to light mode (don't use system preference as it can be confusing)
     return 'light';
   });
 
   const setThemeColor = (color: ThemeColor) => {
     setThemeColorState(color);
 
-    // Save to user-specific localStorage
+    // Save to role-specific localStorage
     try {
       const userStr = localStorage.getItem('user');
       if (userStr) {
         const user = JSON.parse(userStr);
-        const userThemeKey = `themeColor_${user.id}`;
-        localStorage.setItem(userThemeKey, color);
+        const roleThemeKey = `themeColor_${user.role}`;
+        localStorage.setItem(roleThemeKey, color);
+      } else {
+        // Fallback to global storage if no user
+        localStorage.setItem('themeColor', color);
       }
     } catch (e) {
       // Fallback to global storage
@@ -139,7 +155,23 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
 
   const setThemeMode = (mode: ThemeMode) => {
     setThemeModeState(mode);
-    localStorage.setItem('themeMode', mode);
+
+    // Save to role-specific localStorage
+    try {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        const roleThemeModeKey = `themeMode_${user.role}`;
+        localStorage.setItem(roleThemeModeKey, mode);
+      } else {
+        // Fallback to global storage if no user
+        localStorage.setItem('themeMode', mode);
+      }
+    } catch (e) {
+      // Fallback to global storage
+      localStorage.setItem('themeMode', mode);
+    }
+
     applyTheme(themeColor, mode);
   };
 
@@ -175,66 +207,67 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   };
 
   useEffect(() => {
-    // Only apply color theme on mount, don't touch dark/light mode
-    // Let AppLayout handle dark/light mode to avoid conflicts
-    const root = document.documentElement;
-    const theme = themeColors[themeColor];
+    // Apply both color theme and dark/light mode on mount and when they change
+    applyTheme(themeColor, themeMode);
+  }, [themeColor, themeMode]);
 
-    const hexToRgb = (hex: string) => {
-      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-      return result
-        ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}`
-        : '59, 130, 246';
-    };
-
-    root.style.setProperty('--color-primary', theme.primary);
-    root.style.setProperty('--color-primary-dark', theme.primaryDark);
-    root.style.setProperty('--color-primary-light', theme.primaryLight);
-    root.style.setProperty('--color-primary-rgb', hexToRgb(theme.primary));
-  }, [themeColor]);
-
-  // Listen for user changes (login/logout) via storage events only
+  // Listen for user role changes and update theme accordingly
   useEffect(() => {
-    const checkUserChange = () => {
+    const checkUserRoleChange = () => {
       try {
         const userStr = localStorage.getItem('user');
-        if (userStr) {
-          const user = JSON.parse(userStr);
-          const userThemeKey = `themeColor_${user.id}`;
-          const savedColor = localStorage.getItem(userThemeKey);
-          const expectedColor = savedColor as ThemeColor || 'blue';
+        const newRole = userStr ? JSON.parse(userStr).role : null;
 
-          // If the theme color doesn't match what it should be for this user, update it
-          if (themeColor !== expectedColor) {
-            setThemeColorState(expectedColor);
-          }
-        } else {
-          // User logged out, reset to default
-          if (themeColor !== 'blue') {
+        // Only reload theme if role actually changed (not just polling)
+        if (newRole !== currentUserRole) {
+          setCurrentUserRole(newRole);
+
+          if (newRole) {
+            // Load theme for the new role
+            const roleThemeColorKey = `themeColor_${newRole}`;
+            const roleThemeModeKey = `themeMode_${newRole}`;
+
+            const savedColor = localStorage.getItem(roleThemeColorKey) as ThemeColor || 'blue';
+            const savedMode = localStorage.getItem(roleThemeModeKey) as ThemeMode || 'light';
+
+            setThemeColorState(savedColor);
+            setThemeModeState(savedMode);
+            applyTheme(savedColor, savedMode);
+          } else {
+            // User logged out, reset to light mode (default)
             setThemeColorState('blue');
+            setThemeModeState('light');
+            applyTheme('blue', 'light');
           }
         }
+        // If role hasn't changed, don't reload theme (prevents overriding user changes)
       } catch (e) {
-        // Ignore errors
+        console.error('Error checking user role change:', e);
       }
     };
 
-    // Check only once on mount
-    checkUserChange();
+    // Check on mount
+    checkUserRoleChange();
 
-    // Listen for storage events (for cross-tab sync and login/logout)
+    // Poll for role changes every 500ms
+    // ONLY reloads theme when role actually changes (not on every poll)
+    const interval = setInterval(checkUserRoleChange, 500);
+
+    // Also listen for storage events (for cross-tab sync)
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'user' || e.key?.startsWith('themeColor_')) {
-        checkUserChange();
+      if (e.key === 'user') {
+        // Only check user changes, not theme changes (prevents circular updates)
+        checkUserRoleChange();
       }
     };
 
     window.addEventListener('storage', handleStorageChange);
 
     return () => {
+      clearInterval(interval);
       window.removeEventListener('storage', handleStorageChange);
     };
-  }, [themeColor]);
+  }, [currentUserRole]);
 
   return (
     <ThemeContext.Provider

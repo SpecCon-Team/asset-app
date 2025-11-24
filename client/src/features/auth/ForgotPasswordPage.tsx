@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Mail, ArrowLeft, CheckCircle } from 'lucide-react';
 import { getApiClient } from '@/features/assets/lib/apiClient';
+import { ButtonLoader } from '@/components/LoadingSpinner';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -146,10 +147,10 @@ export default function ForgotPasswordPage() {
             <button
               type="submit"
               disabled={isLoading || !email}
-              className="w-full text-white py-3 rounded-lg font-medium disabled:bg-gray-400 disabled:cursor-not-allowed transition-opacity hover:opacity-90"
+              className="w-full flex items-center justify-center gap-2 text-white py-3 rounded-lg font-medium disabled:bg-gray-400 disabled:cursor-not-allowed transition-opacity hover:opacity-90"
               style={{ backgroundColor: (isLoading || !email) ? undefined : 'var(--color-primary)' }}
             >
-              {isLoading ? 'Sending...' : 'Send Reset Instructions'}
+              {isLoading ? <><ButtonLoader /> Sending...</> : 'Send Reset Instructions'}
             </button>
           </form>
 

@@ -80,6 +80,10 @@ model User {
   documentComments    DocumentComment[]
   documentAssociations DocumentAssociation[]
 
+  // Asset Reservations
+  reservations        AssetReservation[] @relation("UserReservations")
+  approvedReservations AssetReservation[] @relation("ReservationApprovals")
+
   createdAt           DateTime       @default(now())
   updatedAt           DateTime       @updatedAt
 }
@@ -135,6 +139,7 @@ model Asset {
   depreciation    AssetDepreciation[]
   valuations      AssetValuation[]
   disposals       AssetDisposal[]
+  reservations    AssetReservation[]
 
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
@@ -1143,6 +1148,120 @@ model DocumentComment {
   @@index([documentId])
   @@index([userId])
   @@index([parentCommentId])
+}
+
+// =====================================================
+// ASSET RESERVATION MODEL
+// =====================================================
+
+model AssetReservation {
+  id                String    @id @default(cuid())
+  assetId           String
+  userId            String
+  reservationStart  DateTime
+  reservationEnd    DateTime
+  status            String    @default("pending") // pending, approved, rejected, cancelled, completed
+  purpose           String?
+  notes             String?
+  approvedById      String?
+  approvedAt        DateTime?
+  rejectedReason    String?
+
+  asset             Asset     @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  user              User      @relation("UserReservations", fields: [userId], references: [id], onDelete: Cascade)
+  approvedBy        User?     @relation("ReservationApprovals", fields: [approvedById], references: [id], onDelete: SetNull)
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([assetId])
+  @@index([userId])
+  @@index([status])
+  @@index([reservationStart])
+  @@index([reservationEnd])
+}
+
+// =====================================================
+// EMAIL NOTIFICATION LOG
+// =====================================================
+
+model EmailNotificationLog {
+  id          String    @id @default(cuid())
+  recipient   String
+  subject     String
+  body        String    @db.Text
+  type        String    // 'maintenance_due', 'low_stock', 'overdue_return', 'depreciation_milestone'
+  entityType  String?   // 'asset', 'ticket', 'inventory'
+  entityId    String?
+  status      String    @default("sent") // sent, failed, pending
+  error       String?   @db.Text
+  sentAt      DateTime  @default(now())
+
+  @@index([recipient])
+  @@index([type])
+  @@index([status])
+  @@index([sentAt])
+}
+
+// =====================================================
+// EXPORT/IMPORT HISTORY
+// =====================================================
+
+model ExportImportHistory {
+  id            String    @id @default(cuid())
+  operation     String    // 'export', 'import'
+  entityType    String    // 'assets', 'inventory', 'tickets'
+  format        String    // 'csv', 'xlsx', 'pdf'
+  recordCount   Int       @default(0)
+  fileName      String
+  filePath      String?
+  userId        String
+  status        String    @default("completed") // completed, failed, processing
+  error         String?   @db.Text
+  metadata      Json?
+
+  createdAt     DateTime  @default(now())
+
+  @@index([userId])
+  @@index([operation])
+  @@index([entityType])
+  @@index([createdAt])
+}
+
+// =====================================================
+// API RATE LIMIT TRACKING
+// =====================================================
+
+model ApiRateLimit {
+  id            String    @id @default(cuid())
+  userId        String
+  endpoint      String
+  requestCount  Int       @default(0)
+  windowStart   DateTime  @default(now())
+  windowEnd     DateTime
+  isBlocked     Boolean   @default(false)
+
+  @@unique([userId, endpoint, windowStart])
+  @@index([userId])
+  @@index([windowStart])
+}
+
+// =====================================================
+// KEYBOARD SHORTCUTS CONFIG
+// =====================================================
+
+model KeyboardShortcut {
+  id          String    @id @default(cuid())
+  userId      String
+  action      String    // 'global_search', 'new_asset', 'new_ticket', etc.
+  keys        String    // 'Ctrl+K', 'Ctrl+N', etc.
+  isActive    Boolean   @default(true)
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([userId, action])
+  @@index([userId])
 }
 
 enum Role {

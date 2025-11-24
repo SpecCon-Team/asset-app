@@ -6,32 +6,26 @@ import { router } from '@/app/router';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import '@/styles/globals.css';
 
-// Initialize theme on app load using user-specific settings
+// Initialize theme on app load using role-based settings
 const initializeTheme = () => {
   try {
     const userStr = localStorage.getItem('user');
     if (userStr) {
       const user = JSON.parse(userStr);
-      const userSettingsKey = `appSettings_${user.id}`;
-      const savedSettings = localStorage.getItem(userSettingsKey);
 
-      if (savedSettings) {
-        const settings = JSON.parse(savedSettings);
-        const theme = settings.theme || 'light';
+      // Use role-based theme storage
+      const roleThemeModeKey = `themeMode_${user.role}`;
+      const savedMode = localStorage.getItem(roleThemeModeKey);
 
-        if (theme === 'dark') {
-          document.documentElement.classList.add('dark');
-        } else if (theme === 'light') {
-          document.documentElement.classList.remove('dark');
-        } else if (theme === 'auto') {
-          const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-          if (isDark) {
-            document.documentElement.classList.add('dark');
-          } else {
-            document.documentElement.classList.remove('dark');
-          }
-        }
+      if (savedMode === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        // Default to light mode (savedMode is 'light' or not set)
+        document.documentElement.classList.remove('dark');
       }
+    } else {
+      // No user logged in, default to light mode
+      document.documentElement.classList.remove('dark');
     }
   } catch (error) {
     console.error('Failed to load theme settings:', error);

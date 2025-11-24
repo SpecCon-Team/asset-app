@@ -3,7 +3,7 @@ import { Shield, Check, Copy, Download, AlertTriangle, Smartphone } from 'lucide
 import { getApiClient } from '@/features/assets/lib/apiClient';
 import { useNavigate } from 'react-router-dom';
 import { showSuccess, showError, showWarning, showCustom } from '@/lib/sweetalert';
-import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
+import { LoadingOverlay, useMinLoadingTime, ButtonLoader } from '@/components/LoadingSpinner';
 
 export default function TwoFactorSetupPage() {
   const [step, setStep] = useState<'status' | 'setup' | 'verify' | 'complete'>('status');
@@ -192,8 +192,16 @@ export default function TwoFactorSetupPage() {
                   disabled={isLoading}
                   className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
                 >
-                  <Smartphone className="w-5 h-5" />
-                  {isLoading ? 'Setting up...' : 'Enable 2FA'}
+                  {isLoading ? (
+                    <>
+                      <ButtonLoader /> Setting up...
+                    </>
+                  ) : (
+                    <>
+                      <Smartphone className="w-5 h-5" />
+                      Enable 2FA
+                    </>
+                  )}
                 </button>
               </>
             )}
@@ -275,9 +283,9 @@ export default function TwoFactorSetupPage() {
               <button
                 onClick={handleVerify}
                 disabled={isLoading || verificationCode.length !== 6}
-                className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg font-semibold transition-colors"
+                className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
               >
-                {isLoading ? 'Verifying...' : 'Verify & Enable'}
+                {isLoading ? <><ButtonLoader /> Verifying...</> : 'Verify & Enable'}
               </button>
             </div>
           </div>

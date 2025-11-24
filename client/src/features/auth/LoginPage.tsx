@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -213,10 +213,17 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={isLoading || (twoFactorCode.length !== 6 && twoFactorCode.length !== 8)}
-                  className="flex-1 text-white py-3 rounded-lg font-medium disabled:bg-gray-400 transition-opacity hover:opacity-90"
+                  className="flex-1 text-white py-3 rounded-lg font-medium disabled:bg-gray-400 transition-opacity hover:opacity-90 flex items-center justify-center gap-2"
                   style={{ backgroundColor: isLoading || (twoFactorCode.length !== 6 && twoFactorCode.length !== 8) ? undefined : 'var(--color-primary)' }}
                 >
-                  {isLoading ? 'Verifying...' : 'Verify'}
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>Verifying...</span>
+                    </>
+                  ) : (
+                    'Verify'
+                  )}
                 </button>
               </div>
             </form>
@@ -275,10 +282,17 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full text-white py-3 rounded-lg font-medium disabled:bg-gray-400 transition-opacity hover:opacity-90"
+                  className="w-full text-white py-3 rounded-lg font-medium disabled:bg-gray-400 transition-opacity hover:opacity-90 flex items-center justify-center gap-2"
                   style={{ backgroundColor: isLoading ? undefined : 'var(--color-primary)' }}
                 >
-                  {isLoading ? 'Signing in...' : 'Sign in'}
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>Signing in...</span>
+                    </>
+                  ) : (
+                    'Sign in'
+                  )}
                 </button>
               </form>
 

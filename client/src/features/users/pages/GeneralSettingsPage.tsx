@@ -15,11 +15,14 @@ import { getApiClient } from '@/features/assets/lib/apiClient';
 import toast from 'react-hot-toast';
 import PushNotificationSettings from '@/components/PushNotificationSettings';
 import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export default function GeneralSettingsPage() {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const showLoading = useMinLoadingTime(isLoading, 2000);
+  const { themeMode, setThemeMode } = useTheme();
+
   const [settings, setSettings] = useState({
     // Notification Settings
     emailNotifications: true,
@@ -38,7 +41,7 @@ export default function GeneralSettingsPage() {
     language: 'en',
     timezone: 'UTC',
     dateFormat: 'MM/DD/YYYY',
-    theme: 'light', // light, dark, auto
+    theme: 'light', // This is now managed by ThemeContext
   });
 
   const [passwordData, setPasswordData] = useState({
@@ -62,30 +65,19 @@ export default function GeneralSettingsPage() {
       if (savedSettings) {
         const parsed = JSON.parse(savedSettings);
         setSettings(parsed);
-        applyTheme(parsed.theme);
-      } else {
-        // Apply initial theme
-        applyTheme(settings.theme);
+      }
+
+      // Load current theme mode from role-based storage to sync with UI
+      const roleThemeModeKey = `themeMode_${user.role}`;
+      const savedThemeMode = localStorage.getItem(roleThemeModeKey);
+      if (savedThemeMode === 'dark') {
+        setSettings((prev) => ({ ...prev, theme: 'dark' }));
+      } else if (savedThemeMode === 'light') {
+        setSettings((prev) => ({ ...prev, theme: 'light' }));
       }
     }
     setIsLoading(false);
   }, []);
-
-  const applyTheme = (theme: string) => {
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else if (theme === 'light') {
-      document.documentElement.classList.remove('dark');
-    } else if (theme === 'auto') {
-      // Check system preference
-      const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      if (isDark) {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
-    }
-  };
 
   const handleToggle = (key: string) => {
     setSettings((prev) => ({ ...prev, [key]: !prev[key as keyof typeof prev] }));
@@ -94,9 +86,18 @@ export default function GeneralSettingsPage() {
   const handleSelectChange = (key: string, value: string) => {
     setSettings((prev) => ({ ...prev, [key]: value }));
 
-    // Apply theme immediately when changed
+    // Apply theme immediately when changed using ThemeContext
     if (key === 'theme') {
-      applyTheme(value);
+      // Convert 'light', 'dark', 'auto' to ThemeContext format
+      if (value === 'dark') {
+        setThemeMode('dark');
+      } else if (value === 'light') {
+        setThemeMode('light');
+      } else if (value === 'auto') {
+        // Check system preference
+        const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        setThemeMode(isDark ? 'dark' : 'light');
+      }
     }
   };
 
@@ -111,6 +112,26 @@ export default function GeneralSettingsPage() {
       // Save to localStorage with user-specific key
       const userSettingsKey = `appSettings_${currentUser.id}`;
       localStorage.setItem(userSettingsKey, JSON.stringify(settings));
+
+      // IMPORTANT: Also save theme mode to role-based storage for consistency
+      if (settings.theme) {
+        const roleThemeModeKey = `themeMode_${currentUser.role}`;
+        let modeToSave: 'dark' | 'light' = 'light';
+
+        if (settings.theme === 'dark') {
+          modeToSave = 'dark';
+        } else if (settings.theme === 'light') {
+          modeToSave = 'light';
+        } else if (settings.theme === 'auto') {
+          // For auto, determine based on system preference
+          modeToSave = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+
+        localStorage.setItem(roleThemeModeKey, modeToSave);
+
+        // Also apply it through ThemeContext to ensure it takes effect
+        setThemeMode(modeToSave);
+      }
 
       await getApiClient().patch(`/users/${currentUser.id}/settings`, settings);
       toast.success('Settings saved successfully!');

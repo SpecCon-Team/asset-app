@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Eye, EyeOff, Info } from 'lucide-react';
+import { ButtonLoader } from '@/components/LoadingSpinner';
 
 export default function SignUpPage() {
   const navigate = useNavigate();
@@ -324,10 +325,10 @@ export default function SignUpPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full text-white py-3 rounded-lg font-medium disabled:bg-gray-400 transition-opacity hover:opacity-90"
+              className="w-full flex items-center justify-center gap-2 text-white py-3 rounded-lg font-medium disabled:bg-gray-400 transition-opacity hover:opacity-90"
               style={{ backgroundColor: isLoading ? undefined : 'var(--color-primary)' }}
             >
-              {isLoading ? 'Creating account...' : 'Sign up'}
+              {isLoading ? <><ButtonLoader /> Creating account...</> : 'Sign up'}
             </button>
           </form>
 

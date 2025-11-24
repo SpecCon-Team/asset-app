@@ -3,6 +3,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Mail, ArrowLeft } from 'lucide-react';
 import { getApiClient } from '@/features/assets/lib/apiClient';
+import { ButtonLoader } from '@/components/LoadingSpinner';
 
 export default function VerifyOTPPage() {
   const navigate = useNavigate();
@@ -162,9 +163,9 @@ export default function VerifyOTPPage() {
             <button
               type="submit"
               disabled={isLoading || otp.join('').length !== 6}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
             >
-              {isLoading ? 'Verifying...' : 'Verify Email'}
+              {isLoading ? <><ButtonLoader /> Verifying...</> : 'Verify Email'}
             </button>
           </form>
 
@@ -173,9 +174,9 @@ export default function VerifyOTPPage() {
             <button
               onClick={handleResendOTP}
               disabled={isResending}
-              className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium disabled:opacity-50"
             >
-              {isResending ? 'Sending...' : 'Resend OTP'}
+              {isResending ? <><ButtonLoader /> Sending...</> : 'Resend OTP'}
             </button>
           </div>
 

@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Eye, EyeOff, CheckCircle, Lock } from 'lucide-react';
 import { getApiClient } from '@/features/assets/lib/apiClient';
+import { ButtonLoader } from '@/components/LoadingSpinner';
 
 export default function ResetPasswordPage() {
   const { token } = useParams<{ token: string }>();
@@ -171,9 +172,9 @@ export default function ResetPasswordPage() {
             <button
               type="submit"
               disabled={isLoading || !password || !confirmPassword || password !== confirmPassword}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
             >
-              {isLoading ? 'Resetting Password...' : 'Reset Password'}
+              {isLoading ? <><ButtonLoader /> Resetting Password...</> : 'Reset Password'}
             </button>
           </form>
 
