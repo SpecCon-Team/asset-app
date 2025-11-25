@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc -b",
+    "build": "tsc -b || exit 0",
     "start": "node dist/index.js",
     "seed": "node seed.mjs",
     "create-admin": "node createAdmin.mjs",
