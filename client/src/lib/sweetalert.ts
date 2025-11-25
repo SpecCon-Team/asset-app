@@ -146,6 +146,11 @@ export const showConfirm = (
 export const showConfirmation = showConfirm;
 
 /**
+ * Confirmation dialog (alias for showConfirm)
+ */
+export const showConfirmDialog = showConfirm;
+
+/**
  * Delete confirmation dialog (dangerous action)
  */
 export const showDeleteConfirm = (
