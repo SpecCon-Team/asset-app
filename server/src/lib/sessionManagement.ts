@@ -280,6 +280,7 @@ export async function logSecurityEvent(
     ipAddress?: string;
     userAgent?: string;
     description?: string;
+    [key: string]: any;
   }
 ): Promise<void> {
   try {

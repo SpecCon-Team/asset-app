@@ -820,7 +820,6 @@ router.post('/qr/generate', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), 
     const qrCodeUrl = await QRCode.toDataURL(qrData, {
       errorCorrectionLevel: 'H',
       type: 'image/png',
-      quality: 0.95,
       margin: 1,
       width: 300
     });
