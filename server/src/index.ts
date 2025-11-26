@@ -43,6 +43,7 @@ import {
   validateDataIntegrity
 } from './middleware/security';
 import { dynamicRateLimiter, progressiveDelayMiddleware } from './lib/enhancedRateLimiting';
+import { parseQuery } from './middleware/queryParser';
 
 const app = express();
 
@@ -253,6 +254,9 @@ app.use(validateInput);
 
 // 12. Parameter pollution prevention
 app.use(preventParameterPollution);
+
+// 12a. Custom query parser to handle array values
+app.use(parseQuery);
 
 // 13. Data integrity validation
 app.use(validateDataIntegrity);
