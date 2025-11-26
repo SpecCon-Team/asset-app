@@ -8,10 +8,10 @@ const router = Router();
 
 // Validation schema
 const templateSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
+  name: z.string().nonempty('Name is required'),
   description: z.string().optional(),
-  title: z.string().min(1, 'Title is required'),
-  ticketDescription: z.string().min(1, 'Description is required'),
+  title: z.string().nonempty('Title is required'),
+  ticketDescription: z.string().nonempty('Description is required'),
   priority: z.enum(['low', 'medium', 'high', 'urgent']).default('medium'),
   category: z.string().optional(),
   tags: z.array(z.string()).default([]),

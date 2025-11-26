@@ -18,10 +18,10 @@ const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
 const createSchema = z.object({
-  title: z.string(),
-  description: z.string(),
+  title: z.string().nonempty("Title is required"),
+  description: z.string().nonempty("Description is required"),
   priority: z.string().default('medium'),
-  createdById: z.string(),
+  createdById: z.string().nonempty("createdById is required"),
   assetId: z.string().nullable().optional(),
 });
 
@@ -762,7 +762,7 @@ router.delete('/bulk', authenticate, requireRole('ADMIN'), async (req: AuthReque
       where: { ticketId: { in: ticketIds } },
     });
 
-    await prisma.sLA.deleteMany({
+    await prisma.ticketSLA.deleteMany({
       where: { ticketId: { in: ticketIds } },
     });
 

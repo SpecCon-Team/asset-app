@@ -9,6 +9,10 @@ export interface AuthRequest extends Request {
     role: string;
     email: string;
   };
+  body: Request['body'];
+  params: Request['params'];
+  query: Request['query'];
+  originalUrl: Request['originalUrl'];
 }
 
 /**

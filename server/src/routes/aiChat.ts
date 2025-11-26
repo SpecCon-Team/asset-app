@@ -13,7 +13,7 @@ router.post('/', authenticate, async (req: AuthRequest, res) => {
     message: z.string().min(1).max(2000),
     history: z.array(z.object({
       role: z.enum(['user', 'assistant']),
-      content: z.string()
+      content: z.string().nonempty().nonempty()
     })).optional()
   });
 
@@ -27,7 +27,7 @@ router.post('/', authenticate, async (req: AuthRequest, res) => {
     const user = req.user!;
 
     // AI Response Logic
-    const reply = await generateAIResponse(message, history, user);
+    const reply = await generateAIResponse(message, history as Array<{ role: 'user' | 'assistant'; content: string }>, user);
 
     res.json({ reply });
   } catch (error) {
@@ -41,7 +41,7 @@ router.post('/', authenticate, async (req: AuthRequest, res) => {
  */
 async function generateAIResponse(
   message: string,
-  history: Array<{ role: string; content: string }>,
+  history: Array<{ role: 'user' | 'assistant'; content?: string }>,
   user: any
 ): Promise<string> {
   const lowerMessage = message.toLowerCase();

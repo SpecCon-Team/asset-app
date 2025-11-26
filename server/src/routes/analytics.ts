@@ -437,7 +437,7 @@ router.get('/maintenance', authenticate, async (req: any, res) => {
       `,
 
       prisma.maintenanceSchedule.groupBy({
-        by: ['maintenanceType'],
+        by: ['maintenanceType'] as const,
         _count: true
       }),
 
