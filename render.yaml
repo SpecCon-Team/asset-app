@@ -23,11 +23,16 @@ services:
     healthCheckPath: /health
 
   # Frontend
-  - type: web
+  - type: static
     name: assettrack-client
-    runtime: static
-    buildCommand: cd client && npm install && npm run build
-    staticPublishPath: ./client/dist
+    rootDir: client
+    buildCommand: npm install && npm run build
+    publishPath: dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: https://assettrack-api.onrender.com/api
+      - key: VITE_API_URL
+        value: https://assettrack-api.onrender.com
     routes:
       - type: rewrite
         source: /*

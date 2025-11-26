@@ -4,6 +4,7 @@ export const AssetSchema = z.object({
   id: z.string().optional(),
   asset_code: z.string(),
   name: z.string(),
+  category: z.string().optional().nullable(),
   serial_number: z.string().optional().nullable(),
   remote_id: z.string().optional().nullable(),
   asset_type: z.string().optional().nullable(),
