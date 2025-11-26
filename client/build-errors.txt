@@ -1,0 +1,162 @@
+src/components/GlobalSearch.tsx(309,25): error TS2322: Type '{ className: string; style: CSSProperties; }' is not assignable to type 'IntrinsicAttributes & { className?: string | undefined; }'.
+  Property 'style' does not exist on type 'IntrinsicAttributes & { className?: string | undefined; }'.
+src/components/QuickReplyPicker.tsx(292,52): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'SetStateAction<string>'.
+  Type 'undefined' is not assignable to type 'SetStateAction<string>'.
+src/features/analytics/AdvancedAnalyticsPage.tsx(314,34): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/features/analytics/AdvancedAnalyticsPage.tsx(320,34): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/features/analytics/AdvancedAnalyticsPage.tsx(326,34): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/features/assets/lib/apiClient.ts(8,26): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/features/assets/pages/AssetDetailsPage.tsx(213,15): error TS2322: Type 'string | null | undefined' is not assignable to type 'string | number | readonly string[] | undefined'.
+  Type 'null' is not assignable to type 'string | number | readonly string[] | undefined'.
+src/features/assets/pages/AssetDetailsPage.tsx(228,15): error TS2322: Type 'string | null | undefined' is not assignable to type 'string | number | readonly string[] | undefined'.
+  Type 'null' is not assignable to type 'string | number | readonly string[] | undefined'.
+src/features/assets/pages/AssetDetailsPage.tsx(243,15): error TS2322: Type 'string | null | undefined' is not assignable to type 'string | number | readonly string[] | undefined'.
+  Type 'null' is not assignable to type 'string | number | readonly string[] | undefined'.
+src/features/assets/pages/AssetDetailsPage.tsx(257,15): error TS2322: Type 'string | null | undefined' is not assignable to type 'string | number | readonly string[] | undefined'.
+  Type 'null' is not assignable to type 'string | number | readonly string[] | undefined'.
+src/features/assets/pages/AssetDetailsPage.tsx(295,15): error TS2322: Type 'string | null | undefined' is not assignable to type 'string | number | readonly string[] | undefined'.
+  Type 'null' is not assignable to type 'string | number | readonly string[] | undefined'.
+src/features/assets/pages/AssetDetailsPage.tsx(320,15): error TS2322: Type 'string | null | undefined' is not assignable to type 'string | number | readonly string[] | undefined'.
+  Type 'null' is not assignable to type 'string | number | readonly string[] | undefined'.
+src/features/assets/pages/AssetDetailsPage.tsx(335,15): error TS2322: Type 'string | null | undefined' is not assignable to type 'string | number | readonly string[] | undefined'.
+  Type 'null' is not assignable to type 'string | number | readonly string[] | undefined'.
+src/features/assets/pages/AssetDetailsPage.tsx(350,15): error TS2322: Type 'string | null | undefined' is not assignable to type 'string | number | readonly string[] | undefined'.
+  Type 'null' is not assignable to type 'string | number | readonly string[] | undefined'.
+src/features/assets/pages/AssetDetailsPage.tsx(365,15): error TS2322: Type 'string | null | undefined' is not assignable to type 'string | number | readonly string[] | undefined'.
+  Type 'null' is not assignable to type 'string | number | readonly string[] | undefined'.
+src/features/assets/pages/AssetDetailsPage.tsx(380,15): error TS2322: Type 'string | null | undefined' is not assignable to type 'string | number | readonly string[] | undefined'.
+  Type 'null' is not assignable to type 'string | number | readonly string[] | undefined'.
+src/features/assets/pages/AssetDetailsPage.tsx(395,15): error TS2322: Type 'string | null | undefined' is not assignable to type 'string | number | readonly string[] | undefined'.
+  Type 'null' is not assignable to type 'string | number | readonly string[] | undefined'.
+src/features/assets/pages/AssetDetailsPage.tsx(410,15): error TS2322: Type 'string | null | undefined' is not assignable to type 'string | number | readonly string[] | undefined'.
+  Type 'null' is not assignable to type 'string | number | readonly string[] | undefined'.
+src/features/assets/pages/AssetDetailsPage.tsx(425,15): error TS2322: Type 'string | null | undefined' is not assignable to type 'string | number | readonly string[] | undefined'.
+  Type 'null' is not assignable to type 'string | number | readonly string[] | undefined'.
+src/features/assets/pages/AssetDetailsPage.tsx(440,15): error TS2322: Type 'string | null | undefined' is not assignable to type 'string | number | readonly string[] | undefined'.
+  Type 'null' is not assignable to type 'string | number | readonly string[] | undefined'.
+src/features/assets/pages/AssetDetailsPage.tsx(454,15): error TS2322: Type 'string | null | undefined' is not assignable to type 'string | number | readonly string[] | undefined'.
+  Type 'null' is not assignable to type 'string | number | readonly string[] | undefined'.
+src/features/assets/pages/AssetDetailsPage.tsx(469,15): error TS2322: Type 'string | null | undefined' is not assignable to type 'string | number | readonly string[] | undefined'.
+  Type 'null' is not assignable to type 'string | number | readonly string[] | undefined'.
+src/features/assets/store.ts(2,49): error TS2305: Module '"./types"' has no exported member 'ListAssetsParams'.
+src/features/assets/store.ts(102,13): error TS2552: Cannot find name 'bulkCreateAssets'. Did you mean 'createAsset'?
+src/features/checkout/CheckoutFormPage.tsx(159,15): error TS2322: Type 'boolean | "" | undefined' is not assignable to type 'boolean | undefined'.
+  Type '""' is not assignable to type 'boolean | undefined'.
+src/features/dashboard/AdminDashboard.tsx(5,18): error TS7016: Could not find a declaration file for module 'papaparse'. 'C:/Users/Opiwe/OneDrive/Desktop/asset-app/node_modules/papaparse/papaparse.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/papaparse` if it exists or add a new declaration (.d.ts) file containing `declare module 'papaparse';`
+src/features/dashboard/AdminDashboard.tsx(266,22): error TS7006: Parameter 'result' implicitly has an 'any' type.
+src/features/dashboard/AdminDashboard.tsx(267,19): error TS7006: Parameter 'error' implicitly has an 'any' type.
+src/features/dashboard/AdminDashboard.tsx(403,77): error TS18048: 'percent' is possibly 'undefined'.
+src/features/dashboard/TechnicianDashboard.tsx(68,27): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | Date'.
+      Type 'undefined' is not assignable to type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+src/features/dashboard/TechnicianDashboard.tsx(97,25): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | Date'.
+      Type 'undefined' is not assignable to type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+src/features/dashboard/TechnicianDashboard.tsx(97,59): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | Date'.
+      Type 'undefined' is not assignable to type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+src/features/dashboard/UserDashboard.tsx(81,25): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | Date'.
+      Type 'undefined' is not assignable to type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+src/features/dashboard/UserDashboard.tsx(81,59): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | Date'.
+      Type 'undefined' is not assignable to type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+src/features/documents/DocumentDetailPage.tsx(54,34): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/features/inventory/InventoryFormPage.tsx(137,15): error TS2322: Type 'boolean | "" | undefined' is not assignable to type 'boolean | undefined'.
+  Type '""' is not assignable to type 'boolean | undefined'.
+src/features/inventory/InventoryFormPage.tsx(266,15): error TS2322: Type 'boolean | "" | undefined' is not assignable to type 'boolean | undefined'.
+  Type '""' is not assignable to type 'boolean | undefined'.
+src/features/reports/AnalyticsPage.tsx(97,33): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | Date'.
+      Type 'undefined' is not assignable to type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+src/features/reports/AnalyticsPage.tsx(105,32): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | Date'.
+      Type 'undefined' is not assignable to type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+src/features/reports/AnalyticsPage.tsx(205,27): error TS2339: Property 'category' does not exist on type '{ status: "available" | "assigned" | "maintenance" | "repair" | "retired"; name: string; asset_code: string; id?: string | undefined; serial_number?: string | null | undefined; remote_id?: string | ... 1 more ... | undefined; ... 16 more ...; updatedAt?: string | undefined; }'.
+src/features/reports/AnalyticsPage.tsx(207,27): error TS2339: Property 'location' does not exist on type '{ status: "available" | "assigned" | "maintenance" | "repair" | "retired"; name: string; asset_code: string; id?: string | undefined; serial_number?: string | null | undefined; remote_id?: string | ... 1 more ... | undefined; ... 16 more ...; updatedAt?: string | undefined; }'.
+src/features/reports/AnalyticsPage.tsx(208,30): error TS2551: Property 'assignedTo' does not exist on type '{ status: "available" | "assigned" | "maintenance" | "repair" | "retired"; name: string; asset_code: string; id?: string | undefined; serial_number?: string | null | undefined; remote_id?: string | ... 1 more ... | undefined; ... 16 more ...; updatedAt?: string | undefined; }'. Did you mean 'assigned_to'?
+src/features/reports/AnalyticsPage.tsx(208,56): error TS2551: Property 'assignedTo' does not exist on type '{ status: "available" | "assigned" | "maintenance" | "repair" | "retired"; name: string; asset_code: string; id?: string | undefined; serial_number?: string | null | undefined; remote_id?: string | ... 1 more ... | undefined; ... 16 more ...; updatedAt?: string | undefined; }'. Did you mean 'assigned_to'?
+src/features/reports/AnalyticsPage.tsx(292,9): error TS2322: Type '(string | undefined)[][]' is not assignable to type 'RowInput[]'.
+  Type '(string | undefined)[]' is not assignable to type 'RowInput'.
+    Type '(string | undefined)[]' is not assignable to type 'CellInput[]'.
+      Type 'string | undefined' is not assignable to type 'CellInput'.
+        Type 'undefined' is not assignable to type 'CellInput'.
+src/features/reports/AnalyticsPage.tsx(490,60): error TS18048: 'percent' is possibly 'undefined'.
+src/features/reports/AnalyticsPage.tsx(532,60): error TS18048: 'percent' is possibly 'undefined'.
+src/features/tickets/pages/MyTasksPage.tsx(316,15): error TS2339: Property 'warning' does not exist on type '{ (message: Message, opts?: Partial<Pick<Toast, "id" | "style" | "className" | "position" | "icon" | "duration" | "ariaProps" | "iconTheme" | "toasterId" | "removeDelay">> | undefined): string; ... 8 more ...; promise<T>(promise: Promise<...> | (() => Promise<...>), msgs: { ...; }, opts?: DefaultToastOptions | undef...'.
+src/features/tickets/pages/NewTicketPage.tsx(99,14): error TS2339: Property 'category' does not exist on type '{ status: "available" | "assigned" | "maintenance" | "repair" | "retired"; name: string; asset_code: string; id?: string | undefined; serial_number?: string | null | undefined; remote_id?: string | ... 1 more ... | undefined; ... 16 more ...; updatedAt?: string | undefined; }'.
+src/features/tickets/pages/NewTicketPage.tsx(99,32): error TS2339: Property 'category' does not exist on type '{ status: "available" | "assigned" | "maintenance" | "repair" | "retired"; name: string; asset_code: string; id?: string | undefined; serial_number?: string | null | undefined; remote_id?: string | ... 1 more ... | undefined; ... 16 more ...; updatedAt?: string | undefined; }'.
+src/features/tickets/pages/NewTicketPage.tsx(105,17): error TS2345: Argument of type '(prev: { title: string; description: string; priority: string; assetId: string; createdById: string; }) => { assetId: string | undefined; title: string; description: string; priority: string; createdById: string; }' is not assignable to parameter of type 'SetStateAction<{ title: string; description: string; priority: string; assetId: string; createdById: string; }>'.
+  Type '(prev: { title: string; description: string; priority: string; assetId: string; createdById: string; }) => { assetId: string | undefined; title: string; description: string; priority: string; createdById: string; }' is not assignable to type '(prevState: { title: string; description: string; priority: string; assetId: string; createdById: string; }) => { title: string; description: string; priority: string; assetId: string; createdById: string; }'.
+    Call signature return types '{ assetId: string | undefined; title: string; description: string; priority: string; createdById: string; }' and '{ title: string; description: string; priority: string; assetId: string; createdById: string; }' are incompatible.
+      The types of 'assetId' are incompatible between these types.
+        Type 'string | undefined' is not assignable to type 'string'.
+          Type 'undefined' is not assignable to type 'string'.
+src/features/tickets/pages/NewTicketPage.tsx(324,36): error TS2339: Property 'category' does not exist on type '{ status: "available" | "assigned" | "maintenance" | "repair" | "retired"; name: string; asset_code: string; id?: string | undefined; serial_number?: string | null | undefined; remote_id?: string | ... 1 more ... | undefined; ... 16 more ...; updatedAt?: string | undefined; }'.
+src/features/tickets/pages/NewTicketPage.tsx(326,40): error TS2339: Property 'category' does not exist on type '{ status: "available" | "assigned" | "maintenance" | "repair" | "retired"; name: string; asset_code: string; id?: string | undefined; serial_number?: string | null | undefined; remote_id?: string | ... 1 more ... | undefined; ... 16 more ...; updatedAt?: string | undefined; }'.
+src/features/tickets/pages/NewTicketPage.tsx(403,34): error TS2339: Property 'category' does not exist on type '{ status: "available" | "assigned" | "maintenance" | "repair" | "retired"; name: string; asset_code: string; id?: string | undefined; serial_number?: string | null | undefined; remote_id?: string | ... 1 more ... | undefined; ... 16 more ...; updatedAt?: string | undefined; }'.
+src/features/tickets/pages/NewTicketPage.tsx(405,41): error TS2339: Property 'category' does not exist on type '{ status: "available" | "assigned" | "maintenance" | "repair" | "retired"; name: string; asset_code: string; id?: string | undefined; serial_number?: string | null | undefined; remote_id?: string | ... 1 more ... | undefined; ... 16 more ...; updatedAt?: string | undefined; }'.
+src/features/tickets/pages/TicketDetailsPage.tsx(74,11): error TS2322: Type 'string' is not assignable to type '"open" | "in_progress" | "closed" | undefined'.
+src/features/tickets/pages/TicketDetailsPage.tsx(75,11): error TS2322: Type 'string' is not assignable to type '"medium" | "low" | "high" | "critical" | undefined'.
+src/features/tickets/pages/TicketsListPage.tsx(77,20): error TS2322: Type 'string' is not assignable to type '"open" | "in_progress" | "closed" | undefined'.
+src/features/tickets/pages/TicketsListPage.tsx(77,42): error TS2322: Type 'string' is not assignable to type '"medium" | "low" | "high" | "critical" | undefined'.
+src/features/tickets/pages/TicketsListPage.tsx(125,28): error TS2322: Type 'string' is not assignable to type '"open" | "in_progress" | "closed" | undefined'.
+src/features/tickets/pages/TicketsListPage.tsx(125,50): error TS2322: Type 'string' is not assignable to type '"medium" | "low" | "high" | "critical" | undefined'.
+src/features/tickets/pages/TicketsListPage.tsx(230,22): error TS2322: Type 'string' is not assignable to type '"open" | "in_progress" | "closed" | undefined'.
+src/features/tickets/pages/TicketsListPage.tsx(230,44): error TS2322: Type 'string' is not assignable to type '"medium" | "low" | "high" | "critical" | undefined'.
+src/features/tickets/pages/TicketsListPage.tsx(270,22): error TS2322: Type 'string' is not assignable to type '"open" | "in_progress" | "closed" | undefined'.
+src/features/tickets/pages/TicketsListPage.tsx(270,44): error TS2322: Type 'string' is not assignable to type '"medium" | "low" | "high" | "critical" | undefined'.
+src/features/tickets/pages/TicketsListPage.tsx(330,26): error TS2322: Type 'string' is not assignable to type '"open" | "in_progress" | "closed" | undefined'.
+src/features/tickets/pages/TicketsListPage.tsx(330,48): error TS2322: Type 'string' is not assignable to type '"medium" | "low" | "high" | "critical" | undefined'.
+src/features/tickets/pages/TicketsListPage.tsx(624,13): error TS2322: Type '{ title: string; status: "open" | "in_progress" | "closed"; priority: "medium" | "low" | "high" | "critical"; number?: string | undefined; id?: string | undefined; asset?: { id: string; status: string; name: string; asset_code: string; } | null | undefined; ... 8 more ...; assignedTo?: { ...; } | ... 1 more ... | un...' is not assignable to type 'Ticket[]'.
+  Type '{ title: string; status: "open" | "in_progress" | "closed"; priority: "medium" | "low" | "high" | "critical"; number?: string | undefined; id?: string | undefined; asset?: { id: string; status: string; name: string; asset_code: string; } | null | undefined; ... 8 more ...; assignedTo?: { ...; } | ... 1 more ... | un...' is not assignable to type 'Ticket'.
+    Types of property 'id' are incompatible.
+      Type 'string | undefined' is not assignable to type 'string'.
+        Type 'undefined' is not assignable to type 'string'.
+src/features/tickets/store.ts(29,45): error TS2345: Argument of type 'ListTicketsParams | undefined' is not assignable to parameter of type '{ limit?: number | undefined; page?: number | undefined; } | undefined'.
+  Type 'ListTicketsParams' has no properties in common with type '{ limit?: number | undefined; page?: number | undefined; }'.
+src/features/whatsapp/WhatsAppSetup.tsx(7,34): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/hooks/useBulkTicketOperations.ts(2,45): error TS2307: Cannot find module '@tanstack/react-query' or its corresponding type declarations.
+src/hooks/useBulkTicketOperations.ts(63,17): error TS7006: Parameter 'data' implicitly has an 'any' type.
+src/hooks/useBulkTicketOperations.ts(63,23): error TS7006: Parameter 'variables' implicitly has an 'any' type.
+src/hooks/useBulkTicketOperations.ts(85,17): error TS7006: Parameter 'data' implicitly has an 'any' type.
+src/hooks/useBulkTicketOperations.ts(85,23): error TS7006: Parameter 'variables' implicitly has an 'any' type.
+src/hooks/useBulkTicketOperations.ts(145,17): error TS7006: Parameter 'data' implicitly has an 'any' type.
+src/hooks/useBulkTicketOperations.ts(145,23): error TS7006: Parameter 'variables' implicitly has an 'any' type.
+src/lib/logger.ts(8,35): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/lib/pushNotifications.ts(89,7): error TS2322: Type 'Uint8Array<ArrayBufferLike>' is not assignable to type 'string | BufferSource | null | undefined'.
+  Type 'Uint8Array<ArrayBufferLike>' is not assignable to type 'ArrayBufferView<ArrayBuffer>'.
+    Types of property 'buffer' are incompatible.
+      Type 'ArrayBufferLike' is not assignable to type 'ArrayBuffer'.
+        Type 'SharedArrayBuffer' is not assignable to type 'ArrayBuffer'.
+          Types of property '[Symbol.toStringTag]' are incompatible.
+            Type '"SharedArrayBuffer"' is not assignable to type '"ArrayBuffer"'.
