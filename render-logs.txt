@@ -1,173 +1,100 @@
-2025-11-27T11:51:36.303066295Z ==> Downloading cache...
-2025-11-27T11:51:36.34143945Z ==> It looks like we don't have access to your repo, but we'll try to clone it anyway.
-2025-11-27T11:51:36.341488771Z ==> Cloning from https://github.com/SpecCon-Team/asset-app
-2025-11-27T11:51:37.076845618Z ==> Checking out commit 7331472e8847f0cc48c4c57e0b956206bc3e4ef8 in branch main
-2025-11-27T11:51:41.773610622Z ==> Downloaded 153MB in 2s. Extraction took 3s.
-2025-11-27T11:51:46.570735221Z ==> Using Node.js version 22.16.0 (default)
-2025-11-27T11:51:46.602063912Z ==> Docs on specifying a Node.js version: https://render.com/docs/node-version
-2025-11-27T11:51:46.747739921Z ==> Running build command 'cd server && npm install && npx prisma generate && npm run build'...
-2025-11-27T11:51:47.877296715Z 
-2025-11-27T11:51:47.877321395Z up to date, audited 201 packages in 1s
-2025-11-27T11:51:47.877335585Z 
-2025-11-27T11:51:47.877344885Z 23 packages are looking for funding
-2025-11-27T11:51:47.877387556Z   run `npm fund` for details
-2025-11-27T11:51:47.879159575Z 
-2025-11-27T11:51:47.879173315Z 2 low severity vulnerabilities
-2025-11-27T11:51:47.879175525Z 
-2025-11-27T11:51:47.879178225Z To address all issues (including breaking changes), run:
-2025-11-27T11:51:47.879180445Z   npm audit fix --force
-2025-11-27T11:51:47.879182065Z 
-2025-11-27T11:51:47.879183885Z Run `npm audit` for details.
-2025-11-27T11:51:48.635776875Z Prisma schema loaded from prisma/schema.prisma
-2025-11-27T11:51:49.928821654Z 
-2025-11-27T11:51:49.928853015Z ✔ Generated Prisma Client (v5.22.0) to ./../node_modules/@prisma/client in 795ms
-2025-11-27T11:51:49.928858205Z 
-2025-11-27T11:51:49.928865885Z Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
-2025-11-27T11:51:49.928869955Z 
-2025-11-27T11:51:49.928874935Z Help us improve the Prisma ORM for everyone. Share your feedback in a short 2-min survey: https://pris.ly/orm/survey/release-5-22
-2025-11-27T11:51:49.928881616Z 
-2025-11-27T11:51:50.869256363Z ┌─────────────────────────────────────────────────────────┐
-2025-11-27T11:51:50.869279104Z │  Update available 5.22.0 -> 7.0.1                       │
-2025-11-27T11:51:50.869283704Z │                                                         │
-2025-11-27T11:51:50.869288314Z │  This is a major update - please follow the guide at    │
-2025-11-27T11:51:50.869292394Z │  https://pris.ly/d/major-version-upgrade                │
-2025-11-27T11:51:50.869296694Z │                                                         │
-2025-11-27T11:51:50.869301264Z │  Run the following to update                            │
-2025-11-27T11:51:50.869305754Z │    npm i --save-dev prisma@latest                       │
-2025-11-27T11:51:50.869310404Z │    npm i @prisma/client@latest                          │
-2025-11-27T11:51:50.869315014Z └─────────────────────────────────────────────────────────┘
-2025-11-27T11:51:51.027066886Z 
-2025-11-27T11:51:51.027093107Z > asset-app-server@0.1.0 build
-2025-11-27T11:51:51.027099587Z > tsc -b || exit 0
-2025-11-27T11:51:51.027104307Z 
-2025-11-27T11:51:56.832741227Z src/lib/slaEngine.ts(147,9): error TS2322: Type '{ policy: { name: string; id: string; createdAt: Date; updatedAt: Date; description: string | null; priority: string; isActive: boolean; responseTimeMinutes: number; resolutionTimeMinutes: number; businessHoursOnly: boolean; escalationEnabled: boolean; escalationUserId: string | null; notifyBeforeMinutes: number; }[...' is not assignable to type 'never'.
-2025-11-27T11:51:56.83287663Z src/lib/workflowEngine.ts(414,33): error TS2339: Property 'sendMessage' does not exist on type 'WhatsAppService'.
-2025-11-27T11:51:56.832918121Z src/middleware/auth.ts(29,28): error TS2339: Property 'headers' does not exist on type 'AuthRequest'.
-2025-11-27T11:51:56.832924501Z src/middleware/cache.ts(28,13): error TS2339: Property 'method' does not exist on type 'AuthRequest'.
-2025-11-27T11:51:56.832949862Z src/routes/analytics.ts(365,48): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'string'.
-2025-11-27T11:51:56.832983883Z src/routes/analytics.ts(439,7): error TS2615: Type of property 'AND' circularly references itself in mapped type '{ [K in keyof { AND?: MaintenanceScheduleScalarWhereWithAggregatesInput | MaintenanceScheduleScalarWhereWithAggregatesInput[]; ... 13 more ...; updatedAt?: string | ... 1 more ... | DateTimeWithAggregatesFilter<...>; }]: Or<...> extends 1 ? { ...; }[K] extends infer TK ? GetHavingFields<...> : never : {} extends Fie...'.
-2025-11-27T11:51:56.832988663Z src/routes/analytics.ts(439,7): error TS2615: Type of property 'NOT' circularly references itself in mapped type '{ [K in keyof { AND?: MaintenanceScheduleScalarWhereWithAggregatesInput | MaintenanceScheduleScalarWhereWithAggregatesInput[]; ... 13 more ...; updatedAt?: string | ... 1 more ... | DateTimeWithAggregatesFilter<...>; }]: Or<...> extends 1 ? { ...; }[K] extends infer TK ? GetHavingFields<...> : never : {} extends Fie...'.
-2025-11-27T11:51:56.833009123Z src/routes/analytics.ts(439,7): error TS2615: Type of property 'OR' circularly references itself in mapped type '{ [K in keyof { AND?: MaintenanceScheduleScalarWhereWithAggregatesInput | MaintenanceScheduleScalarWhereWithAggregatesInput[]; ... 13 more ...; updatedAt?: string | ... 1 more ... | DateTimeWithAggregatesFilter<...>; }]: Or<...> extends 1 ? { ...; }[K] extends infer TK ? GetHavingFields<...> : never : {} extends Fie...'.
-2025-11-27T11:51:56.833120615Z src/routes/analytics.ts(489,11): error TS2353: Object literal may only specify known properties, and 'currentQuantity' does not exist in type 'InventoryItemWhereInput'.
-2025-11-27T11:51:56.833304119Z src/routes/analytics.ts(489,42): error TS2339: Property 'raw' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
-2025-11-27T11:51:56.83333558Z src/routes/analytics.ts(506,7): error TS2615: Type of property 'AND' circularly references itself in mapped type '{ [K in keyof { AND?: InventoryItemScalarWhereWithAggregatesInput | InventoryItemScalarWhereWithAggregatesInput[]; ... 31 more ...; updatedAt?: string | ... 1 more ... | DateTimeWithAggregatesFilter<...>; }]: Or<...> extends 1 ? { ...; }[K] extends infer TK ? GetHavingFields<...> : never : {} extends FieldPaths<...>...'.
-2025-11-27T11:51:56.8333382Z src/routes/analytics.ts(506,7): error TS2615: Type of property 'NOT' circularly references itself in mapped type '{ [K in keyof { AND?: InventoryItemScalarWhereWithAggregatesInput | InventoryItemScalarWhereWithAggregatesInput[]; ... 31 more ...; updatedAt?: string | ... 1 more ... | DateTimeWithAggregatesFilter<...>; }]: Or<...> extends 1 ? { ...; }[K] extends infer TK ? GetHavingFields<...> : never : {} extends FieldPaths<...>...'.
-2025-11-27T11:51:56.83334216Z src/routes/analytics.ts(506,7): error TS2615: Type of property 'OR' circularly references itself in mapped type '{ [K in keyof { AND?: InventoryItemScalarWhereWithAggregatesInput | InventoryItemScalarWhereWithAggregatesInput[]; ... 31 more ...; updatedAt?: string | ... 1 more ... | DateTimeWithAggregatesFilter<...>; }]: Or<...> extends 1 ? { ...; }[K] extends infer TK ? GetHavingFields<...> : never : {} extends FieldPaths<...>...'.
-2025-11-27T11:51:56.833429442Z src/routes/analytics.ts(535,49): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'string'.
-2025-11-27T11:51:56.833438142Z src/routes/analytics.ts(553,13): error TS2353: Object literal may only specify known properties, and 'assigned_user' does not exist in type 'AssetInclude<DefaultArgs>'.
-2025-11-27T11:51:56.833440093Z src/routes/analytics.ts(561,13): error TS2353: Object literal may only specify known properties, and 'created_by_user' does not exist in type 'TicketInclude<DefaultArgs>'.
-2025-11-27T11:51:56.833469513Z src/routes/analytics.ts(569,11): error TS2322: Type '{ user: { select: { name: true; }; }; }' is not assignable to type 'never'.
-2025-11-27T11:51:56.833476813Z src/routes/assets.ts(286,14): error TS2339: Property 'file' does not exist on type 'AuthRequest'.
-2025-11-27T11:51:56.833479873Z src/routes/assets.ts(290,28): error TS2339: Property 'file' does not exist on type 'AuthRequest'.
-2025-11-27T11:51:56.833486934Z src/routes/auditLogs.ts(129,11): error TS2339: Property 'ip' does not exist on type 'AuthRequest'.
-2025-11-27T11:51:56.833489674Z src/routes/checkout.ts(407,44): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'string'.
-2025-11-27T11:51:56.833495034Z src/routes/checkout.ts(539,55): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'string'.
-2025-11-27T11:51:56.833497504Z src/routes/checkout.ts(633,46): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'string'.
-2025-11-27T11:51:56.833502614Z src/routes/checkout.ts(717,49): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'string'.
-2025-11-27T11:51:56.833511544Z src/routes/checkout.ts(787,55): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'string'.
-2025-11-27T11:51:56.833516434Z src/routes/comments.ts(73,25): error TS2339: Property 'headers' does not exist on type 'AuthRequest'.
-2025-11-27T11:51:56.833565035Z src/routes/comments.ts(234,9): error TS2322: Type '{ contentHash: string; ticketId?: string; content?: string; authorId?: string; }' is not assignable to type '(Without<CommentCreateInput, CommentUncheckedCreateInput> & CommentUncheckedCreateInput) | (Without<...> & CommentCreateInput)'.
-2025-11-27T11:51:56.833568885Z   Type '{ contentHash: string; ticketId?: string; content?: string; authorId?: string; }' is not assignable to type 'Without<CommentUncheckedCreateInput, CommentCreateInput> & CommentCreateInput'.
-2025-11-27T11:51:56.833571295Z     Type '{ contentHash: string; ticketId?: string; content?: string; authorId?: string; }' is not assignable to type 'Without<CommentUncheckedCreateInput, CommentCreateInput>'.
-2025-11-27T11:51:56.833573805Z       Types of property 'ticketId' are incompatible.
-2025-11-27T11:51:56.833575616Z         Type 'string' is not assignable to type 'never'.
-2025-11-27T11:51:56.833578256Z src/routes/comments.ts(250,87): error TS2551: Property 'author' does not exist on type '{ id: string; createdAt: Date; updatedAt: Date; ticketId: string; content: string; contentHash: string; authorId: string; }'. Did you mean 'authorId'?
-2025-11-27T11:51:56.833580045Z src/routes/comments.ts(250,110): error TS2551: Property 'author' does not exist on type '{ id: string; createdAt: Date; updatedAt: Date; ticketId: string; content: string; contentHash: string; authorId: string; }'. Did you mean 'authorId'?
-2025-11-27T11:51:56.833585666Z src/routes/depreciation.ts(212,44): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'string'.
-2025-11-27T11:51:56.833588246Z src/routes/depreciation.ts(317,46): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'string'.
-2025-11-27T11:51:56.833589966Z src/routes/depreciation.ts(352,52): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'string'.
-2025-11-27T11:51:56.833596436Z src/routes/depreciation.ts(421,54): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'string'.
-2025-11-27T11:51:56.833598296Z src/routes/depreciation.ts(508,53): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'string'.
-2025-11-27T11:51:56.833624746Z src/routes/documents.ts(681,54): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'string'.
-2025-11-27T11:51:56.833628977Z src/routes/globalSearch.ts(3,10): error TS2724: '"../middleware/auth"' has no exported member named 'authenticateToken'. Did you mean 'authenticate'?
-2025-11-27T11:51:56.833631497Z src/routes/inventory.ts(268,44): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'string'.
-2025-11-27T11:51:56.833636917Z src/routes/inventory.ts(359,46): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'string'.
-2025-11-27T11:51:56.833639507Z src/routes/inventory.ts(428,49): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'string'.
-2025-11-27T11:51:56.833652777Z src/routes/inventory.ts(454,59): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'string'.
-2025-11-27T11:51:56.833657527Z src/routes/inventory.ts(646,60): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'string'.
-2025-11-27T11:51:56.833663277Z src/routes/maintenance.ts(128,9): error TS2353: Object literal may only specify known properties, and 'history' does not exist in type 'MaintenanceScheduleInclude<DefaultArgs>'.
-2025-11-27T11:51:56.833668458Z src/routes/maintenance.ts(155,44): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'string'.
-2025-11-27T11:51:56.833705698Z src/routes/maintenance.ts(179,9): error TS2353: Object literal may only specify known properties, and 'scheduleType' does not exist in type '(Without<MaintenanceScheduleCreateInput, MaintenanceScheduleUncheckedCreateInput> & MaintenanceScheduleUncheckedCreateInput) | (Without<...> & MaintenanceScheduleCreateInput)'.
-2025-11-27T11:51:56.833709088Z src/routes/maintenance.ts(203,46): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'string'.
-2025-11-27T11:51:56.833711419Z src/routes/maintenance.ts(231,9): error TS2353: Object literal may only specify known properties, and 'scheduleType' does not exist in type '(Without<MaintenanceScheduleUpdateInput, MaintenanceScheduleUncheckedUpdateInput> & MaintenanceScheduleUncheckedUpdateInput) | (Without<...> & MaintenanceScheduleUpdateInput)'.
-2025-11-27T11:51:56.833713748Z src/routes/maintenance.ts(255,49): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'string'.
-2025-11-27T11:51:56.833724539Z src/routes/maintenance.ts(279,56): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'string'.
-2025-11-27T11:51:56.833728489Z src/routes/maintenance.ts(299,34): error TS2339: Property 'maintenanceHistory' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
-2025-11-27T11:51:56.833740099Z src/routes/maintenance.ts(315,18): error TS2339: Property 'scheduleType' does not exist on type '{ status: string; id: string; createdAt: Date; updatedAt: Date; description: string; notes: string; title: string; assignedToId: string; assetId: string; frequency: string; nextDueDate: Date; lastCompletedAt: Date; }'.
-2025-11-27T11:51:56.833743439Z src/routes/maintenance.ts(340,9): error TS2561: Object literal may only specify known properties, but 'lastCompletedDate' does not exist in type '(Without<MaintenanceScheduleUpdateInput, MaintenanceScheduleUncheckedUpdateInput> & MaintenanceScheduleUncheckedUpdateInput) | (Without<...> & MaintenanceScheduleUpdateInput)'. Did you mean to write 'lastCompletedAt'?
-2025-11-27T11:51:56.833745809Z src/routes/maintenance.ts(357,34): error TS2339: Property 'maintenanceHistory' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
-2025-11-27T11:51:56.833810891Z src/routes/notifications.ts(121,7): error TS2322: Type '{ message?: string; type?: string; userId?: string; title?: string; assetId?: string; senderId?: string; ticketId?: string; }' is not assignable to type '(Without<NotificationCreateInput, NotificationUncheckedCreateInput> & NotificationUncheckedCreateInput) | (Without<...> & NotificationCreateInput)'.
-2025-11-27T11:51:56.833818501Z   Type '{ message?: string; type?: string; userId?: string; title?: string; assetId?: string; senderId?: string; ticketId?: string; }' is not assignable to type 'Without<NotificationUncheckedCreateInput, NotificationCreateInput> & NotificationCreateInput'.
-2025-11-27T11:51:56.833825641Z     Type '{ message?: string; type?: string; userId?: string; title?: string; assetId?: string; senderId?: string; ticketId?: string; }' is not assignable to type 'Without<NotificationUncheckedCreateInput, NotificationCreateInput>'.
-2025-11-27T11:51:56.833828511Z       Types of property 'userId' are incompatible.
-2025-11-27T11:51:56.833831111Z         Type 'string' is not assignable to type 'never'.
-2025-11-27T11:51:56.833834091Z src/routes/peg.ts(64,7): error TS2322: Type '{ email: string; contactPerson: string; phone: string; userId: string; name?: string; location?: string; provinceId?: string; }' is not assignable to type '(Without<PEGClientCreateInput, PEGClientUncheckedCreateInput> & PEGClientUncheckedCreateInput) | (Without<...> & PEGClientCreateInput)'.
-2025-11-27T11:51:56.833836341Z   Type '{ email: string; contactPerson: string; phone: string; userId: string; name?: string; location?: string; provinceId?: string; }' is not assignable to type 'Without<PEGClientUncheckedCreateInput, PEGClientCreateInput> & PEGClientCreateInput'.
-2025-11-27T11:51:56.833838531Z     Type '{ email: string; contactPerson: string; phone: string; userId: string; name?: string; location?: string; provinceId?: string; }' is not assignable to type 'Without<PEGClientUncheckedCreateInput, PEGClientCreateInput>'.
-2025-11-27T11:51:56.833840791Z       Types of property 'userId' are incompatible.
-2025-11-27T11:51:56.833842951Z         Type 'string' is not assignable to type 'never'.
-2025-11-27T11:51:56.833845201Z src/routes/reservations.ts(3,10): error TS2724: '"../middleware/auth"' has no exported member named 'authenticateToken'. Did you mean 'authenticate'?
-2025-11-27T11:51:56.833847851Z src/routes/sessions.ts(61,24): error TS2339: Property 'ip' does not exist on type 'AuthRequest'.
-2025-11-27T11:51:56.833860012Z src/routes/sessions.ts(62,24): error TS2339: Property 'headers' does not exist on type 'AuthRequest'.
-2025-11-27T11:51:56.833862532Z src/routes/sessions.ts(80,37): error TS2339: Property 'headers' does not exist on type 'AuthRequest'.
-2025-11-27T11:51:56.833864782Z src/routes/sessions.ts(97,24): error TS2339: Property 'ip' does not exist on type 'AuthRequest'.
-2025-11-27T11:51:56.833866962Z src/routes/sessions.ts(98,24): error TS2339: Property 'headers' does not exist on type 'AuthRequest'.
-2025-11-27T11:51:56.833869132Z src/routes/sessions.ts(133,24): error TS2339: Property 'ip' does not exist on type 'AuthRequest'.
-2025-11-27T11:51:56.833878092Z src/routes/sessions.ts(134,24): error TS2339: Property 'headers' does not exist on type 'AuthRequest'.
-2025-11-27T11:51:56.833880422Z src/routes/sessions.ts(200,24): error TS2339: Property 'ip' does not exist on type 'AuthRequest'.
-2025-11-27T11:51:56.833882582Z src/routes/sessions.ts(201,24): error TS2339: Property 'headers' does not exist on type 'AuthRequest'.
-2025-11-27T11:51:56.833892622Z src/routes/ticketTemplates.ts(96,7): error TS2322: Type '{ createdById: string; name?: string; description?: string; title?: string; priority?: "medium" | "low" | "high" | "urgent"; assignedToId?: string; isActive?: boolean; ticketDescription?: string; category?: string; tags?: string[]; }' is not assignable to type '(Without<TicketTemplateCreateInput, TicketTemplateUncheckedCreateInput> & TicketTemplateUncheckedCreateInput) | (Without<...> & TicketTemplateCreateInput)'.
-2025-11-27T11:51:56.833905593Z   Type '{ createdById: string; name?: string; description?: string; title?: string; priority?: "medium" | "low" | "high" | "urgent"; assignedToId?: string; isActive?: boolean; ticketDescription?: string; category?: string; tags?: string[]; }' is not assignable to type 'Without<TicketTemplateUncheckedCreateInput, TicketTemplateCreateInput> & TicketTemplateCreateInput'.
-2025-11-27T11:51:56.833908083Z     Type '{ createdById: string; name?: string; description?: string; title?: string; priority?: "medium" | "low" | "high" | "urgent"; assignedToId?: string; isActive?: boolean; ticketDescription?: string; category?: string; tags?: string[]; }' is not assignable to type 'Without<TicketTemplateUncheckedCreateInput, TicketTemplateCreateInput>'.
-2025-11-27T11:51:56.833910393Z       Types of property 'createdById' are incompatible.
-2025-11-27T11:51:56.833912543Z         Type 'string' is not assignable to type 'never'.
-2025-11-27T11:51:56.833915533Z src/routes/tickets.ts(121,7): error TS2322: Type '{ number: string; description?: string; title?: string; priority?: string; createdById?: string; assetId?: string; }' is not assignable to type '(Without<TicketCreateInput, TicketUncheckedCreateInput> & TicketUncheckedCreateInput) | (Without<...> & TicketCreateInput)'.
-2025-11-27T11:51:56.833917863Z   Type '{ number: string; description?: string; title?: string; priority?: string; createdById?: string; assetId?: string; }' is not assignable to type 'Without<TicketUncheckedCreateInput, TicketCreateInput> & TicketCreateInput'.
-2025-11-27T11:51:56.833920443Z     Type '{ number: string; description?: string; title?: string; priority?: string; createdById?: string; assetId?: string; }' is not assignable to type 'Without<TicketUncheckedCreateInput, TicketCreateInput>'.
-2025-11-27T11:51:56.833922623Z       Types of property 'createdById' are incompatible.
-2025-11-27T11:51:56.833924833Z         Type 'string' is not assignable to type 'never'.
-2025-11-27T11:51:56.833935793Z src/routes/tickets.ts(145,30): error TS2551: Property 'createdBy' does not exist on type '{ number: string; status: string; id: string; createdAt: Date; updatedAt: Date; description: string; title: string; priority: string; resolution: string; createdById: string; assignedToId: string; assetId: string; dueDate: Date; }'. Did you mean 'createdById'?
-2025-11-27T11:51:56.833938303Z src/routes/tickets.ts(145,55): error TS2551: Property 'createdBy' does not exist on type '{ number: string; status: string; id: string; createdAt: Date; updatedAt: Date; description: string; title: string; priority: string; resolution: string; createdById: string; assignedToId: string; assetId: string; dueDate: Date; }'. Did you mean 'createdById'?
-2025-11-27T11:51:56.833940664Z src/routes/tickets.ts(503,14): error TS2339: Property 'file' does not exist on type 'AuthRequest'.
-2025-11-27T11:51:56.833950764Z src/routes/tickets.ts(507,28): error TS2339: Property 'file' does not exist on type 'AuthRequest'.
-2025-11-27T11:51:56.833953454Z src/routes/tickets.ts(675,50): error TS2561: Object literal may only specify known properties, but 'serialNumber' does not exist in type 'AssetSelect<DefaultArgs>'. Did you mean to write 'serial_number'?
-2025-11-27T11:51:56.833955684Z src/routes/tickets.ts(701,16): error TS2551: Property 'createdBy' does not exist on type '{ number: string; status: string; id: string; createdAt: Date; updatedAt: Date; description: string; title: string; priority: string; resolution: string; createdById: string; assignedToId: string; assetId: string; dueDate: Date; }'. Did you mean 'createdById'?
-2025-11-27T11:51:56.833958194Z src/routes/tickets.ts(701,42): error TS2551: Property 'createdBy' does not exist on type '{ number: string; status: string; id: string; createdAt: Date; updatedAt: Date; description: string; title: string; priority: string; resolution: string; createdById: string; assignedToId: string; assetId: string; dueDate: Date; }'. Did you mean 'createdById'?
-2025-11-27T11:51:56.833971284Z src/routes/tickets.ts(702,16): error TS2551: Property 'assignedTo' does not exist on type '{ number: string; status: string; id: string; createdAt: Date; updatedAt: Date; description: string; title: string; priority: string; resolution: string; createdById: string; assignedToId: string; assetId: string; dueDate: Date; }'. Did you mean 'assignedToId'?
-2025-11-27T11:51:56.833976234Z src/routes/tickets.ts(702,43): error TS2551: Property 'assignedTo' does not exist on type '{ number: string; status: string; id: string; createdAt: Date; updatedAt: Date; description: string; title: string; priority: string; resolution: string; createdById: string; assignedToId: string; assetId: string; dueDate: Date; }'. Did you mean 'assignedToId'?
-2025-11-27T11:51:56.833978804Z src/routes/tickets.ts(703,16): error TS2551: Property 'asset' does not exist on type '{ number: string; status: string; id: string; createdAt: Date; updatedAt: Date; description: string; title: string; priority: string; resolution: string; createdById: string; assignedToId: string; assetId: string; dueDate: Date; }'. Did you mean 'assetId'?
-2025-11-27T11:51:56.833983484Z src/routes/tickets.ts(769,18): error TS2339: Property 'workflowHistory' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
-2025-11-27T11:51:56.833989194Z src/routes/workflows.ts(70,7): error TS2322: Type '{ createdBy: string; name?: string; description?: string; priority?: number; entityType?: "asset" | "ticket"; trigger?: "assigned" | "created" | "status_changed" | "priority_changed" | "updated"; conditions?: any[]; actions?: any[]; isActive?: boolean; }' is not assignable to type '(Without<WorkflowTemplateCreateInput, WorkflowTemplateUncheckedCreateInput> & WorkflowTemplateUncheckedCreateInput) | (Without<...> & WorkflowTemplateCreateInput)'.
-2025-11-27T11:51:56.833992085Z   Type '{ createdBy: string; name?: string; description?: string; priority?: number; entityType?: "asset" | "ticket"; trigger?: "assigned" | "created" | "status_changed" | "priority_changed" | "updated"; conditions?: any[]; actions?: any[]; isActive?: boolean; }' is not assignable to type 'Without<WorkflowTemplateUncheckedCreateInput, WorkflowTemplateCreateInput> & WorkflowTemplateCreateInput'.
-2025-11-27T11:51:56.833994325Z     Type '{ createdBy: string; name?: string; description?: string; priority?: number; entityType?: "asset" | "ticket"; trigger?: "assigned" | "created" | "status_changed" | "priority_changed" | "updated"; conditions?: any[]; actions?: any[]; isActive?: boolean; }' is not assignable to type 'WorkflowTemplateCreateInput'.
-2025-11-27T11:51:56.833996505Z       Property 'name' is optional in type '{ createdBy: string; name?: string; description?: string; priority?: number; entityType?: "asset" | "ticket"; trigger?: "assigned" | "created" | "status_changed" | "priority_changed" | "updated"; conditions?: any[]; actions?: any[]; isActive?: boolean; }' but required in type 'WorkflowTemplateCreateInput'.
-2025-11-27T11:51:56.834005935Z src/routes/workflows.ts(224,7): error TS2322: Type '{ name?: string; description?: string; priority?: number; conditions?: any; isActive?: boolean; assignmentType?: "round_robin" | "least_busy" | "skill_based" | "location_based" | "specific_user"; targetUserId?: string; targetUserIds?: string[]; }' is not assignable to type '(Without<AutoAssignmentRuleCreateInput, AutoAssignmentRuleUncheckedCreateInput> & AutoAssignmentRuleUncheckedCreateInput) | (Without<...> & AutoAssignmentRuleCreateInput)'.
-2025-11-27T11:51:56.834010695Z   Type '{ name?: string; description?: string; priority?: number; conditions?: any; isActive?: boolean; assignmentType?: "round_robin" | "least_busy" | "skill_based" | "location_based" | "specific_user"; targetUserId?: string; targetUserIds?: string[]; }' is not assignable to type 'Without<AutoAssignmentRuleUncheckedCreateInput, AutoAssignmentRuleCreateInput> & AutoAssignmentRuleCreateInput'.
-2025-11-27T11:51:56.834019425Z     Type '{ name?: string; description?: string; priority?: number; conditions?: any; isActive?: boolean; assignmentType?: "round_robin" | "least_busy" | "skill_based" | "location_based" | "specific_user"; targetUserId?: string; targetUserIds?: string[]; }' is not assignable to type 'AutoAssignmentRuleCreateInput'.
-2025-11-27T11:51:56.834021645Z       Property 'name' is optional in type '{ name?: string; description?: string; priority?: number; conditions?: any; isActive?: boolean; assignmentType?: "round_robin" | "least_busy" | "skill_based" | "location_based" | "specific_user"; targetUserId?: string; targetUserIds?: string[]; }' but required in type 'AutoAssignmentRuleCreateInput'.
-2025-11-27T11:51:56.834023505Z src/routes/workflows.ts(345,7): error TS2322: Type '{ name?: string; description?: string; priority?: "medium" | "low" | "high" | "critical"; isActive?: boolean; responseTimeMinutes?: number; resolutionTimeMinutes?: number; businessHoursOnly?: boolean; escalationEnabled?: boolean; escalationUserId?: string; notifyBeforeMinutes?: number; }' is not assignable to type '(Without<SLAPolicyCreateInput, SLAPolicyUncheckedCreateInput> & SLAPolicyUncheckedCreateInput) | (Without<...> & SLAPolicyCreateInput)'.
-2025-11-27T11:51:56.834025475Z   Type '{ name?: string; description?: string; priority?: "medium" | "low" | "high" | "critical"; isActive?: boolean; responseTimeMinutes?: number; resolutionTimeMinutes?: number; businessHoursOnly?: boolean; escalationEnabled?: boolean; escalationUserId?: string; notifyBeforeMinutes?: number; }' is not assignable to type 'Without<SLAPolicyUncheckedCreateInput, SLAPolicyCreateInput> & SLAPolicyCreateInput'.
-2025-11-27T11:51:56.834027205Z     Type '{ name?: string; description?: string; priority?: "medium" | "low" | "high" | "critical"; isActive?: boolean; responseTimeMinutes?: number; resolutionTimeMinutes?: number; businessHoursOnly?: boolean; escalationEnabled?: boolean; escalationUserId?: string; notifyBeforeMinutes?: number; }' is not assignable to type 'SLAPolicyCreateInput'.
-2025-11-27T11:51:56.834029145Z       Property 'name' is optional in type '{ name?: string; description?: string; priority?: "medium" | "low" | "high" | "critical"; isActive?: boolean; responseTimeMinutes?: number; resolutionTimeMinutes?: number; businessHoursOnly?: boolean; escalationEnabled?: boolean; escalationUserId?: string; notifyBeforeMinutes?: number; }' but required in type 'SLAPolicyCreateInput'.
-2025-11-27T11:51:57.514056939Z ==> Uploading build...
-2025-11-27T11:52:04.39525422Z ==> Uploaded in 5.3s. Compression took 1.6s
-2025-11-27T11:52:04.419233352Z ==> Build successful 🎉
-2025-11-27T11:52:18.038777791Z ==> Deploying...
-2025-11-27T11:52:38.704726689Z ==> Running 'cd server && node dist/index.js'
-2025-11-27T11:52:42.71553984Z Server running on http://localhost:4000
-2025-11-27T11:52:42.715559761Z Environment: production
-2025-11-27T11:52:42.715564171Z Health check: http://localhost:4000/health
-2025-11-27T11:52:43.431823084Z ✅ Primary Database: 🌐 Neon Cloud (Always Online)
-2025-11-27T11:52:43.431969763Z 📝 Single Database Mode
-2025-11-27T11:52:43.432007115Z ✅ Database connected successfully
-2025-11-27T11:52:43.730997393Z [ERROR] 2025-11-27T11:52:43.730Z - Action: HEAD / | User: anonymous | IP: ::1 | Status: failure | Details: {"duration":"3ms","statusCode":404}
-2025-11-27T11:52:43.804921929Z ::1 - - [27/Nov/2025:11:52:43 +0000] "HEAD / HTTP/1.1" 404 70 "-" "Go-http-client/1.1"
-2025-11-27T11:52:49.549414315Z ==> Your service is live 🎉
-2025-11-27T11:52:49.862477866Z ==> 
-2025-11-27T11:52:49.904698333Z ==> ///////////////////////////////////////////////////////////
-2025-11-27T11:52:49.948233209Z ==> 
-2025-11-27T11:52:50.001027093Z ==> Available at your primary URL https://assettrack-api.onrender.com
-2025-11-27T11:52:50.03714551Z ==> 
-2025-11-27T11:52:50.075342237Z ==> ///////////////////////////////////////////////////////////
-2025-11-27T11:52:51.487068786Z 35.247.111.159 - - [27/Nov/2025:11:52:51 +0000] "GET / HTTP/1.1" 404 70 "-" "Go-http-client/2.0"
-2025-11-27T11:53:18.936891506Z prisma:error Error in PostgreSQL connection: Error { kind: Closed, cause: None }
+2025-11-27T13:06:59.843435421Z src/routes/tickets.ts(702,16): error TS2551: Property 'assignedTo' does not exist on type '{ number: string; status: string; id: string; createdAt: Date; updatedAt: Date; description: string; title: string; priority: string; resolution: string; createdById: string; assignedToId: string; assetId: string; dueDate: Date; }'. Did you mean 'assignedToId'?
+2025-11-27T13:06:59.843464832Z src/routes/tickets.ts(702,43): error TS2551: Property 'assignedTo' does not exist on type '{ number: string; status: string; id: string; createdAt: Date; updatedAt: Date; description: string; title: string; priority: string; resolution: string; createdById: string; assignedToId: string; assetId: string; dueDate: Date; }'. Did you mean 'assignedToId'?
+2025-11-27T13:06:59.843466972Z src/routes/tickets.ts(703,16): error TS2551: Property 'asset' does not exist on type '{ number: string; status: string; id: string; createdAt: Date; updatedAt: Date; description: string; title: string; priority: string; resolution: string; createdById: string; assignedToId: string; assetId: string; dueDate: Date; }'. Did you mean 'assetId'?
+2025-11-27T13:06:59.843470442Z src/routes/tickets.ts(769,18): error TS2339: Property 'workflowHistory' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+2025-11-27T13:06:59.843472322Z src/routes/travel.ts(13,21): error TS2339: Property 'user' does not exist on type 'Request'.
+2025-11-27T13:06:59.843477032Z src/routes/travel.ts(32,17): error TS2339: Property 'params' does not exist on type 'Request'.
+2025-11-27T13:06:59.843499732Z src/routes/travel.ts(33,21): error TS2339: Property 'user' does not exist on type 'Request'.
+2025-11-27T13:06:59.843503403Z src/routes/travel.ts(52,7): error TS2339: Property 'destination' does not exist on type 'ReadableStream<Uint8Array<ArrayBuffer>>'.
+2025-11-27T13:06:59.843506083Z src/routes/travel.ts(53,7): error TS2339: Property 'country' does not exist on type 'ReadableStream<Uint8Array<ArrayBuffer>>'.
+2025-11-27T13:06:59.843512643Z src/routes/travel.ts(54,7): error TS2339: Property 'startDate' does not exist on type 'ReadableStream<Uint8Array<ArrayBuffer>>'.
+2025-11-27T13:06:59.843515583Z src/routes/travel.ts(55,7): error TS2339: Property 'endDate' does not exist on type 'ReadableStream<Uint8Array<ArrayBuffer>>'.
+2025-11-27T13:06:59.843545983Z src/routes/travel.ts(56,7): error TS2339: Property 'category' does not exist on type 'ReadableStream<Uint8Array<ArrayBuffer>>'.
+2025-11-27T13:06:59.843549683Z src/routes/travel.ts(57,7): error TS2339: Property 'status' does not exist on type 'ReadableStream<Uint8Array<ArrayBuffer>>'.
+2025-11-27T13:06:59.843552224Z src/routes/travel.ts(58,7): error TS2339: Property 'budget' does not exist on type 'ReadableStream<Uint8Array<ArrayBuffer>>'.
+2025-11-27T13:06:59.843554984Z src/routes/travel.ts(59,7): error TS2339: Property 'spent' does not exist on type 'ReadableStream<Uint8Array<ArrayBuffer>>'.
+2025-11-27T13:06:59.843561154Z src/routes/travel.ts(60,7): error TS2339: Property 'notes' does not exist on type 'ReadableStream<Uint8Array<ArrayBuffer>>'.
+2025-11-27T13:06:59.843565754Z src/routes/travel.ts(61,7): error TS2339: Property 'itinerary' does not exist on type 'ReadableStream<Uint8Array<ArrayBuffer>>'.
+2025-11-27T13:06:59.843568444Z src/routes/travel.ts(83,21): error TS2339: Property 'user' does not exist on type 'Request'.
+2025-11-27T13:06:59.843599154Z src/routes/travel.ts(98,7): error TS2339: Property 'destination' does not exist on type 'ReadableStream<Uint8Array<ArrayBuffer>>'.
+2025-11-27T13:06:59.843610675Z src/routes/travel.ts(99,7): error TS2339: Property 'country' does not exist on type 'ReadableStream<Uint8Array<ArrayBuffer>>'.
+2025-11-27T13:06:59.843613805Z src/routes/travel.ts(100,7): error TS2339: Property 'startDate' does not exist on type 'ReadableStream<Uint8Array<ArrayBuffer>>'.
+2025-11-27T13:06:59.843616585Z src/routes/travel.ts(101,7): error TS2339: Property 'endDate' does not exist on type 'ReadableStream<Uint8Array<ArrayBuffer>>'.
+2025-11-27T13:06:59.843622885Z src/routes/travel.ts(102,7): error TS2339: Property 'category' does not exist on type 'ReadableStream<Uint8Array<ArrayBuffer>>'.
+2025-11-27T13:06:59.843625815Z src/routes/travel.ts(103,7): error TS2339: Property 'status' does not exist on type 'ReadableStream<Uint8Array<ArrayBuffer>>'.
+2025-11-27T13:06:59.843628735Z src/routes/travel.ts(104,7): error TS2339: Property 'budget' does not exist on type 'ReadableStream<Uint8Array<ArrayBuffer>>'.
+2025-11-27T13:06:59.843631465Z src/routes/travel.ts(105,7): error TS2339: Property 'spent' does not exist on type 'ReadableStream<Uint8Array<ArrayBuffer>>'.
+2025-11-27T13:06:59.843655126Z src/routes/travel.ts(106,7): error TS2339: Property 'notes' does not exist on type 'ReadableStream<Uint8Array<ArrayBuffer>>'.
+2025-11-27T13:06:59.843659895Z src/routes/travel.ts(107,7): error TS2339: Property 'itinerary' does not exist on type 'ReadableStream<Uint8Array<ArrayBuffer>>'.
+2025-11-27T13:06:59.843663056Z src/routes/travel.ts(113,17): error TS2339: Property 'params' does not exist on type 'Request'.
+2025-11-27T13:06:59.843665846Z src/routes/travel.ts(114,21): error TS2339: Property 'user' does not exist on type 'Request'.
+2025-11-27T13:06:59.843668506Z src/routes/travel.ts(124,17): error TS2339: Property 'params' does not exist on type 'Request'.
+2025-11-27T13:06:59.843675166Z src/routes/travel.ts(153,17): error TS2339: Property 'params' does not exist on type 'Request'.
+2025-11-27T13:06:59.843677906Z src/routes/travel.ts(154,21): error TS2339: Property 'user' does not exist on type 'Request'.
+2025-11-27T13:06:59.843680566Z src/routes/travel.ts(164,17): error TS2339: Property 'params' does not exist on type 'Request'.
+2025-11-27T13:06:59.843683206Z src/routes/travel.ts(180,21): error TS2339: Property 'user' does not exist on type 'Request'.
+2025-11-27T13:06:59.843718507Z src/routes/twoFactor.ts(18,22): error TS2339: Property 'user' does not exist on type 'Request'.
+2025-11-27T13:06:59.843721267Z src/routes/twoFactor.ts(71,24): error TS2339: Property 'user' does not exist on type 'Request'.
+2025-11-27T13:06:59.843722997Z src/routes/twoFactor.ts(194,24): error TS2339: Property 'user' does not exist on type 'Request'.
+2025-11-27T13:06:59.843751237Z src/routes/twoFactor.ts(240,24): error TS2339: Property 'user' does not exist on type 'Request'.
+2025-11-27T13:06:59.843753657Z src/routes/twoFactor.ts(277,24): error TS2339: Property 'user' does not exist on type 'Request'.
+2025-11-27T13:06:59.843757597Z src/routes/twoFactor.ts(323,11): error TS2339: Property 'user' does not exist on type 'Request'.
+2025-11-27T13:06:59.843784468Z src/routes/twoFactor.ts(372,22): error TS2339: Property 'user' does not exist on type 'Request'.
+2025-11-27T13:06:59.843786548Z src/routes/twoFactor.ts(373,25): error TS2339: Property 'user' does not exist on type 'Request'.
+2025-11-27T13:06:59.843816699Z src/routes/twoFactor.ts(380,23): error TS2339: Property 'user' does not exist on type 'Request'.
+2025-11-27T13:06:59.843819509Z src/routes/twoFactor.ts(403,11): error TS2339: Property 'user' does not exist on type 'Request'.
+2025-11-27T13:06:59.843821739Z src/routes/users.ts(37,51): error TS2339: Property 'query' does not exist on type 'Request'.
+2025-11-27T13:06:59.843825639Z src/routes/whatsapp.ts(35,13): error TS2339: Property 'phoneNumber' does not exist on type 'ReadableStream<Uint8Array<ArrayBuffer>>'.
+2025-11-27T13:06:59.843832439Z src/routes/whatsapp.ts(81,13): error TS2339: Property 'phoneNumber' does not exist on type 'ReadableStream<Uint8Array<ArrayBuffer>>'.
+2025-11-27T13:06:59.843837489Z src/routes/whatsapp.ts(81,26): error TS2339: Property 'message' does not exist on type 'ReadableStream<Uint8Array<ArrayBuffer>>'.
+2025-11-27T13:06:59.843844649Z src/routes/whatsapp.ts(122,13): error TS2339: Property 'phoneNumber' does not exist on type 'ReadableStream<Uint8Array<ArrayBuffer>>'.
+2025-11-27T13:06:59.843847399Z src/routes/whatsapp.ts(122,26): error TS2339: Property 'ticketData' does not exist on type 'ReadableStream<Uint8Array<ArrayBuffer>>'.
+2025-11-27T13:06:59.84385413Z src/routes/whatsapp.ts(163,13): error TS2339: Property 'phoneNumber' does not exist on type 'ReadableStream<Uint8Array<ArrayBuffer>>'.
+2025-11-27T13:06:59.84389301Z src/routes/whatsapp.ts(163,26): error TS2339: Property 'assetData' does not exist on type 'ReadableStream<Uint8Array<ArrayBuffer>>'.
+2025-11-27T13:06:59.84389691Z src/routes/workflows.ts(30,24): error TS2339: Property 'params' does not exist on type 'Request'.
+2025-11-27T13:06:59.84390504Z src/routes/workflows.ts(70,7): error TS2322: Type '{ createdBy: any; name?: string; description?: string; priority?: number; entityType?: "asset" | "ticket"; trigger?: "assigned" | "created" | "status_changed" | "priority_changed" | "updated"; conditions?: any[]; actions?: any[]; isActive?: boolean; }' is not assignable to type '(Without<WorkflowTemplateCreateInput, WorkflowTemplateUncheckedCreateInput> & WorkflowTemplateUncheckedCreateInput) | (Without<...> & WorkflowTemplateCreateInput)'.
+2025-11-27T13:06:59.843908211Z   Type '{ createdBy: any; name?: string; description?: string; priority?: number; entityType?: "asset" | "ticket"; trigger?: "assigned" | "created" | "status_changed" | "priority_changed" | "updated"; conditions?: any[]; actions?: any[]; isActive?: boolean; }' is not assignable to type 'Without<WorkflowTemplateUncheckedCreateInput, WorkflowTemplateCreateInput> & WorkflowTemplateCreateInput'.
+2025-11-27T13:06:59.843910271Z     Type '{ createdBy: any; name?: string; description?: string; priority?: number; entityType?: "asset" | "ticket"; trigger?: "assigned" | "created" | "status_changed" | "priority_changed" | "updated"; conditions?: any[]; actions?: any[]; isActive?: boolean; }' is not assignable to type 'WorkflowTemplateCreateInput'.
+2025-11-27T13:06:59.843912121Z       Property 'name' is optional in type '{ createdBy: any; name?: string; description?: string; priority?: number; entityType?: "asset" | "ticket"; trigger?: "assigned" | "created" | "status_changed" | "priority_changed" | "updated"; conditions?: any[]; actions?: any[]; isActive?: boolean; }' but required in type 'WorkflowTemplateCreateInput'.
+2025-11-27T13:06:59.843918701Z src/routes/workflows.ts(72,24): error TS2339: Property 'user' does not exist on type 'Request'.
+2025-11-27T13:06:59.843923281Z src/routes/workflows.ts(89,24): error TS2339: Property 'params' does not exist on type 'Request'.
+2025-11-27T13:06:59.843963072Z src/routes/workflows.ts(110,24): error TS2339: Property 'params' does not exist on type 'Request'.
+2025-11-27T13:06:59.843966982Z src/routes/workflows.ts(126,24): error TS2339: Property 'params' does not exist on type 'Request'.
+2025-11-27T13:06:59.843969672Z src/routes/workflows.ts(151,24): error TS2339: Property 'params' does not exist on type 'Request'.
+2025-11-27T13:06:59.843975452Z src/routes/workflows.ts(152,13): error TS2339: Property 'entityId' does not exist on type 'ReadableStream<Uint8Array<ArrayBuffer>>'.
+2025-11-27T13:06:59.843979202Z src/routes/workflows.ts(167,54): error TS2339: Property 'query' does not exist on type 'Request'.
+2025-11-27T13:06:59.844003642Z src/routes/workflows.ts(224,7): error TS2322: Type '{ name?: string; description?: string; priority?: number; conditions?: any; isActive?: boolean; assignmentType?: "round_robin" | "least_busy" | "skill_based" | "location_based" | "specific_user"; targetUserId?: string; targetUserIds?: string[]; }' is not assignable to type '(Without<AutoAssignmentRuleCreateInput, AutoAssignmentRuleUncheckedCreateInput> & AutoAssignmentRuleUncheckedCreateInput) | (Without<...> & AutoAssignmentRuleCreateInput)'.
+2025-11-27T13:06:59.844015363Z   Type '{ name?: string; description?: string; priority?: number; conditions?: any; isActive?: boolean; assignmentType?: "round_robin" | "least_busy" | "skill_based" | "location_based" | "specific_user"; targetUserId?: string; targetUserIds?: string[]; }' is not assignable to type 'Without<AutoAssignmentRuleUncheckedCreateInput, AutoAssignmentRuleCreateInput> & AutoAssignmentRuleCreateInput'.
+2025-11-27T13:06:59.844018943Z     Type '{ name?: string; description?: string; priority?: number; conditions?: any; isActive?: boolean; assignmentType?: "round_robin" | "least_busy" | "skill_based" | "location_based" | "specific_user"; targetUserId?: string; targetUserIds?: string[]; }' is not assignable to type 'AutoAssignmentRuleCreateInput'.
+2025-11-27T13:06:59.844021913Z       Property 'name' is optional in type '{ name?: string; description?: string; priority?: number; conditions?: any; isActive?: boolean; assignmentType?: "round_robin" | "least_busy" | "skill_based" | "location_based" | "specific_user"; targetUserId?: string; targetUserIds?: string[]; }' but required in type 'AutoAssignmentRuleCreateInput'.
+2025-11-27T13:06:59.844030113Z src/routes/workflows.ts(240,24): error TS2339: Property 'params' does not exist on type 'Request'.
+2025-11-27T13:06:59.844036573Z src/routes/workflows.ts(261,24): error TS2339: Property 'params' does not exist on type 'Request'.
+2025-11-27T13:06:59.844042253Z src/routes/workflows.ts(277,24): error TS2339: Property 'params' does not exist on type 'Request'.
+2025-11-27T13:06:59.844076334Z src/routes/workflows.ts(345,7): error TS2322: Type '{ name?: string; description?: string; priority?: "medium" | "low" | "high" | "critical"; isActive?: boolean; responseTimeMinutes?: number; resolutionTimeMinutes?: number; businessHoursOnly?: boolean; escalationEnabled?: boolean; escalationUserId?: string; notifyBeforeMinutes?: number; }' is not assignable to type '(Without<SLAPolicyCreateInput, SLAPolicyUncheckedCreateInput> & SLAPolicyUncheckedCreateInput) | (Without<...> & SLAPolicyCreateInput)'.
+2025-11-27T13:06:59.844079104Z   Type '{ name?: string; description?: string; priority?: "medium" | "low" | "high" | "critical"; isActive?: boolean; responseTimeMinutes?: number; resolutionTimeMinutes?: number; businessHoursOnly?: boolean; escalationEnabled?: boolean; escalationUserId?: string; notifyBeforeMinutes?: number; }' is not assignable to type 'Without<SLAPolicyUncheckedCreateInput, SLAPolicyCreateInput> & SLAPolicyCreateInput'.
+2025-11-27T13:06:59.844081044Z     Type '{ name?: string; description?: string; priority?: "medium" | "low" | "high" | "critical"; isActive?: boolean; responseTimeMinutes?: number; resolutionTimeMinutes?: number; businessHoursOnly?: boolean; escalationEnabled?: boolean; escalationUserId?: string; notifyBeforeMinutes?: number; }' is not assignable to type 'SLAPolicyCreateInput'.
+2025-11-27T13:06:59.844083084Z       Property 'name' is optional in type '{ name?: string; description?: string; priority?: "medium" | "low" | "high" | "critical"; isActive?: boolean; responseTimeMinutes?: number; resolutionTimeMinutes?: number; businessHoursOnly?: boolean; escalationEnabled?: boolean; escalationUserId?: string; notifyBeforeMinutes?: number; }' but required in type 'SLAPolicyCreateInput'.
+2025-11-27T13:06:59.844084934Z src/routes/workflows.ts(361,24): error TS2339: Property 'params' does not exist on type 'Request'.
+2025-11-27T13:06:59.844089024Z src/routes/workflows.ts(382,24): error TS2339: Property 'params' does not exist on type 'Request'.
+2025-11-27T13:06:59.844095684Z src/routes/workflows.ts(409,30): error TS2339: Property 'params' does not exist on type 'Request'.
+2025-11-27T13:07:01.057368478Z ==> Uploading build...
+2025-11-27T13:07:07.291349719Z ==> Uploaded in 4.8s. Compression took 1.4s
+2025-11-27T13:07:07.316465601Z ==> Build successful 🎉
+2025-11-27T13:07:10.069578407Z ==> Deploying...
+2025-11-27T13:07:29.565940538Z ==> Running 'cd server && node dist/index.js'
+2025-11-27T13:07:33.472003852Z Server running on http://localhost:4000
+2025-11-27T13:07:33.472232875Z Environment: production
+2025-11-27T13:07:33.472241285Z Health check: http://localhost:4000/health
+2025-11-27T13:07:33.965656458Z [ERROR] 2025-11-27T13:07:33.965Z - Action: HEAD / | User: anonymous | IP: ::1 | Status: failure | Details: {"duration":"97ms","statusCode":404}
+2025-11-27T13:07:34.065599717Z ::1 - - [27/Nov/2025:13:07:34 +0000] "HEAD / HTTP/1.1" 404 70 "-" "Go-http-client/1.1"
+2025-11-27T13:07:34.562347508Z ✅ Primary Database: 🌐 Neon Cloud (Always Online)
+2025-11-27T13:07:34.5623829Z 📝 Single Database Mode
+2025-11-27T13:07:34.56238931Z ✅ Database connected successfully
+2025-11-27T13:07:40.842500646Z ==> Your service is live 🎉
+2025-11-27T13:07:40.885340712Z ==> 
+2025-11-27T13:07:40.922409829Z ==> ///////////////////////////////////////////////////////////
+2025-11-27T13:07:40.955091876Z ==> 
+2025-11-27T13:07:41.373351977Z ==> Available at your primary URL https://assettrack-api.onrender.com
+2025-11-27T13:07:41.415069823Z ==> 
+2025-11-27T13:07:41.457863379Z ==> ///////////////////////////////////////////////////////////
+2025-11-27T13:07:42.68777921Z 34.82.242.193 - - [27/Nov/2025:13:07:42 +0000] "GET / HTTP/1.1" 404 70 "-" "Go-http-client/2.0"

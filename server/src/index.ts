@@ -7,6 +7,7 @@ import mongoSanitize from 'express-mongo-sanitize';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import { prisma } from './lib/prisma';
+import './middleware/auth';
 import authRouter from './routes/auth';
 import usersRouter from './routes/users';
 import assetsRouter from './routes/assets';
