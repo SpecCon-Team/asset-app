@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs/promises';
@@ -65,7 +65,7 @@ const upload = multer({
 });
 
 // Upload attachment to ticket
-router.post('/:ticketId', authenticate, uploadRateLimiter, upload.single('file'), async (req: Request, res) => {
+router.post('/:ticketId', authenticate, uploadRateLimiter, upload.single('file'), async (req, res: Response) => {
   try {
     const { ticketId } = req.params;
     const user = req.user;
@@ -142,7 +142,7 @@ router.post('/:ticketId', authenticate, uploadRateLimiter, upload.single('file')
 });
 
 // Get attachments for a ticket
-router.get('/ticket/:ticketId', authenticate, async (req, res) => {
+router.get('/ticket/:ticketId', authenticate, async (req, res: Response) => {
   try {
     const { ticketId } = req.params;
 
@@ -159,7 +159,7 @@ router.get('/ticket/:ticketId', authenticate, async (req, res) => {
 });
 
 // Delete attachment
-router.delete('/:id', authenticate, async (req: Request, res) => {
+router.delete('/:id', authenticate, async (req, res: Response) => {
   try {
     const { id } = req.params;
     const user = req.user;

@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { Role } from '@prisma/client';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
@@ -33,7 +33,7 @@ const updatePasswordSchema = z.object({
 });
 
 // Get all users - requires authentication, admins see all fields
-router.get('/', authenticate, cacheMiddleware(30000), applyFieldVisibility('user'), async (req: Request, res) => {
+router.get('/', authenticate, cacheMiddleware(30000), applyFieldVisibility('user'), async (req: Request, res: Response) => {
   const { type, page = '1', limit = '100' } = req.query;
 
   let whereClause: any = {};
@@ -85,7 +85,7 @@ router.get('/', authenticate, cacheMiddleware(30000), applyFieldVisibility('user
 });
 
 // Assign role - ADMIN only
-router.patch('/:id/role', authenticate, requireRole('ADMIN'), async (req, res) => {
+router.patch('/:id/role', authenticate, requireRole('ADMIN'), async (req: Request, res: Response) => {
   const parsed = assignRoleSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json(parsed.error.flatten());
   const user = await prisma.user.update({
@@ -97,7 +97,7 @@ router.patch('/:id/role', authenticate, requireRole('ADMIN'), async (req, res) =
 });
 
 // Update availability - self or ADMIN
-router.patch('/:id/availability', authenticate, requireSelfOrAdmin, async (req, res) => {
+router.patch('/:id/availability', authenticate, requireSelfOrAdmin, async (req: Request, res: Response) => {
   const parsed = updateAvailabilitySchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json(parsed.error.flatten());
   const user = await prisma.user.update({
@@ -109,7 +109,7 @@ router.patch('/:id/availability', authenticate, requireSelfOrAdmin, async (req, 
 });
 
 // Update profile - self or ADMIN
-router.patch('/:id/profile', authenticate, requireSelfOrAdmin, async (req, res) => {
+router.patch('/:id/profile', authenticate, requireSelfOrAdmin, async (req: Request, res: Response) => {
   const parsed = updateProfileSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json(parsed.error.flatten());
 
@@ -133,7 +133,7 @@ router.patch('/:id/profile', authenticate, requireSelfOrAdmin, async (req, res) 
 });
 
 // Update password - self only (not even admin can change others' passwords)
-router.patch('/:id/password', authenticate, requireSelfOrAdmin, async (req, res) => {
+router.patch('/:id/password', authenticate, requireSelfOrAdmin, async (req: Request, res: Response) => {
   console.log('Password change request received for user:', req.params.id);
 
   const parsed = updatePasswordSchema.safeParse(req.body);
@@ -185,14 +185,14 @@ router.patch('/:id/password', authenticate, requireSelfOrAdmin, async (req, res)
 });
 
 // Update settings - self only
-router.patch('/:id/settings', authenticate, requireSelfOrAdmin, async (req, res) => {
+router.patch('/:id/settings', authenticate, requireSelfOrAdmin, async (req: Request, res: Response) => {
   // Settings are stored client-side for now (localStorage)
   // You can extend this to store in database if needed
   res.json({ message: 'Settings updated successfully' });
 });
 
 // Delete user - ADMIN only
-router.delete('/:id', authenticate, requireRole('ADMIN'), async (req, res) => {
+router.delete('/:id', authenticate, requireRole('ADMIN'), async (req: Request, res: Response) => {
   try {
     const userId = req.params.id;
 

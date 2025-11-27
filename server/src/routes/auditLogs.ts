@@ -1,12 +1,13 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { authenticate, requireRole } from '../middleware/auth';
 import { getAuditLogs } from '../lib/auditLog';
+import { prisma } from '../lib/prisma'; // Moved prisma import
 
 const router = Router();
 
 // GET /api/audit-logs - Get audit logs (ADMIN only)
-router.get('/', authenticate, requireRole('ADMIN'), async (req: Request, res) => {
+router.get('/', authenticate, requireRole('ADMIN'), async (req: Request, res: Response) => {
   try {
     const querySchema = z.object({
       userId: z.string().optional(),
@@ -42,9 +43,9 @@ router.get('/', authenticate, requireRole('ADMIN'), async (req: Request, res) =>
 });
 
 // GET /api/audit-logs/stats - Get audit log statistics (ADMIN only)
-router.get('/stats', authenticate, requireRole('ADMIN'), async (req: Request, res) => {
+router.get('/stats', authenticate, requireRole('ADMIN'), async (req: Request, res: Response) => {
   try {
-    const { prisma } = await import('../lib/prisma');
+
 
     // Get stats for the last 30 days
     const thirtyDaysAgo = new Date();
@@ -102,7 +103,7 @@ router.get('/stats', authenticate, requireRole('ADMIN'), async (req: Request, re
 });
 
 // GET /api/audit-logs/export - Export audit logs as CSV (ADMIN only)
-router.get('/export', authenticate, requireRole('ADMIN'), async (req: Request, res) => {
+router.get('/export', authenticate, requireRole('ADMIN'), async (req: Request, res: Response) => {
   try {
     const querySchema = z.object({
       startDate: z.string().optional().transform(val => val ? new Date(val) : undefined),

@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma';
 import { authenticate, requireRole } from '../middleware/auth';
@@ -17,7 +17,7 @@ const createNotificationSchema = z.object({
 });
 
 // Get all notifications for a user
-router.get('/user/:userId', authenticate, cacheMiddleware(15000), async (req: Request, res) => {
+router.get('/user/:userId', authenticate, cacheMiddleware(15000), async (req: Request, res: Response) => {
   try {
     // Users can only view their own notifications
     if (req.user?.id !== req.params.userId && req.user?.role !== 'ADMIN') {
@@ -91,7 +91,7 @@ router.get('/user/:userId', authenticate, cacheMiddleware(15000), async (req: Re
 });
 
 // Get unread notification count
-router.get('/user/:userId/unread-count', authenticate, async (req: Request, res) => {
+router.get('/user/:userId/unread-count', authenticate, async (req: Request, res: Response) => {
   try {
     // Users can only view their own notification count
     if (req.user?.id !== req.params.userId && req.user?.role !== 'ADMIN') {
@@ -112,13 +112,21 @@ router.get('/user/:userId/unread-count', authenticate, async (req: Request, res)
 });
 
 // Create a notification (authenticated users only, typically used by system)
-router.post('/', authenticate, async (req: Request, res) => {
+router.post('/', authenticate, async (req: Request, res: Response) => {
   const parsed = createNotificationSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json(parsed.error.flatten());
 
   try {
     const notification = await prisma.notification.create({
-      data: parsed.data,
+      data: {
+        type: parsed.data.type,
+        title: parsed.data.title,
+        message: parsed.data.message,
+        userId: parsed.data.userId,
+        senderId: parsed.data.senderId,
+        ticketId: parsed.data.ticketId,
+        assetId: parsed.data.assetId,
+      },
     });
     res.json(notification);
   } catch (error) {
@@ -128,7 +136,7 @@ router.post('/', authenticate, async (req: Request, res) => {
 });
 
 // Mark notification as read
-router.patch('/:id/read', authenticate, async (req: Request, res) => {
+router.patch('/:id/read', authenticate, async (req: Request, res: Response) => {
   try {
     // Get the notification first to check ownership
     const notification = await prisma.notification.findUnique({
@@ -157,7 +165,7 @@ router.patch('/:id/read', authenticate, async (req: Request, res) => {
 });
 
 // Mark all notifications as read for a user
-router.patch('/user/:userId/read-all', authenticate, async (req: Request, res) => {
+router.patch('/user/:userId/read-all', authenticate, async (req: Request, res: Response) => {
   try {
     // Users can only mark their own notifications as read
     if (req.user?.id !== req.params.userId && req.user?.role !== 'ADMIN') {
@@ -179,7 +187,7 @@ router.patch('/user/:userId/read-all', authenticate, async (req: Request, res) =
 });
 
 // Delete a notification
-router.delete('/:id', authenticate, async (req: Request, res) => {
+router.delete('/:id', authenticate, async (req: Request, res: Response) => {
   try {
     // Get the notification first to check ownership
     const notification = await prisma.notification.findUnique({
@@ -207,7 +215,7 @@ router.delete('/:id', authenticate, async (req: Request, res) => {
 });
 
 // Delete all read notifications for a user
-router.delete('/user/:userId/read', authenticate, async (req: Request, res) => {
+router.delete('/user/:userId/read', authenticate, async (req: Request, res: Response) => {
   try {
     // Users can only delete their own notifications
     if (req.user?.id !== req.params.userId && req.user?.role !== 'ADMIN') {
@@ -228,7 +236,7 @@ router.delete('/user/:userId/read', authenticate, async (req: Request, res) => {
 });
 
 // Dismiss all notifications for a user
-router.delete('/user/:userId/dismiss-all', authenticate, async (req: Request, res) => {
+router.delete('/user/:userId/dismiss-all', authenticate, async (req: Request, res: Response) => {
   try {
     // Users can only delete their own notifications
     if (req.user?.id !== req.params.userId && req.user?.role !== 'ADMIN') {
@@ -250,7 +258,7 @@ router.delete('/user/:userId/dismiss-all', authenticate, async (req: Request, re
 });
 
 // Speed test notification endpoint (TECHNICIAN or ADMIN only)
-router.post('/speed-test', authenticate, requireRole('TECHNICIAN', 'ADMIN'), async (req: Request, res) => {
+router.post('/speed-test', authenticate, requireRole('TECHNICIAN', 'ADMIN'), async (req: Request, res: Response) => {
   const schema = z.object({
     downloadSpeed: z.number(),
     uploadSpeed: z.number(),
@@ -314,7 +322,7 @@ router.post('/speed-test', authenticate, requireRole('TECHNICIAN', 'ADMIN'), asy
 });
 
 // TEST ENDPOINT: Create a test notification (ADMIN only)
-router.post('/test/:userId', authenticate, requireRole('ADMIN'), async (req: Request, res) => {
+router.post('/test/:userId', authenticate, requireRole('ADMIN'), async (req: Request, res: Response) => {
   try {
     const notification = await prisma.notification.create({
       data: {

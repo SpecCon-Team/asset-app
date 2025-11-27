@@ -1,7 +1,20 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import { whatsappService } from '../lib/whatsapp';
 import { authenticate, requireRole } from '../middleware/auth';
 import { prisma } from '../lib/prisma';
+
+interface WhatsAppTicketData {
+  ticketNumber: string;
+  title: string;
+  priority: string;
+  assignedTo?: string;
+}
+
+interface WhatsAppAssetData {
+  assetCode: string;
+  assetName: string;
+  assignedTo: string;
+}
 
 const router = express.Router();
 
@@ -9,7 +22,7 @@ const router = express.Router();
  * Get WhatsApp configuration status
  * GET /api/whatsapp/status
  */
-router.get('/status', authenticate, requireRole('ADMIN'), (req: Request, res) => {
+router.get('/status', authenticate, requireRole('ADMIN'), (req: Request, res: Response) => {
   try {
     const isConfigured = whatsappService.isConfigured();
 
@@ -30,7 +43,7 @@ router.get('/status', authenticate, requireRole('ADMIN'), (req: Request, res) =>
  * POST /api/whatsapp/test
  * Body: { phoneNumber: string }
  */
-router.post('/test', authenticate, requireRole('ADMIN'), async (req: Request, res) => {
+router.post('/test', authenticate, requireRole('ADMIN'), async (req: Request<{}, {}, { phoneNumber: string }>, res: Response) => {
   try {
     const { phoneNumber } = req.body;
 
@@ -76,7 +89,7 @@ router.post('/test', authenticate, requireRole('ADMIN'), async (req: Request, re
  * POST /api/whatsapp/send
  * Body: { phoneNumber: string, message: string }
  */
-router.post('/send', authenticate, requireRole('ADMIN'), async (req: Request, res) => {
+router.post('/send', authenticate, requireRole('ADMIN'), async (req: Request<{}, {}, { phoneNumber: string; message: string }>, res: Response) => {
   try {
     const { phoneNumber, message } = req.body;
 
@@ -117,7 +130,7 @@ router.post('/send', authenticate, requireRole('ADMIN'), async (req: Request, re
  * POST /api/whatsapp/notify/ticket
  * Body: { phoneNumber: string, ticketData: object }
  */
-router.post('/notify/ticket', authenticate, async (req: Request, res) => {
+router.post('/notify/ticket', authenticate, async (req: Request<{}, {}, { phoneNumber: string; ticketData: WhatsAppTicketData }>, res: Response) => {
   try {
     const { phoneNumber, ticketData } = req.body;
 
@@ -158,7 +171,7 @@ router.post('/notify/ticket', authenticate, async (req: Request, res) => {
  * POST /api/whatsapp/notify/asset
  * Body: { phoneNumber: string, assetData: object }
  */
-router.post('/notify/asset', authenticate, async (req: Request, res) => {
+router.post('/notify/asset', authenticate, async (req: Request<{}, {}, { phoneNumber: string; assetData: WhatsAppAssetData }>, res: Response) => {
   try {
     const { phoneNumber, assetData } = req.body;
 
@@ -199,7 +212,7 @@ router.post('/notify/asset', authenticate, async (req: Request, res) => {
  * Meta calls this endpoint to verify your webhook
  * GET /api/whatsapp/webhook
  */
-router.get('/webhook', (req, res) => {
+router.get('/webhook', (req: Request, res: Response) => {
   try {
     console.log('Raw query:', req.query);
     console.log('Full URL:', req.url);
@@ -233,7 +246,7 @@ router.get('/webhook', (req, res) => {
  * Receives incoming WhatsApp messages from Meta
  * POST /api/whatsapp/webhook
  */
-router.post('/webhook', async (req, res) => {
+router.post('/webhook', async (req: Request, res: Response) => {
   try {
     console.log('📩 Received webhook:', JSON.stringify(req.body, null, 2));
 

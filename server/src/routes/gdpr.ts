@@ -15,6 +15,8 @@ import {
   cleanupOldData,
 } from '../lib/gdpr';
 import { logAudit } from '../lib/auditLog';
+import bcrypt from 'bcryptjs';
+import { prisma } from '../lib/prisma';
 
 const router = Router();
 
@@ -22,7 +24,7 @@ const router = Router();
  * GET /api/gdpr/export
  * Export all user data (GDPR Article 20 - Right to Data Portability)
  */
-router.get('/export', authenticate, async (req: Request, res) => {
+router.get('/export', authenticate, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
 
@@ -48,7 +50,7 @@ router.get('/export', authenticate, async (req: Request, res) => {
  * GET /api/gdpr/retention-summary
  * Get data retention summary for current user
  */
-router.get('/retention-summary', authenticate, async (req: Request, res) => {
+router.get('/retention-summary', authenticate, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     const summary = await getDataRetentionSummary(userId);
@@ -63,7 +65,7 @@ router.get('/retention-summary', authenticate, async (req: Request, res) => {
  * GET /api/gdpr/privacy-report
  * Generate privacy report for current user
  */
-router.get('/privacy-report', authenticate, async (req: Request, res) => {
+router.get('/privacy-report', authenticate, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     const report = await generatePrivacyReport(userId);
@@ -83,7 +85,7 @@ router.get('/privacy-report', authenticate, async (req: Request, res) => {
  * Request account anonymization (GDPR Article 17 - Right to Erasure)
  * Requires password confirmation
  */
-router.post('/anonymize', authenticate, async (req: Request, res) => {
+router.post('/anonymize', authenticate, async (req: Request, res: Response) => {
   const schema = z.object({
     password: z.string(),
     confirmation: z.literal('I understand this action cannot be undone'),
@@ -101,8 +103,6 @@ router.post('/anonymize', authenticate, async (req: Request, res) => {
     const userId = req.user!.id;
 
     // Verify password
-    const bcrypt = require('bcryptjs');
-    const { prisma } = require('../lib/prisma');
     const user = await prisma.user.findUnique({ where: { id: userId } });
 
     if (!user || !(await bcrypt.compare(parsed.data.password, user.password))) {
@@ -133,7 +133,7 @@ router.post('/anonymize', authenticate, async (req: Request, res) => {
  * Permanently delete user account (ADMIN only)
  * This is for compliance with legal deletion requirements
  */
-router.delete('/delete/:userId', authenticate, requireRole('ADMIN'), async (req: Request, res) => {
+router.delete('/delete/:userId', authenticate, requireRole('ADMIN'), async (req: Request, res: Response) => {
   const schema = z.object({
     reason: z.string().min(10, 'Deletion reason must be at least 10 characters'),
     confirmation: z.literal('PERMANENTLY DELETE'),
@@ -181,7 +181,7 @@ router.delete('/delete/:userId', authenticate, requireRole('ADMIN'), async (req:
  * POST /api/gdpr/cleanup
  * Clean up old data based on retention policies (ADMIN only)
  */
-router.post('/cleanup', authenticate, requireRole('ADMIN'), async (req: Request, res) => {
+router.post('/cleanup', authenticate, requireRole('ADMIN'), async (req: Request, res: Response) => {
   const schema = z.object({
     daysToRetain: z.number().min(30).max(3650).optional(),
   });
@@ -220,9 +220,9 @@ router.post('/cleanup', authenticate, requireRole('ADMIN'), async (req: Request,
  * GET /api/gdpr/admin/retention-stats
  * Get overall data retention statistics (ADMIN only)
  */
-router.get('/admin/retention-stats', authenticate, requireRole('ADMIN'), async (req: Request, res) => {
+router.get('/admin/retention-stats', authenticate, requireRole('ADMIN'), async (req: Request, res: Response) => {
   try {
-    const { prisma } = require('../lib/prisma');
+
 
     const [
       totalUsers,

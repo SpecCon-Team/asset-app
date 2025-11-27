@@ -120,7 +120,7 @@ export const authenticate = async (
  * Checks if authenticated user has one of the required roles
  */
 export const requireRole = (...allowedRoles: string[]) => {
-  return (req: AuthRequest, res: Response, next: NextFunction): void => {
+  return (req: Request, res: Response, next: NextFunction): void => {
     if (!req.user) {
       res.status(401).json({
         error: 'Unauthorized',
@@ -146,7 +146,7 @@ export const requireRole = (...allowedRoles: string[]) => {
  * Checks if user owns the resource or is an admin
  */
 export const requireOwnershipOrAdmin = (resourceUserIdField: string = 'userId') => {
-  return (req: AuthRequest, res: Response, next: NextFunction): void => {
+  return (req: Request, res: Response, next: NextFunction): void => {
     if (!req.user) {
       res.status(401).json({
         error: 'Unauthorized',
@@ -180,7 +180,7 @@ export const requireOwnershipOrAdmin = (resourceUserIdField: string = 'userId') 
  * Check if user is self or admin
  * Used for user profile operations
  */
-export const requireSelfOrAdmin = (req: AuthRequest, res: Response, next: NextFunction): void => {
+export const requireSelfOrAdmin = (req: Request, res: Response, next: NextFunction): void => {
   if (!req.user) {
     res.status(401).json({
       error: 'Unauthorized',

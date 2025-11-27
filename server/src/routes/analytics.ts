@@ -550,7 +550,7 @@ router.get('/export', authenticate, requireRole(['ADMIN']), async (req: Request,
         data = await prisma.asset.findMany({
           where: dateFilter,
           include: {
-            assigned_user: { select: { name: true } }
+            currentHolder: { select: { name: true } }
           }
         });
         break;
@@ -558,19 +558,20 @@ router.get('/export', authenticate, requireRole(['ADMIN']), async (req: Request,
         data = await prisma.ticket.findMany({
           where: dateFilter,
           include: {
-            created_by_user: { select: { name: true } },
-            assigned_user: { select: { name: true } }
+            createdBy: { select: { name: true } },
+            assignedTo: { select: { name: true } }
           }
         });
         break;
       case 'audit':
-        data = await prisma.auditLog.findMany({
-          where: dateFilter,
-          include: {
-            user: { select: { name: true } }
-          }
-        });
-        break;
+                  // AuditLog has userName and userEmail directly, no need for user include
+                  // data = await prisma.auditLog.findMany({
+                  //   where: dateFilter,
+                  //   include: {
+                  //     user: { select: { name: true } }
+                  //   }
+                  // });
+                  data = await prisma.auditLog.findMany({ where: dateFilter });        break;
       default:
         return res.status(400).json({ error: 'Invalid export type' });
     }

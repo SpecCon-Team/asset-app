@@ -1,6 +1,7 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma';
+import { Prisma } from '@prisma/client';
 import multer from 'multer';
 import { parse } from 'csv-parse/sync';
 import { authenticate, requireRole } from '../middleware/auth';
@@ -14,6 +15,14 @@ import { autoAssignmentEngine } from '../lib/autoAssignment';
 import { slaEngine } from '../lib/slaEngine';
 import { cacheMiddleware, invalidateCache } from '../middleware/cache';
 
+type TicketWithAllRelations = Prisma.TicketGetPayload<{
+  include: {
+    createdBy: { select: { id: true, email: true, name: true, role: true } };
+    assignedTo: { select: { id: true, email: true, name: true } };
+    asset: true;
+  };
+}>;
+
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -25,7 +34,7 @@ const createSchema = z.object({
   assetId: z.string().nullable().optional(),
 });
 
-router.get('/', authenticate, cacheMiddleware(20000), applyFieldVisibility('ticket'), async (req: Request, res) => {
+router.get('/', authenticate, cacheMiddleware(20000), applyFieldVisibility('ticket'), async (req: Request, res: Response) => {
   try {
     const { page = '1', limit = '100' } = req.query;
 
@@ -72,7 +81,7 @@ router.get('/', authenticate, cacheMiddleware(20000), applyFieldVisibility('tick
   }
 });
 
-router.get('/:id', authenticate, applyFieldVisibility('ticket'), async (req: Request, res) => {
+router.get('/:id', authenticate, applyFieldVisibility('ticket'), async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
@@ -106,7 +115,7 @@ router.get('/:id', authenticate, applyFieldVisibility('ticket'), async (req: Req
   }
 });
 
-router.post('/', authenticate, async (req: Request, res) => {
+router.post('/', authenticate, async (req: Request, res: Response) => {
   const parsed = createSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json(parsed.error.flatten());
 
@@ -117,12 +126,21 @@ router.post('/', authenticate, async (req: Request, res) => {
     const number = `TKT-${timestamp}-${randomSuffix}`;
 
     // Create the ticket
-    const ticket = await prisma.ticket.create({
-      data: { ...parsed.data, number },
+    const ticket: TicketWithAllRelations = await prisma.ticket.create({
+      data: {
+        number: number,
+        title: parsed.data.title,
+        description: parsed.data.description,
+        priority: parsed.data.priority,
+        createdById: parsed.data.createdById,
+        assetId: parsed.data.assetId,
+      },
       include: {
         createdBy: {
           select: { id: true, email: true, name: true, role: true },
         },
+        assignedTo: { select: { id: true, email: true, name: true } },
+        asset: true,
       },
     });
 
@@ -142,7 +160,7 @@ router.post('/', authenticate, async (req: Request, res) => {
         data: {
           type: 'ticket_status',
           title: 'New ticket created',
-          message: `${ticket.createdBy.name || ticket.createdBy.email} created a new ticket: "${ticket.title}"`,
+          message: `${ticket.createdBy.name || ticket.createdBy.email} created a new ticket: "${ticket.title}"`, 
           userId: admin.id,
           senderId: ticket.createdById,
           ticketId: ticket.id,
@@ -186,7 +204,7 @@ router.post('/', authenticate, async (req: Request, res) => {
   }
 });
 
-router.patch('/bulk', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: Request, res) => {
+router.patch('/bulk', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: Request, res: Response) => {
   const schema = z.object({
     ticketIds: z.array(z.string()),
     updates: z.object({
@@ -223,7 +241,7 @@ router.patch('/bulk', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (r
   }
 });
 
-router.patch('/:id', authenticate, async (req: Request, res) => {
+router.patch('/:id', authenticate, async (req: Request, res: Response) => {
   const parsed = createSchema.partial().extend({
     status: z.string().optional(),
     resolution: z.string().optional(),
@@ -276,10 +294,10 @@ router.patch('/:id', authenticate, async (req: Request, res) => {
     }
 
     // Update the ticket (use the actual database ID from oldTicket)
-    const ticket = await prisma.ticket.update({
+    const ticket: TicketWithAllRelations = await prisma.ticket.update({
       where: { id: oldTicket.id },
       data: parsed.data,
-      include: { createdBy: true, assignedTo: true },
+      include: { createdBy: true, assignedTo: true, asset: true },
     });
 
     // Send notification if status changed
@@ -288,7 +306,7 @@ router.patch('/:id', authenticate, async (req: Request, res) => {
       await createNotificationIfNotExists({
         type: 'ticket_status',
         title: 'Ticket status updated',
-        message: `Your ticket status has been changed from "${oldTicket.status}" to "${parsed.data.status}"`,
+        message: `Your ticket status has been changed from "${oldTicket.status}" to "${parsed.data.status}"`, 
         userId: ticket.createdById,
         senderId: ticket.assignedToId,
         ticketId: ticket.id,
@@ -347,7 +365,7 @@ Type *MENU* for more options.`,
           createNotificationIfNotExists({
             type: 'ticket_status',
             title: 'Ticket closed',
-            message: `${ticket.assignedTo?.name || 'A technician'} closed ticket: "${ticket.title}" (${ticket.number})`,
+            message: `${ticket.assignedTo?.name || 'A technician'} closed ticket: "${ticket.title}" (${ticket.number})`, 
             userId: admin.id,
             senderId: ticket.assignedToId,
             ticketId: ticket.id,
@@ -364,7 +382,7 @@ Type *MENU* for more options.`,
       await createNotificationIfNotExists({
         type: 'ticket_assigned',
         title: 'Ticket assigned',
-        message: `Your ticket has been assigned to ${ticket.assignedTo?.name || ticket.assignedTo?.email || 'a technician'}`,
+        message: `Your ticket has been assigned to ${ticket.assignedTo?.name || ticket.assignedTo?.email || 'a technician'}`, 
         userId: ticket.createdById,
         senderId: parsed.data.assignedToId,
         ticketId: ticket.id,
@@ -375,7 +393,7 @@ Type *MENU* for more options.`,
         await createNotificationIfNotExists({
           type: 'ticket_assigned',
           title: 'New ticket assigned to you',
-          message: `You have been assigned to ticket: ${ticket.title}`,
+          message: `You have been assigned to ticket: ${ticket.title}`, 
           userId: parsed.data.assignedToId,
           senderId: ticket.createdById,
           ticketId: ticket.id,
@@ -419,7 +437,8 @@ Type *MENU* for more options.`,
   }
 });
 
-router.delete('/bulk', authenticate, requireRole('ADMIN'), async (req: Request, res) => {
+// Bulk delete tickets (general - first instance)
+router.delete('/bulk', authenticate, requireRole('ADMIN'), async (req: Request, res: Response) => {
   const schema = z.object({
     ticketIds: z.array(z.string()),
   });
@@ -428,32 +447,64 @@ router.delete('/bulk', authenticate, requireRole('ADMIN'), async (req: Request, 
   if (!parsed.success) return res.status(400).json(parsed.error.flatten());
 
   try {
-    // Delete related notifications first to avoid foreign key constraint issues
-    await prisma.notification.deleteMany({
-      where: { ticketId: { in: parsed.data.ticketIds } },
+    const { ticketIds } = parsed.data;
+
+    // Get ticket details before deletion for audit log
+    const ticketsToDelete = await prisma.ticket.findMany({
+      where: { id: { in: ticketIds } },
+      select: {
+        id: true,
+        number: true,
+        title: true,
+        createdById: true,
+      },
     });
 
-    // Delete related comments
+    // Delete related records first (due to foreign key constraints)
+    await prisma.notification.deleteMany({
+      where: { ticketId: { in: ticketIds } },
+    });
+
     await prisma.comment.deleteMany({
-      where: { ticketId: { in: parsed.data.ticketIds } },
+      where: { ticketId: { in: ticketIds } },
+    });
+
+    await prisma.attachment.deleteMany({
+      where: { ticketId: { in: ticketIds } },
+    });
+
+    await prisma.ticketSLA.deleteMany({
+      where: { ticketId: { in: ticketIds } },
+    });
+
+    await prisma.workflowExecution.deleteMany({
+      where: { entityType: 'ticket', entityId: { in: ticketIds } },
     });
 
     // Delete the tickets
-    const result = await prisma.ticket.deleteMany({
-      where: { id: { in: parsed.data.ticketIds } },
+    await prisma.ticket.deleteMany({
+      where: { id: { in: ticketIds } },
     });
 
+    // Log audit trail
+    await logAudit(req, 'DELETE', 'Ticket', 'BULK', undefined, {
+      action: 'bulk_delete',
+      count: ticketIds.length,
+      tickets: ticketsToDelete,
+    });
+
+    console.log(`✅ Bulk deleted ${ticketIds.length} tickets`);
     res.json({
-      message: `Successfully deleted ${result.count} ticket(s)`,
-      count: result.count
+      message: `Successfully deleted ${ticketIds.length} tickets`,
+      count: ticketIds.length,
     });
   } catch (error) {
-    console.error('Failed to delete tickets:', error);
+    console.error('Bulk delete error:', error);
     res.status(500).json({ message: 'Failed to delete tickets' });
   }
 });
 
-router.delete('/:id', authenticate, requireRole('ADMIN'), async (req: Request, res) => {
+router.delete('/:id', authenticate, requireRole('ADMIN'), async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
@@ -498,7 +549,7 @@ router.delete('/:id', authenticate, requireRole('ADMIN'), async (req: Request, r
 });
 
 // POST /api/tickets/import-csv - Import tickets from CSV (ADMIN or TECHNICIAN only)
-router.post('/import-csv', authenticate, requireRole('ADMIN', 'TECHNICIAN'), upload.single('file'), async (req: Request, res) => {
+router.post('/import-csv', authenticate, requireRole('ADMIN', 'TECHNICIAN'), upload.single('file'), async (req: Request, res: Response) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
@@ -585,7 +636,7 @@ router.post('/import-csv', authenticate, requireRole('ADMIN', 'TECHNICIAN'), upl
 });
 
 // Bulk close tickets
-router.post('/bulk/close', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: Request, res) => {
+router.post('/bulk/close', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: Request, res: Response) => {
   const schema = z.object({
     ticketIds: z.array(z.string()),
     resolution: z.string().optional(),
@@ -607,11 +658,12 @@ router.post('/bulk/close', authenticate, requireRole('ADMIN', 'TECHNICIAN'), asy
     });
 
     // Get updated tickets for response
-    const closedTickets = await prisma.ticket.findMany({
+    const closedTickets: TicketWithAllRelations[] = await prisma.ticket.findMany({
       where: { id: { in: ticketIds } },
       include: {
         createdBy: { select: { id: true, name: true, email: true } },
         assignedTo: { select: { id: true, name: true, email: true } },
+        asset: true,
       },
     });
 
@@ -620,7 +672,7 @@ router.post('/bulk/close', authenticate, requireRole('ADMIN', 'TECHNICIAN'), asy
       createNotificationIfNotExists({
         type: 'ticket_status',
         title: 'Ticket closed',
-        message: `Your ticket "${ticket.title}" has been closed`,
+        message: `Your ticket "${ticket.title}" has been closed`, 
         userId: ticket.createdById,
         senderId: req.user!.id,
         ticketId: ticket.id,
@@ -649,7 +701,7 @@ router.post('/bulk/close', authenticate, requireRole('ADMIN', 'TECHNICIAN'), asy
 });
 
 // Bulk export tickets
-router.post('/bulk/export', authenticate, async (req: Request, res) => {
+router.post('/bulk/export', authenticate, async (req: Request, res: Response) => {
   const schema = z.object({
     ticketIds: z.array(z.string()),
     format: z.enum(['json', 'csv']).default('json'),
@@ -667,12 +719,12 @@ router.post('/bulk/export', authenticate, async (req: Request, res) => {
       whereClause.createdById = req.user?.id;
     }
 
-    const tickets = await prisma.ticket.findMany({
+    const tickets: TicketWithAllRelations[] = await prisma.ticket.findMany({
       where: whereClause,
       include: {
         createdBy: { select: { id: true, name: true, email: true } },
         assignedTo: { select: { id: true, name: true, email: true } },
-        asset: { select: { id: true, name: true, serialNumber: true } },
+        asset: { select: { id: true, name: true, serial_number: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -727,7 +779,7 @@ router.post('/bulk/export', authenticate, async (req: Request, res) => {
 });
 
 // Bulk delete tickets (admin only)
-router.delete('/bulk', authenticate, requireRole('ADMIN'), async (req: Request, res) => {
+router.delete('/bulk', authenticate, requireRole('ADMIN'), async (req: Request, res: Response) => {
   const schema = z.object({
     ticketIds: z.array(z.string()),
   });
@@ -766,8 +818,8 @@ router.delete('/bulk', authenticate, requireRole('ADMIN'), async (req: Request, 
       where: { ticketId: { in: ticketIds } },
     });
 
-    await prisma.workflowHistory.deleteMany({
-      where: { ticketId: { in: ticketIds } },
+    await prisma.workflowExecution.deleteMany({
+      where: { entityType: 'ticket', entityId: { in: ticketIds } },
     });
 
     // Delete the tickets

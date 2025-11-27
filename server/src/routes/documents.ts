@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { authenticate, requireRole } from '../middleware/auth';
 import { logAudit } from '../lib/auditLog';
@@ -6,6 +6,49 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs/promises';
 import { v4 as uuidv4 } from 'uuid';
+
+interface DocumentUploadBody {
+  title: string;
+  description?: string;
+  categoryId?: string;
+  tags?: string; // JSON string
+  metadata?: string; // JSON string
+}
+
+interface DocumentUpdateBody {
+  title?: string;
+  description?: string;
+  categoryId?: string;
+  tags?: string[]; // Assuming it's parsed as string[]
+  metadata?: object; // Assuming it's parsed as object
+  status?: string;
+}
+
+interface DocumentVersionBody {
+  versionLabel?: string;
+}
+
+interface DocumentCategoryBody {
+  name: string;
+  description?: string;
+  icon?: string;
+  color?: string;
+  parentCategoryId?: string;
+  sortOrder?: number;
+}
+
+interface DocumentShareBody {
+  sharedWithUserId?: string;
+  sharedWithRole?: string;
+  permissions?: string[];
+  expiresAt?: string; // ISO date string
+  message?: string;
+}
+
+interface DocumentCommentBody {
+  comment: string;
+  parentCommentId?: string;
+}
 
 // Helper function to convert BigInt values to numbers recursively
 function convertBigIntsToNumbers(obj: any): any {
@@ -80,7 +123,7 @@ const upload = multer({
 // =====================================================
 
 // GET /api/documents - List all documents
-router.get('/', authenticate, async (req: Request, res) => {
+router.get('/', authenticate, async (req: Request, res: Response) => {
   try {
     const { categoryId, status = 'active', search, page = '1', limit = '50' } = req.query;
 
@@ -150,7 +193,7 @@ router.get('/', authenticate, async (req: Request, res) => {
 });
 
 // GET /api/documents/stats - Get document statistics
-router.get('/stats', authenticate, async (req: Request, res) => {
+router.get('/stats', authenticate, async (req: Request, res: Response) => {
   try {
     const [
       totalDocs,
@@ -218,7 +261,7 @@ router.get('/stats', authenticate, async (req: Request, res) => {
 });
 
 // GET /api/documents/recent - Get recent documents
-router.get('/recent', authenticate, async (req: Request, res) => {
+router.get('/recent', authenticate, async (req: Request, res: Response) => {
   try {
     const { limit = '10' } = req.query;
 
@@ -254,7 +297,7 @@ router.get('/recent', authenticate, async (req: Request, res) => {
 });
 
 // GET /api/documents/:id - Get single document
-router.get('/:id', authenticate, async (req: Request, res) => {
+router.get('/:id', authenticate, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
@@ -338,7 +381,7 @@ router.get('/:id', authenticate, async (req: Request, res) => {
 });
 
 // POST /api/documents/upload - Upload new document
-router.post('/upload', authenticate, upload.single('file'), async (req: Request, res) => {
+router.post('/upload', authenticate, upload.single('file'), async (req: Request<{}, {}, DocumentUploadBody>, res: Response) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
@@ -407,7 +450,7 @@ router.post('/upload', authenticate, upload.single('file'), async (req: Request,
 });
 
 // PUT /api/documents/:id - Update document metadata
-router.put('/:id', authenticate, async (req: Request, res) => {
+router.put('/:id', authenticate, async (req: Request<{ id: string }, {}, DocumentUpdateBody>, res: Response) => {
   try {
     const { id } = req.params;
     const { title, description, categoryId, tags, metadata, status } = req.body;
@@ -463,7 +506,7 @@ router.put('/:id', authenticate, async (req: Request, res) => {
 });
 
 // DELETE /api/documents/:id - Delete document
-router.delete('/:id', authenticate, async (req: Request, res) => {
+router.delete('/:id', authenticate, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
@@ -499,7 +542,7 @@ router.delete('/:id', authenticate, async (req: Request, res) => {
 });
 
 // GET /api/documents/:id/download - Download document
-router.get('/:id/download', authenticate, async (req: Request, res) => {
+router.get('/:id/download', authenticate, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
@@ -533,7 +576,7 @@ router.get('/:id/download', authenticate, async (req: Request, res) => {
 });
 
 // POST /api/documents/:id/version - Upload new version
-router.post('/:id/version', authenticate, upload.single('file'), async (req: Request, res) => {
+router.post('/:id/version', authenticate, upload.single('file'), async (req: Request<{ id: string }, {}, DocumentVersionBody>, res: Response) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
@@ -620,7 +663,7 @@ router.post('/:id/version', authenticate, upload.single('file'), async (req: Req
 });
 
 // GET /api/documents/:id/versions - Get version history
-router.get('/:id/versions', authenticate, async (req: Request, res) => {
+router.get('/:id/versions', authenticate, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
@@ -660,7 +703,7 @@ router.get('/:id/versions', authenticate, async (req: Request, res) => {
 // =====================================================
 
 // GET /api/documents/categories/all - List all categories
-router.get('/categories/all', authenticate, async (req: Request, res) => {
+router.get('/categories/all', authenticate, async (req: Request, res: Response) => {
   try {
     const categories = await prisma.documentCategory.findMany({
       where: { isActive: true },
@@ -678,7 +721,7 @@ router.get('/categories/all', authenticate, async (req: Request, res) => {
 });
 
 // POST /api/documents/categories - Create category
-router.post('/categories', authenticate, requireRole(['ADMIN']), async (req: Request, res) => {
+router.post('/categories', authenticate, requireRole(['ADMIN']), async (req: Request<{}, {}, DocumentCategoryBody>, res: Response) => {
   try {
     const { name, description, icon, color, parentCategoryId, sortOrder } = req.body;
 
@@ -717,7 +760,7 @@ router.post('/categories', authenticate, requireRole(['ADMIN']), async (req: Req
 // =====================================================
 
 // POST /api/documents/:id/share - Share document
-router.post('/:id/share', authenticate, async (req: Request, res) => {
+router.post('/:id/share', authenticate, async (req: Request<{ id: string }, {}, DocumentShareBody>, res: Response) => {
   try {
     const { id } = req.params;
     const { sharedWithUserId, sharedWithRole, permissions, expiresAt, message } = req.body;
@@ -770,7 +813,7 @@ router.post('/:id/share', authenticate, async (req: Request, res) => {
 // =====================================================
 
 // POST /api/documents/:id/comments - Add comment
-router.post('/:id/comments', authenticate, async (req: Request, res) => {
+router.post('/:id/comments', authenticate, async (req: Request<{ id: string }, {}, DocumentCommentBody>, res: Response) => {
   try {
     const { id } = req.params;
     const { comment, parentCommentId } = req.body;

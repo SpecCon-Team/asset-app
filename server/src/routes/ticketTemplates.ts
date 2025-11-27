@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma';
 import { authenticate, requireRole } from '../middleware/auth';
@@ -20,7 +20,7 @@ const templateSchema = z.object({
 });
 
 // Get all templates
-router.get('/', authenticate, async (req: Request, res) => {
+router.get('/', authenticate, async (req: Request, res: Response) => {
   try {
     const { category, isActive } = req.query;
 
@@ -57,7 +57,7 @@ router.get('/', authenticate, async (req: Request, res) => {
 });
 
 // Get single template
-router.get('/:id', authenticate, async (req: Request, res) => {
+router.get('/:id', authenticate, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
@@ -85,7 +85,7 @@ router.get('/:id', authenticate, async (req: Request, res) => {
 });
 
 // Create template (Admin/Technician only)
-router.post('/', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: Request, res) => {
+router.post('/', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: Request, res: Response) => {
   const parsed = templateSchema.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json(parsed.error.flatten());
@@ -94,7 +94,14 @@ router.post('/', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: R
   try {
     const template = await prisma.ticketTemplate.create({
       data: {
-        ...parsed.data,
+        name: parsed.data.name!,
+        title: parsed.data.title!,
+        ticketDescription: parsed.data.ticketDescription!,
+        priority: parsed.data.priority,
+        category: parsed.data.category,
+        tags: parsed.data.tags,
+        assignedToId: parsed.data.assignedToId,
+        isActive: parsed.data.isActive,
         createdById: req.user!.id,
       },
       include: {
@@ -122,7 +129,7 @@ router.post('/', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: R
 });
 
 // Update template (Admin/Technician only)
-router.patch('/:id', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: Request, res) => {
+router.patch('/:id', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: Request, res: Response) => {
   const parsed = templateSchema.partial().safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json(parsed.error.flatten());
@@ -176,7 +183,7 @@ router.patch('/:id', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (re
 });
 
 // Delete template (Admin/Technician only)
-router.delete('/:id', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: Request, res) => {
+router.delete('/:id', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
@@ -215,7 +222,7 @@ router.delete('/:id', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (r
 });
 
 // Archive/restore template
-router.patch('/:id/archive', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: Request, res) => {
+router.patch('/:id/archive', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: Request<{}, {}, { isActive: boolean }>, res: Response) => {
   try {
     const { id } = req.params;
     const { isActive } = req.body;
@@ -245,7 +252,7 @@ router.patch('/:id/archive', authenticate, requireRole('ADMIN', 'TECHNICIAN'), a
 });
 
 // Get template categories (for filtering)
-router.get('/meta/categories', authenticate, async (req: Request, res) => {
+router.get('/meta/categories', authenticate, async (req: Request, res: Response) => {
   try {
     const templates = await prisma.ticketTemplate.findMany({
       where: { isActive: true },
@@ -266,7 +273,7 @@ router.get('/meta/categories', authenticate, async (req: Request, res) => {
 });
 
 // Use template - create ticket from template
-router.post('/:id/use', authenticate, async (req: Request, res) => {
+router.post('/:id/use', authenticate, async (req: Request<{}, {}, { assetId?: string }>, res: Response) => {
   try {
     const { id } = req.params;
     const { assetId } = req.body;

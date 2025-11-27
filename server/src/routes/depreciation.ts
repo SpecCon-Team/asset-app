@@ -1,7 +1,53 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { authenticate, requireRole } from '../middleware/auth';
 import { logAudit } from '../lib/auditLog';
+
+interface CreateDepreciationRecordBody {
+  assetId: string;
+  depreciationMethod: string;
+  purchasePrice: number;
+  salvageValue?: number;
+  usefulLifeYears: number;
+  usefulLifeMonths?: number;
+  purchaseDate: string; // ISO date string
+  depreciationStartDate: string; // ISO date string
+  annualDepreciationRate?: number;
+  notes?: string;
+}
+
+interface UpdateDepreciationRecordBody {
+  salvageValue?: number;
+  notes?: string;
+  isActive?: boolean;
+}
+
+interface PostDepreciationPeriodBody {
+  periodId: string;
+}
+
+interface CreateAssetValuationBody {
+  assetId: string;
+  valuationDate: string; // ISO date string
+  valuationType: string;
+  bookValue: number;
+  marketValue?: number;
+  replacementValue?: number;
+  condition?: string;
+  appraisedBy?: string;
+  notes?: string;
+}
+
+interface CreateAssetDisposalBody {
+  assetId: string;
+  disposalDate: string; // ISO date string
+  disposalMethod: string;
+  reason: string;
+  bookValueAtDisposal: number;
+  disposalProceeds?: number;
+  disposedToParty?: string;
+  notes?: string;
+}
 
 // Helper function to convert BigInt values to numbers recursively
 function convertBigIntsToNumbers(obj: any): any {
@@ -33,12 +79,12 @@ const router = Router();
 // =====================================================
 
 // GET /api/depreciation - List all depreciation records
-router.get('/', authenticate, async (req: Request, res) => {
+router.get('/', authenticate, async (req: Request, res: Response) => {
   try {
     const { status, method, page = '1', limit = '50' } = req.query;
 
-    const pageNum = parseInt(page);
-    const limitNum = parseInt(limit);
+    const pageNum = parseInt(page as string);
+    const limitNum = parseInt(limit as string);
     const skip = (pageNum - 1) * limitNum;
 
     const where: any = {};
@@ -99,7 +145,7 @@ router.get('/', authenticate, async (req: Request, res) => {
 });
 
 // GET /api/depreciation/stats - Get depreciation statistics
-router.get('/stats', authenticate, async (req: Request, res) => {
+router.get('/stats', authenticate, async (req: Request, res: Response) => {
   try {
     const [
       totalAssets,
@@ -154,7 +200,7 @@ router.get('/stats', authenticate, async (req: Request, res) => {
 });
 
 // GET /api/depreciation/due - Get depreciation due this month
-router.get('/due', authenticate, async (req: Request, res) => {
+router.get('/due', authenticate, async (req: Request, res: Response) => {
   try {
     const dueItems = await prisma.$queryRaw`
       SELECT * FROM "DepreciationDueThisMonth"
@@ -171,7 +217,7 @@ router.get('/due', authenticate, async (req: Request, res) => {
 });
 
 // GET /api/depreciation/:id - Get single depreciation record
-router.get('/:id', authenticate, async (req: Request, res) => {
+router.get('/:id', authenticate, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
@@ -209,7 +255,7 @@ router.get('/:id', authenticate, async (req: Request, res) => {
 });
 
 // POST /api/depreciation - Create depreciation record
-router.post('/', authenticate, requireRole(['ADMIN']), async (req: Request, res) => {
+router.post('/', authenticate, requireRole(['ADMIN']), async (req: Request<{}, {}, CreateDepreciationRecordBody>, res: Response) => {
   try {
     const {
       assetId,
@@ -314,7 +360,7 @@ router.post('/', authenticate, requireRole(['ADMIN']), async (req: Request, res)
 });
 
 // PUT /api/depreciation/:id - Update depreciation record
-router.put('/:id', authenticate, requireRole(['ADMIN']), async (req: Request, res) => {
+router.put('/:id', authenticate, requireRole(['ADMIN']), async (req: Request<{ id: string }, {}, UpdateDepreciationRecordBody>, res: Response) => {
   try {
     const { id } = req.params;
     const { salvageValue, notes, isActive } = req.body;
@@ -349,7 +395,7 @@ router.put('/:id', authenticate, requireRole(['ADMIN']), async (req: Request, re
 });
 
 // POST /api/depreciation/:id/post - Post depreciation for period
-router.post('/:id/post', authenticate, requireRole(['ADMIN']), async (req: Request, res) => {
+router.post('/:id/post', authenticate, requireRole(['ADMIN']), async (req: Request<{ id: string }, {}, PostDepreciationPeriodBody>, res: Response) => {
   try {
     const { id } = req.params;
     const { periodId } = req.body;
@@ -418,7 +464,7 @@ router.post('/:id/post', authenticate, requireRole(['ADMIN']), async (req: Reque
 // =====================================================
 
 // POST /api/depreciation/valuations - Create valuation
-router.post('/valuations', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: Request, res) => {
+router.post('/valuations', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: Request<{}, {}, CreateAssetValuationBody>, res: Response) => {
   try {
     const {
       assetId,
@@ -470,7 +516,7 @@ router.post('/valuations', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), a
 });
 
 // GET /api/depreciation/valuations/:assetId - Get valuations for asset
-router.get('/valuations/:assetId', authenticate, async (req: Request, res) => {
+router.get('/valuations/:assetId', authenticate, async (req: Request, res: Response) => {
   try {
     const { assetId } = req.params;
 
@@ -505,7 +551,7 @@ router.get('/valuations/:assetId', authenticate, async (req: Request, res) => {
 // =====================================================
 
 // POST /api/depreciation/disposals - Create disposal record
-router.post('/disposals', authenticate, requireRole(['ADMIN']), async (req: Request, res) => {
+router.post('/disposals', authenticate, requireRole(['ADMIN']), async (req: Request<{}, {}, CreateAssetDisposalBody>, res: Response) => {
   try {
     const {
       assetId,
@@ -566,7 +612,7 @@ router.post('/disposals', authenticate, requireRole(['ADMIN']), async (req: Requ
 });
 
 // GET /api/depreciation/disposals - List disposals
-router.get('/disposals', authenticate, async (req: Request, res) => {
+router.get('/disposals', authenticate, async (req: Request, res: Response) => {
   try {
     const disposals = await prisma.assetDisposal.findMany({
       include: {

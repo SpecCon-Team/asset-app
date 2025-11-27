@@ -1,7 +1,72 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { authenticate, requireRole } from '../middleware/auth';
 import { logAudit } from '../lib/auditLog';
+
+interface CreateInventoryItemBody {
+  itemCode: string;
+  name: string;
+  description?: string;
+  category: string;
+  subcategory?: string;
+  unit: string;
+  unitPrice?: number;
+  currentStock?: number;
+  minimumStock?: number;
+  maximumStock?: number;
+  reorderPoint?: number;
+  reorderQuantity?: number;
+  location?: string;
+  barcode?: string;
+  manufacturer?: string;
+  tags?: string[];
+  imageUrl?: string;
+}
+
+interface UpdateInventoryItemBody {
+  name?: string;
+  description?: string;
+  category?: string;
+  subcategory?: string;
+  unit?: string;
+  unitPrice?: number;
+  minimumStock?: number;
+  maximumStock?: number;
+  reorderPoint?: number;
+  reorderQuantity?: number;
+  location?: string;
+  manufacturer?: string;
+  tags?: string[];
+  imageUrl?: string;
+  isActive?: boolean;
+}
+
+interface CreateStockTransactionBody {
+  transactionType: string;
+  quantity: number;
+  unitPrice?: number;
+  reference?: string;
+  notes?: string;
+  supplierId?: string;
+  issuedToId?: string;
+  issuedToAssetId?: string;
+}
+
+interface CreateSupplierBody {
+  supplierCode: string;
+  name: string;
+  contactPerson?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  country?: string;
+  notes?: string;
+}
+
+interface AcknowledgeAlertBody {
+  id: string; // The alert ID
+}
 
 // Helper function to convert BigInt values to numbers recursively
 function convertBigIntsToNumbers(obj: any): any {
@@ -33,7 +98,7 @@ const router = Router();
 // =====================================================
 
 // GET /api/inventory - List all inventory items
-router.get('/', authenticate, async (req: Request, res) => {
+router.get('/', authenticate, async (req: Request, res: Response) => {
   try {
     const {
       search,
@@ -45,8 +110,8 @@ router.get('/', authenticate, async (req: Request, res) => {
       sortOrder = 'asc'
     } = req.query;
 
-    const pageNum = parseInt(page);
-    const limitNum = parseInt(limit);
+    const pageNum = parseInt(page as string);
+    const limitNum = parseInt(limit as string);
     const skip = (pageNum - 1) * limitNum;
 
     const where: any = { isActive: true };
@@ -82,7 +147,7 @@ router.get('/', authenticate, async (req: Request, res) => {
           }
         },
         orderBy: {
-          [sortBy]: sortOrder
+          [sortBy as string]: sortOrder
         },
         skip,
         take: limitNum
@@ -118,7 +183,7 @@ router.get('/', authenticate, async (req: Request, res) => {
 });
 
 // GET /api/inventory/low-stock - Get low stock items
-router.get('/low-stock', authenticate, async (req: Request, res) => {
+router.get('/low-stock', authenticate, async (req: Request, res: Response) => {
   try {
     const items = await prisma.$queryRaw`
       SELECT * FROM "LowStockItems"
@@ -135,7 +200,7 @@ router.get('/low-stock', authenticate, async (req: Request, res) => {
 });
 
 // GET /api/inventory/stats - Get inventory statistics
-router.get('/stats', authenticate, async (req: Request, res) => {
+router.get('/stats', authenticate, async (req: Request, res: Response) => {
   try {
     const [
       totalItems,
@@ -203,7 +268,7 @@ router.get('/stats', authenticate, async (req: Request, res) => {
 });
 
 // GET /api/inventory/:id - Get single inventory item
-router.get('/:id', authenticate, async (req: Request, res) => {
+router.get('/:id', authenticate, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
@@ -265,7 +330,7 @@ router.get('/:id', authenticate, async (req: Request, res) => {
 });
 
 // POST /api/inventory - Create new inventory item
-router.post('/', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: Request, res) => {
+router.post('/', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: Request<{}, {}, CreateInventoryItemBody>, res: Response) => {
   try {
     const {
       itemCode,
@@ -356,7 +421,7 @@ router.post('/', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req:
 });
 
 // PUT /api/inventory/:id - Update inventory item
-router.put('/:id', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: Request, res) => {
+router.put('/:id', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: Request<{ id: string }, {}, UpdateInventoryItemBody>, res: Response) => {
   try {
     const { id } = req.params;
     const {
@@ -425,7 +490,7 @@ router.put('/:id', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (re
 });
 
 // DELETE /api/inventory/:id - Delete inventory item
-router.delete('/:id', authenticate, requireRole(['ADMIN']), async (req: Request, res) => {
+router.delete('/:id', authenticate, requireRole(['ADMIN']), async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
@@ -451,7 +516,7 @@ router.delete('/:id', authenticate, requireRole(['ADMIN']), async (req: Request,
 // =====================================================
 
 // POST /api/inventory/:id/transaction - Create stock transaction
-router.post('/:id/transaction', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: Request, res) => {
+router.post('/:id/transaction', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: Request<{ id: string }, {}, CreateStockTransactionBody>, res: Response) => {
   try {
     const { id } = req.params;
     const {
@@ -544,7 +609,7 @@ router.post('/:id/transaction', authenticate, requireRole(['ADMIN', 'TECHNICIAN'
 });
 
 // GET /api/inventory/:id/transactions - Get transactions for item
-router.get('/:id/transactions', authenticate, async (req: Request, res) => {
+router.get('/:id/transactions', authenticate, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { limit = '100' } = req.query;
@@ -576,7 +641,7 @@ router.get('/:id/transactions', authenticate, async (req: Request, res) => {
       orderBy: {
         transactionDate: 'desc'
       },
-      take: parseInt(limit)
+      take: parseInt(limit as string)
     });
 
     res.json({ transactions });
@@ -594,7 +659,7 @@ router.get('/:id/transactions', authenticate, async (req: Request, res) => {
 // =====================================================
 
 // GET /api/inventory/suppliers - List all suppliers
-router.get('/suppliers/list', authenticate, async (req: Request, res) => {
+router.get('/suppliers/list', authenticate, async (req: Request, res: Response) => {
   try {
     const { search, active } = req.query;
 
@@ -643,7 +708,7 @@ router.get('/suppliers/list', authenticate, async (req: Request, res) => {
 });
 
 // POST /api/inventory/suppliers - Create supplier
-router.post('/suppliers/create', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: Request, res) => {
+router.post('/suppliers/create', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: Request<{}, {}, CreateSupplierBody>, res: Response) => {
   try {
     const {
       supplierCode,
@@ -707,7 +772,7 @@ router.post('/suppliers/create', authenticate, requireRole(['ADMIN', 'TECHNICIAN
 // =====================================================
 
 // GET /api/inventory/alerts - Get stock alerts
-router.get('/alerts/list', authenticate, async (req: Request, res) => {
+router.get('/alerts/list', authenticate, async (req: Request, res: Response) => {
   try {
     const { resolved } = req.query;
 
@@ -754,7 +819,7 @@ router.get('/alerts/list', authenticate, async (req: Request, res) => {
 });
 
 // POST /api/inventory/alerts/:id/acknowledge - Acknowledge alert
-router.post('/alerts/:id/acknowledge', authenticate, async (req: Request, res) => {
+router.post('/alerts/:id/acknowledge', authenticate, async (req: Request<{ id: string }, {}, AcknowledgeAlertBody>, res: Response) => {
   try {
     const { id } = req.params;
 

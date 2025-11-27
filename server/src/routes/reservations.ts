@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authenticate } from '../middleware/auth';
 
@@ -53,7 +53,15 @@ router.get('/', authenticate, async (req: Request, res) => {
 });
 
 // Create new reservation
-router.post('/', authenticate, async (req: Request, res) => {
+interface CreateReservationRequestBody {
+  assetId: string;
+  reservationStart: string;
+  reservationEnd: string;
+  purpose: string;
+  notes?: string;
+}
+
+router.post('/', authenticate, async (req: Request<Record<string, never>, Record<string, never>, CreateReservationRequestBody>, res) => {
   try {
     const { assetId, reservationStart, reservationEnd, purpose, notes } = req.body;
 
@@ -109,7 +117,12 @@ router.post('/', authenticate, async (req: Request, res) => {
 });
 
 // Update reservation status (approve/reject)
-router.patch('/:id/status', authenticate, async (req: Request, res) => {
+interface UpdateReservationStatusRequestBody {
+  status: 'pending' | 'approved' | 'rejected' | 'cancelled';
+  rejectedReason?: string;
+}
+
+router.patch('/:id/status', authenticate, async (req: Request<Record<string, never>, Record<string, never>, UpdateReservationStatusRequestBody>, res) => {
   try {
     const { id } = req.params;
     const { status, rejectedReason } = req.body;

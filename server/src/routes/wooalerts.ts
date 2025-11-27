@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { whatsappService } from '../lib/whatsapp';
 import bcrypt from 'bcryptjs';
@@ -19,7 +19,7 @@ const router = express.Router();
  *   "ticket": "My laptop is not working properly"
  * }
  */
-router.post('/wooalerts-webhook', async (req, res) => {
+router.post('/wooalerts-webhook', async (req: Request, res: Response) => {
   try {
     console.log('📩 Received WooAlerts webhook:', JSON.stringify(req.body, null, 2));
 
@@ -248,7 +248,7 @@ function parseTicketDescription(description: string): {
  * Test endpoint to verify webhook is accessible
  * GET /api/wooalerts-webhook/test
  */
-router.get('/wooalerts-webhook/test', (req, res) => {
+router.get('/wooalerts-webhook/test', (req: Request, res: Response) => {
   res.json({
     success: true,
     message: 'WooAlerts webhook endpoint is accessible',

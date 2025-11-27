@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma';
 import multer from 'multer';
@@ -8,6 +8,61 @@ import { applyFieldVisibility } from '../middleware/fieldVisibility';
 import { validateFieldUpdates, Role } from '../lib/permissions';
 import { logAudit } from '../lib/auditLog';
 import { cacheMiddleware, invalidateCache } from '../middleware/cache';
+
+interface CreateAssetBody {
+  asset_code?: string;
+  name: string;
+  serial_number?: string | null;
+  remote_id?: string | null;
+  asset_type?: string | null;
+  condition?: string | null;
+  status?: string;
+  assigned_to?: string | null;
+  scanned_by?: string | null;
+  scan_datetime?: string | null;
+  description?: string | null;
+  ownership?: string | null;
+  office_location?: string | null;
+  extension?: string | null;
+  deskphones?: string | null;
+  mouse?: string | null;
+  keyboard?: string | null;
+  department?: string | null;
+  notes?: string | null;
+  ownerId?: string | null;
+}
+
+interface UpdateAssetBody {
+  asset_code?: string;
+  name?: string;
+  serial_number?: string | null;
+  remote_id?: string | null;
+  asset_type?: string | null;
+  condition?: string | null;
+  status?: string;
+  assigned_to?: string | null;
+  scanned_by?: string | null;
+  scan_datetime?: string | null;
+  description?: string | null;
+  ownership?: string | null;
+  office_location?: string | null;
+  extension?: string | null;
+  deskphones?: string | null;
+  mouse?: string | null;
+  keyboard?: string | null;
+  department?: string | null;
+  notes?: string | null;
+  ownerId?: string | null;
+}
+
+interface ImportCsvBody {
+  // Multer handles the file, other body parts go here if any
+}
+
+interface BulkCreateAssetsBody {
+  // This expects an array of assets to be created
+  // For simplicity, let's assume it's an array of CreateAssetBody
+}
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -61,7 +116,7 @@ const createSchema = z.object({
 const updateSchema = createSchema.partial();
 
 // GET /api/assets - List all assets
-router.get('/', authenticate, cacheMiddleware(30000), applyFieldVisibility('asset'), async (req: Request, res) => {
+router.get('/', authenticate, cacheMiddleware(30000), applyFieldVisibility('asset'), async (req: Request, res: Response) => {
   try {
     console.log('Assets GET request received');
     const search = (req.query.search as string) || undefined;
@@ -129,7 +184,7 @@ router.get('/', authenticate, cacheMiddleware(30000), applyFieldVisibility('asse
 });
 
 // GET /api/assets/:id - Get single asset
-router.get('/:id', authenticate, applyFieldVisibility('asset'), async (req: Request, res) => {
+router.get('/:id', authenticate, applyFieldVisibility('asset'), async (req: Request, res: Response) => {
   try {
     const asset = await prisma.asset.findUnique({
       where: { id: req.params.id },
@@ -155,7 +210,7 @@ router.get('/:id', authenticate, applyFieldVisibility('asset'), async (req: Requ
 });
 
 // POST /api/assets - Create new asset (ADMIN or TECHNICIAN only)
-router.post('/', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: Request, res) => {
+router.post('/', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: Request<{}, {}, CreateAssetBody>, res: Response) => {
   try {
     console.log('POST /api/assets - Request body:', req.body);
 
@@ -196,7 +251,7 @@ router.post('/', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: R
 });
 
 // PUT /api/assets/:id - Update asset (ADMIN or TECHNICIAN only)
-router.put('/:id', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: Request, res) => {
+router.put('/:id', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: Request<{ id: string }, {}, UpdateAssetBody>, res: Response) => {
   try {
     console.log('PUT /api/assets/:id - User:', req.user?.email, 'Role:', req.user?.role);
     console.log('PUT /api/assets/:id - Request body:', req.body);
@@ -252,7 +307,7 @@ router.put('/:id', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req:
 });
 
 // DELETE /api/assets/:id - Delete asset (ADMIN only)
-router.delete('/:id', authenticate, requireRole('ADMIN'), async (req: Request, res) => {
+router.delete('/:id', authenticate, requireRole('ADMIN'), async (req: Request, res: Response) => {
   try {
     // Get asset data before deletion for audit trail
     const asset = await prisma.asset.findUnique({
@@ -281,7 +336,7 @@ router.delete('/:id', authenticate, requireRole('ADMIN'), async (req: Request, r
 
 // POST /api/assets/bulk - Bulk create assets (for CSV import)
 // POST /api/assets/import-csv - Import assets from CSV (ADMIN or TECHNICIAN only)
-router.post('/import-csv', authenticate, requireRole('ADMIN', 'TECHNICIAN'), upload.single('file'), async (req: Request, res) => {
+router.post('/import-csv', authenticate, requireRole('ADMIN', 'TECHNICIAN'), upload.single('file'), async (req: Request<{}, {}, ImportCsvBody>, res: Response) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
@@ -356,7 +411,7 @@ router.post('/import-csv', authenticate, requireRole('ADMIN', 'TECHNICIAN'), upl
   }
 });
 
-router.post('/bulk', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: Request, res) => {
+router.post('/bulk', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: Request<{}, {}, CreateAssetBody[]>, res: Response) => {
   try {
     console.log('POST /api/assets/bulk - Request body:', req.body);
 

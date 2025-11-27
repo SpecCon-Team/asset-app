@@ -1,7 +1,40 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authenticate, requireRole } from '../middleware/auth.js';
 import { logAudit } from '../lib/auditLog.js';
+
+interface CreateMaintenanceScheduleBody {
+  assetId: string;
+  title: string;
+  description?: string;
+  frequency: string;
+  nextDueDate: string; // ISO date string
+  priority?: string;
+  estimatedDuration?: number;
+  cost?: number;
+  assignedToId?: string;
+}
+
+interface UpdateMaintenanceScheduleBody {
+  title?: string;
+  description?: string;
+  frequency?: string;
+  nextDueDate?: string; // ISO date string
+  priority?: string;
+  estimatedDuration?: number;
+  cost?: number;
+  assignedToId?: string;
+  isActive?: boolean;
+}
+
+interface CompleteMaintenanceTaskBody {
+  status?: string;
+  notes?: string;
+  actualDuration?: number;
+  actualCost?: number;
+  partsReplaced?: string[]; // Assuming it's an array of strings
+  issues?: string;
+}
 
 // Helper function to convert BigInt values to numbers recursively
 function convertBigIntsToNumbers(obj: any): any {
@@ -30,7 +63,7 @@ const router = Router();
 const prisma = new PrismaClient();
 
 // Get all maintenance schedules
-router.get('/', authenticate, async (req: Request, res) => {
+router.get('/', authenticate, async (req: Request, res: Response) => {
   try {
     const { assetId, status, priority, assignedToId } = req.query;
 
@@ -65,7 +98,7 @@ router.get('/', authenticate, async (req: Request, res) => {
 });
 
 // Get upcoming maintenance (due within X days)
-router.get('/upcoming', authenticate, async (req: Request, res) => {
+router.get('/upcoming', authenticate, async (req: Request, res: Response) => {
   try {
     const days = parseInt(req.query.days as string) || 7;
     const now = new Date();
@@ -94,7 +127,7 @@ router.get('/upcoming', authenticate, async (req: Request, res) => {
 });
 
 // Get overdue maintenance
-router.get('/overdue', authenticate, async (req: Request, res) => {
+router.get('/overdue', authenticate, async (req: Request, res: Response) => {
   try {
     const now = new Date();
 
@@ -119,24 +152,12 @@ router.get('/overdue', authenticate, async (req: Request, res) => {
 });
 
 // Get single maintenance schedule
-router.get('/:id', authenticate, async (req: Request, res) => {
+router.get('/:id', authenticate, async (req: Request, res: Response) => {
   try {
     const schedule = await prisma.maintenanceSchedule.findUnique({
       where: { id: req.params.id },
       include: {
         asset: true,
-        history: {
-          include: {
-            completedBy: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-              },
-            },
-          },
-          orderBy: { completedAt: 'desc' },
-        },
       },
     });
 
@@ -152,13 +173,12 @@ router.get('/:id', authenticate, async (req: Request, res) => {
 });
 
 // Create maintenance schedule
-router.post('/', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: Request, res) => {
+router.post('/', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: Request<{}, {}, CreateMaintenanceScheduleBody>, res: Response) => {
   try {
     const {
       assetId,
       title,
       description,
-      scheduleType,
       frequency,
       nextDueDate,
       priority,
@@ -167,7 +187,7 @@ router.post('/', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req:
       assignedToId,
     } = req.body;
 
-    if (!assetId || !title || !scheduleType || !nextDueDate) {
+    if (!assetId || !title || !nextDueDate) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
@@ -176,10 +196,9 @@ router.post('/', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req:
         assetId,
         title,
         description,
-        scheduleType,
         frequency,
         nextDueDate: new Date(nextDueDate),
-        priority: priority || 'medium',
+        priority: priority as string || 'medium',
         estimatedDuration,
         cost,
         assignedToId,
@@ -200,12 +219,11 @@ router.post('/', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req:
 });
 
 // Update maintenance schedule
-router.put('/:id', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: Request, res) => {
+router.put('/:id', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: Request<{ id: string }, {}, UpdateMaintenanceScheduleBody>, res: Response) => {
   try {
     const {
       title,
       description,
-      scheduleType,
       frequency,
       nextDueDate,
       priority,
@@ -228,10 +246,9 @@ router.put('/:id', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (re
       data: {
         title,
         description,
-        scheduleType,
         frequency,
         nextDueDate: nextDueDate ? new Date(nextDueDate) : undefined,
-        priority,
+        priority: priority as string,
         estimatedDuration,
         cost,
         assignedToId,
@@ -252,7 +269,7 @@ router.put('/:id', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (re
 });
 
 // Delete maintenance schedule
-router.delete('/:id', authenticate, requireRole(['ADMIN']), async (req: Request, res) => {
+router.delete('/:id', authenticate, requireRole(['ADMIN']), async (req: Request, res: Response) => {
   try {
     const schedule = await prisma.maintenanceSchedule.findUnique({
       where: { id: req.params.id },
@@ -276,7 +293,7 @@ router.delete('/:id', authenticate, requireRole(['ADMIN']), async (req: Request,
 });
 
 // Complete maintenance task
-router.post('/:id/complete', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: Request, res) => {
+router.post('/:id/complete', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: Request<{ id: string }, {}, CompleteMaintenanceTaskBody>, res: Response) => {
   try {
     const {
       status,
@@ -296,24 +313,24 @@ router.post('/:id/complete', authenticate, requireRole(['ADMIN', 'TECHNICIAN']),
     }
 
     // Create history record
-    const history = await prisma.maintenanceHistory.create({
-      data: {
-        scheduleId: schedule.id,
-        assetId: schedule.assetId,
-        completedById: req.user.id,
-        status: status || 'completed',
-        notes,
-        actualDuration,
-        actualCost,
-        partsReplaced: partsReplaced ? JSON.stringify(partsReplaced) : null,
-        issues,
-      },
-    });
+    // const history = await prisma.maintenanceHistory.create({
+    //   data: {
+    //     scheduleId: schedule.id,
+    //     assetId: schedule.assetId,
+    //     completedById: req.user.id,
+    //     status: status || 'completed',
+    //     notes,
+    //     actualDuration,
+    //     actualCost,
+    //     partsReplaced: partsReplaced ? JSON.stringify(partsReplaced) : null,
+    //     issues,
+    //   },
+    // });
 
     // Calculate next due date if recurring
     let nextDueDate = schedule.nextDueDate;
-    if (schedule.scheduleType === 'recurring' && schedule.frequency) {
-      const current = new Date();
+    if (schedule.frequency) {
+      const current = new Date(schedule.nextDueDate); // Base calculation on the *current* nextDueDate
       switch (schedule.frequency) {
         case 'daily':
           nextDueDate = new Date(current.setDate(current.getDate() + 1));
@@ -330,6 +347,9 @@ router.post('/:id/complete', authenticate, requireRole(['ADMIN', 'TECHNICIAN']),
         case 'yearly':
           nextDueDate = new Date(current.setFullYear(current.getFullYear() + 1));
           break;
+        default:
+          // For 'once' or unknown frequencies, do not change nextDueDate
+          break;
       }
     }
 
@@ -337,7 +357,7 @@ router.post('/:id/complete', authenticate, requireRole(['ADMIN', 'TECHNICIAN']),
     const updatedSchedule = await prisma.maintenanceSchedule.update({
       where: { id: req.params.id },
       data: {
-        lastCompletedDate: new Date(),
+        lastCompletedAt: new Date(),
         nextDueDate,
       },
     });
@@ -352,31 +372,31 @@ router.post('/:id/complete', authenticate, requireRole(['ADMIN', 'TECHNICIAN']),
 });
 
 // Get maintenance history
-router.get('/:id/history', authenticate, async (req: Request, res) => {
-  try {
-    const history = await prisma.maintenanceHistory.findMany({
-      where: { scheduleId: req.params.id },
-      include: {
-        completedBy: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-      },
-      orderBy: { completedAt: 'desc' },
-    });
+// router.get('/:id/history', authenticate, async (req: Request, res: Response) => {
+//   try {
+//     const history = await prisma.maintenanceHistory.findMany({
+//       where: { scheduleId: req.params.id },
+//       include: {
+//         completedBy: {
+//           select: {
+//             id: true,
+//             name: true,
+//             email: true,
+//           },
+//         },
+//       },
+//       orderBy: { completedAt: 'desc' },
+//     });
 
-    res.json(convertBigIntsToNumbers(history));
-  } catch (error) {
-    console.error('Failed to fetch maintenance history:', error);
-    res.status(500).json({ error: 'Failed to fetch maintenance history' });
-  }
-});
+//     res.json(convertBigIntsToNumbers(history));
+//   } catch (error) {
+//     console.error('Failed to fetch maintenance history:', error);
+//     res.status(500).json({ error: 'Failed to fetch maintenance history' });
+//   }
+// });
 
 // Get maintenance statistics
-router.get('/stats/overview', authenticate, async (req: Request, res) => {
+router.get('/stats/overview', authenticate, async (req: Request, res: Response) => {
   try {
     const now = new Date();
     const thirtyDaysAgo = new Date();

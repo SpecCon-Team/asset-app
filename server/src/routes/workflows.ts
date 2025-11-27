@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma';
 import { authenticate, requireRole } from '../middleware/auth';
@@ -11,7 +11,7 @@ const router = Router();
 // ==================== WORKFLOW TEMPLATES ====================
 
 // Get all workflows
-router.get('/templates', authenticate, requireRole('ADMIN'), async (req: Request, res) => {
+router.get('/templates', authenticate, requireRole('ADMIN'), async (req: Request, res: Response) => {
   try {
     const workflows = await prisma.workflowTemplate.findMany({
       orderBy: [{ priority: 'desc' }, { createdAt: 'desc' }],
@@ -25,7 +25,7 @@ router.get('/templates', authenticate, requireRole('ADMIN'), async (req: Request
 });
 
 // Get single workflow
-router.get('/templates/:id', authenticate, requireRole('ADMIN'), async (req: Request, res) => {
+router.get('/templates/:id', authenticate, requireRole('ADMIN'), async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
@@ -62,13 +62,20 @@ const createWorkflowSchema = z.object({
   priority: z.number().default(0),
 });
 
-router.post('/templates', authenticate, requireRole('ADMIN'), async (req: Request, res) => {
+router.post('/templates', authenticate, requireRole('ADMIN'), async (req: Request, res: Response) => {
   try {
     const data = createWorkflowSchema.parse(req.body);
 
     const workflow = await prisma.workflowTemplate.create({
       data: {
-        ...data,
+        name: data.name,
+        description: data.description,
+        entityType: data.entityType,
+        trigger: data.trigger,
+        conditions: data.conditions,
+        actions: data.actions,
+        isActive: data.isActive,
+        priority: data.priority,
         createdBy: req.user!.id,
       },
     });
@@ -84,7 +91,7 @@ router.post('/templates', authenticate, requireRole('ADMIN'), async (req: Reques
 });
 
 // Update workflow
-router.put('/templates/:id', authenticate, requireRole('ADMIN'), async (req: Request, res) => {
+router.put('/templates/:id', authenticate, requireRole('ADMIN'), async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const data = createWorkflowSchema.partial().parse(req.body);
@@ -105,7 +112,7 @@ router.put('/templates/:id', authenticate, requireRole('ADMIN'), async (req: Req
 });
 
 // Delete workflow
-router.delete('/templates/:id', authenticate, requireRole('ADMIN'), async (req: Request, res) => {
+router.delete('/templates/:id', authenticate, requireRole('ADMIN'), async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
@@ -121,7 +128,7 @@ router.delete('/templates/:id', authenticate, requireRole('ADMIN'), async (req: 
 });
 
 // Toggle workflow active status
-router.patch('/templates/:id/toggle', authenticate, requireRole('ADMIN'), async (req: Request, res) => {
+router.patch('/templates/:id/toggle', authenticate, requireRole('ADMIN'), async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
@@ -146,7 +153,7 @@ router.patch('/templates/:id/toggle', authenticate, requireRole('ADMIN'), async 
 });
 
 // Test workflow (dry run)
-router.post('/templates/:id/test', authenticate, requireRole('ADMIN'), async (req: Request, res) => {
+router.post('/templates/:id/test', authenticate, requireRole('ADMIN'), async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { entityId } = req.body;
@@ -162,7 +169,7 @@ router.post('/templates/:id/test', authenticate, requireRole('ADMIN'), async (re
 // ==================== WORKFLOW EXECUTIONS ====================
 
 // Get workflow executions
-router.get('/executions', authenticate, requireRole('ADMIN'), async (req: Request, res) => {
+router.get('/executions', authenticate, requireRole('ADMIN'), async (req: Request, res: Response) => {
   try {
     const { workflowId, status, limit = '50' } = req.query;
 
@@ -191,7 +198,7 @@ router.get('/executions', authenticate, requireRole('ADMIN'), async (req: Reques
 // ==================== AUTO-ASSIGNMENT RULES ====================
 
 // Get all assignment rules
-router.get('/assignment-rules', authenticate, requireRole('ADMIN'), async (req: Request, res) => {
+router.get('/assignment-rules', authenticate, requireRole('ADMIN'), async (req: Request, res: Response) => {
   try {
     const rules = await prisma.autoAssignmentRule.findMany({
       orderBy: [{ priority: 'desc' }, { createdAt: 'desc' }],
@@ -216,12 +223,21 @@ const createAssignmentRuleSchema = z.object({
   targetUserIds: z.array(z.string()).optional(),
 });
 
-router.post('/assignment-rules', authenticate, requireRole('ADMIN'), async (req: Request, res) => {
+router.post('/assignment-rules', authenticate, requireRole('ADMIN'), async (req: Request, res: Response) => {
   try {
     const data = createAssignmentRuleSchema.parse(req.body);
 
     const rule = await prisma.autoAssignmentRule.create({
-      data,
+      data: {
+        name: data.name,
+        description: data.description,
+        isActive: data.isActive,
+        priority: data.priority,
+        conditions: data.conditions,
+        assignmentType: data.assignmentType,
+        targetUserId: data.targetUserId,
+        targetUserIds: data.targetUserIds,
+      },
     });
 
     res.status(201).json(rule);
@@ -235,7 +251,7 @@ router.post('/assignment-rules', authenticate, requireRole('ADMIN'), async (req:
 });
 
 // Update assignment rule
-router.put('/assignment-rules/:id', authenticate, requireRole('ADMIN'), async (req: Request, res) => {
+router.put('/assignment-rules/:id', authenticate, requireRole('ADMIN'), async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const data = createAssignmentRuleSchema.partial().parse(req.body);
@@ -256,7 +272,7 @@ router.put('/assignment-rules/:id', authenticate, requireRole('ADMIN'), async (r
 });
 
 // Delete assignment rule
-router.delete('/assignment-rules/:id', authenticate, requireRole('ADMIN'), async (req: Request, res) => {
+router.delete('/assignment-rules/:id', authenticate, requireRole('ADMIN'), async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
@@ -272,7 +288,7 @@ router.delete('/assignment-rules/:id', authenticate, requireRole('ADMIN'), async
 });
 
 // Toggle assignment rule
-router.patch('/assignment-rules/:id/toggle', authenticate, requireRole('ADMIN'), async (req: Request, res) => {
+router.patch('/assignment-rules/:id/toggle', authenticate, requireRole('ADMIN'), async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
@@ -297,7 +313,7 @@ router.patch('/assignment-rules/:id/toggle', authenticate, requireRole('ADMIN'),
 });
 
 // Get assignment stats
-router.get('/assignment-stats', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: Request, res) => {
+router.get('/assignment-stats', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: Request, res: Response) => {
   try {
     const stats = await autoAssignmentEngine.getAssignmentStats();
     res.json(stats);
@@ -310,7 +326,7 @@ router.get('/assignment-stats', authenticate, requireRole('ADMIN', 'TECHNICIAN')
 // ==================== SLA POLICIES ====================
 
 // Get all SLA policies
-router.get('/sla-policies', authenticate, requireRole('ADMIN'), async (req: Request, res) => {
+router.get('/sla-policies', authenticate, requireRole('ADMIN'), async (req: Request, res: Response) => {
   try {
     const policies = await prisma.sLAPolicy.findMany({
       orderBy: { priority: 'asc' },
@@ -337,12 +353,23 @@ const createSLAPolicySchema = z.object({
   isActive: z.boolean().default(true),
 });
 
-router.post('/sla-policies', authenticate, requireRole('ADMIN'), async (req: Request, res) => {
+router.post('/sla-policies', authenticate, requireRole('ADMIN'), async (req: Request, res: Response) => {
   try {
     const data = createSLAPolicySchema.parse(req.body);
 
     const policy = await prisma.sLAPolicy.create({
-      data,
+      data: {
+        name: data.name,
+        description: data.description,
+        priority: data.priority,
+        responseTimeMinutes: data.responseTimeMinutes,
+        resolutionTimeMinutes: data.resolutionTimeMinutes,
+        businessHoursOnly: data.businessHoursOnly,
+        escalationEnabled: data.escalationEnabled,
+        escalationUserId: data.escalationUserId,
+        notifyBeforeMinutes: data.notifyBeforeMinutes,
+        isActive: data.isActive,
+      },
     });
 
     res.status(201).json(policy);
@@ -356,7 +383,7 @@ router.post('/sla-policies', authenticate, requireRole('ADMIN'), async (req: Req
 });
 
 // Update SLA policy
-router.put('/sla-policies/:id', authenticate, requireRole('ADMIN'), async (req: Request, res) => {
+router.put('/sla-policies/:id', authenticate, requireRole('ADMIN'), async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const data = createSLAPolicySchema.partial().parse(req.body);
@@ -377,7 +404,7 @@ router.put('/sla-policies/:id', authenticate, requireRole('ADMIN'), async (req: 
 });
 
 // Delete SLA policy
-router.delete('/sla-policies/:id', authenticate, requireRole('ADMIN'), async (req: Request, res) => {
+router.delete('/sla-policies/:id', authenticate, requireRole('ADMIN'), async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
@@ -393,7 +420,7 @@ router.delete('/sla-policies/:id', authenticate, requireRole('ADMIN'), async (re
 });
 
 // Get SLA statistics
-router.get('/sla-stats', authenticate, async (req: Request, res) => {
+router.get('/sla-stats', authenticate, async (req: Request, res: Response) => {
   try {
     const stats = await slaEngine.getSLAStats();
     res.json(stats);
@@ -404,7 +431,7 @@ router.get('/sla-stats', authenticate, async (req: Request, res) => {
 });
 
 // Get ticket SLA details
-router.get('/ticket-sla/:ticketId', authenticate, async (req: Request, res) => {
+router.get('/ticket-sla/:ticketId', authenticate, async (req: Request, res: Response) => {
   try {
     const { ticketId } = req.params;
 

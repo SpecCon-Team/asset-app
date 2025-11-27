@@ -1,11 +1,54 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { z } from 'zod';
-import { prisma } from '../lib/prisma';
+import { prisma, Prisma } from '../lib/prisma';
 import { authenticate, requireRole } from '../middleware/auth';
 import { logAudit } from '../lib/auditLog';
 import { createNotificationIfNotExists } from '../lib/notificationHelper';
 import { slaEngine } from '../lib/slaEngine';
 import crypto from 'crypto';
+
+interface CreateCommentBody {
+  content: string;
+  ticketId: string;
+  authorId: string;
+}
+
+type CommentWithAuthorAndTicket = {
+  id: string;
+  content: string;
+  contentHash: string | null;
+  ticketId: string;
+  authorId: string;
+  createdAt: Date;
+  updatedAt: Date;
+  author: {
+    id: string;
+    email: string;
+    name: string | null;
+    role: string;
+  };
+  ticket: {
+    id: string;
+    number: string;
+    title: string;
+    description: string;
+    status: string;
+    priority: string;
+    dueDate: Date | null;
+    createdById: string;
+    assignedToId: string | null;
+    assetId: string | null;
+    resolution: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+    createdBy: {
+      id: string;
+      email: string;
+      name: string | null;
+      role: string;
+    };
+  };
+};
 
 const router = Router();
 
@@ -32,7 +75,7 @@ const createCommentSchema = z.object({
 });
 
 // Get all comments for a ticket
-router.get('/ticket/:ticketId', authenticate, async (req: Request, res) => {
+router.get('/ticket/:ticketId', authenticate, async (req: Request, res: Response) => {
   try {
     // First check if user has access to this ticket
     const ticket = await prisma.ticket.findUnique({
@@ -68,7 +111,7 @@ router.get('/ticket/:ticketId', authenticate, async (req: Request, res) => {
 });
 
 // Create a comment
-router.post('/', authenticate, async (req: Request, res) => {
+router.post('/', authenticate, async (req: Request<{}, {}, CreateCommentBody>, res: Response) => {
   // LOG EVERY INCOMING REQUEST IMMEDIATELY
   const requestId = req.headers['x-request-id'] as string;
   const timestamp = new Date().toISOString();
@@ -92,7 +135,7 @@ router.post('/', authenticate, async (req: Request, res) => {
       console.log(`[DUPLICATE PREVENTED] ❌ Request ID ${requestId} already processed - returning cached result`);
 
       // Return the previously created comment
-      const existingComment = await prisma.comment.findUnique({
+      const existingComment: CommentWithAuthorAndTicket | null = await prisma.comment.findUnique({
         where: { id: processed.commentId },
         include: {
           author: {
@@ -142,7 +185,7 @@ router.post('/', authenticate, async (req: Request, res) => {
     const recentTime = new Date(Date.now() - 30000);
     console.log(`[DB CHECK] Checking for duplicates since ${recentTime.toISOString()}...`);
 
-    const existingComment = await prisma.comment.findFirst({
+    const existingComment: CommentWithAuthorAndTicket | null = await prisma.comment.findFirst({
       where: {
         content: parsed.data.content,
         ticketId: parsed.data.ticketId,
@@ -230,10 +273,12 @@ router.post('/', authenticate, async (req: Request, res) => {
     try {
       console.log(`[CREATE] Creating new comment...`);
 
-      const comment = await prisma.comment.create({
+      const comment: CommentWithAuthorAndTicket = await prisma.comment.create({
         data: {
-          ...parsed.data,
-          contentHash, // Store hash for duplicate detection
+          content: parsed.data.content,
+          ticketId: parsed.data.ticketId,
+          authorId: parsed.data.authorId,
+          contentHash,
         },
         include: {
           author: {
@@ -410,7 +455,7 @@ router.post('/', authenticate, async (req: Request, res) => {
 });
 
 // Delete a comment
-router.delete('/:id', authenticate, async (req: Request, res) => {
+router.delete('/:id', authenticate, async (req: Request, res: Response) => {
   try {
     // Get the comment first to check ownership
     const comment = await prisma.comment.findUnique({

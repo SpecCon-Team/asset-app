@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma';
 import { authenticate } from '../middleware/auth';
@@ -17,7 +17,7 @@ const pegClientSchema = z.object({
 });
 
 // Get all PEG clients for the authenticated user
-router.get('/', authenticate, async (req: Request, res) => {
+router.get('/', authenticate, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
 
@@ -34,7 +34,7 @@ router.get('/', authenticate, async (req: Request, res) => {
 });
 
 // Get clients by province
-router.get('/province/:provinceId', authenticate, async (req: Request, res) => {
+router.get('/province/:provinceId', authenticate, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     const { provinceId } = req.params;
@@ -55,18 +55,20 @@ router.get('/province/:provinceId', authenticate, async (req: Request, res) => {
 });
 
 // Create a new PEG client
-router.post('/', authenticate, async (req: Request, res) => {
+router.post('/', authenticate, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     const validatedData = pegClientSchema.parse(req.body);
 
     const client = await prisma.pEGClient.create({
       data: {
-        ...validatedData,
-        email: validatedData.email || null,
+        name: validatedData.name,
+        location: validatedData.location,
         contactPerson: validatedData.contactPerson || null,
         phone: validatedData.phone || null,
-        userId,
+        email: validatedData.email || null,
+        provinceId: validatedData.provinceId,
+        userId: userId,
       },
     });
 
@@ -89,7 +91,7 @@ router.post('/', authenticate, async (req: Request, res) => {
 });
 
 // Update a PEG client
-router.put('/:id', authenticate, async (req: Request, res) => {
+router.put('/:id', authenticate, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     const { id } = req.params;
@@ -137,7 +139,7 @@ router.put('/:id', authenticate, async (req: Request, res) => {
 });
 
 // Delete a PEG client
-router.delete('/:id', authenticate, async (req: Request, res) => {
+router.delete('/:id', authenticate, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     const { id } = req.params;
@@ -175,7 +177,7 @@ router.delete('/:id', authenticate, async (req: Request, res) => {
 });
 
 // Bulk delete all clients for the user
-router.delete('/', authenticate, async (req: Request, res) => {
+router.delete('/', authenticate, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
 

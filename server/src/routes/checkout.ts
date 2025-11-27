@@ -4,6 +4,38 @@ import { authenticate, requireRole } from '../middleware/auth';
 import { logAudit } from '../lib/auditLog';
 import QRCode from 'qrcode';
 
+interface CreateCheckoutBody {
+  assetId: string;
+  userId: string;
+  expectedReturnDate?: string; // ISO date string
+  location?: string;
+  purpose?: string;
+  notes?: string;
+  condition?: string;
+}
+
+interface CheckinAssetBody {
+  returnCondition?: string;
+  returnNotes?: string;
+  location?: string;
+}
+
+interface UpdateCheckoutBody {
+  expectedReturnDate?: string; // ISO date string
+  location?: string;
+  purpose?: string;
+  notes?: string;
+  condition?: string;
+}
+
+interface GenerateQRCodeBody {
+  assetId: string;
+}
+
+interface ScanQRCodeBody {
+  qrCode: string;
+}
+
 // Helper function to convert BigInt values to numbers recursively
 function convertBigIntsToNumbers(obj: any): any {
   if (obj === null || obj === undefined) return obj;
@@ -33,7 +65,7 @@ const router = Router();
 // GET /api/checkout - List all checkouts
 // =====================================================
 
-router.get('/', authenticate, async (req: Request, res) => {
+router.get('/', authenticate, async (req: Request, res: Response) => {
   try {
     const {
       status,
@@ -46,8 +78,8 @@ router.get('/', authenticate, async (req: Request, res) => {
       sortOrder = 'desc'
     } = req.query;
 
-    const pageNum = parseInt(page);
-    const limitNum = parseInt(limit);
+    const pageNum = parseInt(page as string);
+    const limitNum = parseInt(limit as string);
     const skip = (pageNum - 1) * limitNum;
 
     const where: any = {};
@@ -149,7 +181,7 @@ router.get('/', authenticate, async (req: Request, res) => {
 // GET /api/checkout/current - Get current checkouts
 // =====================================================
 
-router.get('/current', authenticate, async (req: Request, res) => {
+router.get('/current', authenticate, async (req: Request, res: Response) => {
   try {
     const checkouts = await prisma.$queryRaw`
       SELECT * FROM "CurrentCheckouts"
@@ -170,7 +202,7 @@ router.get('/current', authenticate, async (req: Request, res) => {
 // GET /api/checkout/overdue - Get overdue checkouts
 // =====================================================
 
-router.get('/overdue', authenticate, async (req: Request, res) => {
+router.get('/overdue', authenticate, async (req: Request, res: Response) => {
   try {
     const checkouts = await prisma.$queryRaw`
       SELECT * FROM "OverdueCheckouts"
@@ -190,7 +222,7 @@ router.get('/overdue', authenticate, async (req: Request, res) => {
 // GET /api/checkout/history - Get checkout history
 // =====================================================
 
-router.get('/history', authenticate, async (req: Request, res) => {
+router.get('/history', authenticate, async (req: Request, res: Response) => {
   try {
     const { assetId, userId, limit = '100' } = req.query;
 
@@ -227,7 +259,7 @@ router.get('/history', authenticate, async (req: Request, res) => {
 // GET /api/checkout/stats - Get checkout statistics
 // =====================================================
 
-router.get('/stats', authenticate, async (req: Request, res) => {
+router.get('/stats', authenticate, async (req: Request, res: Response) => {
   try {
     const [
       totalCheckouts,
@@ -321,7 +353,7 @@ router.get('/stats', authenticate, async (req: Request, res) => {
 // GET /api/checkout/:id - Get single checkout
 // =====================================================
 
-router.get('/:id', authenticate, async (req: Request, res) => {
+router.get('/:id', authenticate, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
@@ -404,7 +436,7 @@ router.get('/:id', authenticate, async (req: Request, res) => {
 // POST /api/checkout - Create new checkout
 // =====================================================
 
-router.post('/', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: Request, res) => {
+router.post('/', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: Request<{}, {}, CreateCheckoutBody>, res: Response) => {
   try {
     const {
       assetId,
@@ -536,7 +568,7 @@ router.post('/', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req:
 // POST /api/checkout/:id/checkin - Check in asset
 // =====================================================
 
-router.post('/:id/checkin', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: Request, res) => {
+router.post('/:id/checkin', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: Request<{ id: string }, {}, CheckinAssetBody>, res: Response) => {
   try {
     const { id } = req.params;
     const {
@@ -630,7 +662,7 @@ router.post('/:id/checkin', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), 
 // PUT /api/checkout/:id - Update checkout
 // =====================================================
 
-router.put('/:id', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: Request, res) => {
+router.put('/:id', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: Request<{ id: string }, {}, UpdateCheckoutBody>, res: Response) => {
   try {
     const { id } = req.params;
     const {
@@ -714,7 +746,7 @@ router.put('/:id', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (re
 // DELETE /api/checkout/:id - Delete checkout
 // =====================================================
 
-router.delete('/:id', authenticate, requireRole(['ADMIN']), async (req: Request, res) => {
+router.delete('/:id', authenticate, requireRole(['ADMIN']), async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
@@ -749,7 +781,7 @@ router.delete('/:id', authenticate, requireRole(['ADMIN']), async (req: Request,
 // =====================================================
 
 // GET /api/checkout/qr/asset/:assetId - Get QR code for asset
-router.get('/qr/asset/:assetId', authenticate, async (req: Request, res) => {
+router.get('/qr/asset/:assetId', authenticate, async (req: Request, res: Response) => {
   try {
     const { assetId } = req.params;
 
@@ -784,7 +816,7 @@ router.get('/qr/asset/:assetId', authenticate, async (req: Request, res) => {
 });
 
 // POST /api/checkout/qr/generate - Generate QR code for asset
-router.post('/qr/generate', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: Request, res) => {
+router.post('/qr/generate', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: Request<{}, {}, GenerateQRCodeBody>, res: Response) => {
   try {
     const { assetId } = req.body;
 
@@ -860,7 +892,7 @@ router.post('/qr/generate', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), 
 });
 
 // POST /api/checkout/qr/scan - Scan QR code
-router.post('/qr/scan', authenticate, async (req: Request, res) => {
+router.post('/qr/scan', authenticate, async (req: Request<{}, {}, ScanQRCodeBody>, res: Response) => {
   try {
     const { qrCode } = req.body;
 
@@ -911,7 +943,7 @@ router.post('/qr/scan', authenticate, async (req: Request, res) => {
 // =====================================================
 
 // GET /api/checkout/location/history/:assetId - Get location history for asset
-router.get('/location/history/:assetId', authenticate, async (req: Request, res) => {
+router.get('/location/history/:assetId', authenticate, async (req: Request, res: Response) => {
   try {
     const { assetId } = req.params;
 
