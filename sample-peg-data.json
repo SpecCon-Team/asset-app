@@ -1,0 +1,182 @@
+[
+  {
+    "id": "1",
+    "name": "Cape Town Tech Solutions",
+    "location": "Cape Town",
+    "contactPerson": "John Smith",
+    "phone": "+27 21 123 4567",
+    "email": "john@capetowntech.co.za",
+    "provinceId": "WC"
+  },
+  {
+    "id": "2",
+    "name": "Stellenbosch Consulting",
+    "location": "Stellenbosch",
+    "contactPerson": "Sarah Johnson",
+    "phone": "+27 21 987 6543",
+    "email": "sarah@stellcons.co.za",
+    "provinceId": "WC"
+  },
+  {
+    "id": "3",
+    "name": "Port Elizabeth Industries",
+    "location": "Gqeberha (Port Elizabeth)",
+    "contactPerson": "Michael Brown",
+    "phone": "+27 41 234 5678",
+    "email": "michael@peindustries.co.za",
+    "provinceId": "EC"
+  },
+  {
+    "id": "4",
+    "name": "East London Manufacturing",
+    "location": "East London",
+    "contactPerson": "Linda van der Merwe",
+    "phone": "+27 43 345 6789",
+    "email": "linda@elmanuf.co.za",
+    "provinceId": "EC"
+  },
+  {
+    "id": "5",
+    "name": "Kimberley Mining Corp",
+    "location": "Kimberley",
+    "contactPerson": "David Miller",
+    "phone": "+27 53 456 7890",
+    "email": "david@kimbmining.co.za",
+    "provinceId": "NC"
+  },
+  {
+    "id": "6",
+    "name": "Upington Logistics",
+    "location": "Upington",
+    "contactPerson": "Susan Peters",
+    "phone": "+27 54 567 8901",
+    "email": "susan@uplogistics.co.za",
+    "provinceId": "NC"
+  },
+  {
+    "id": "7",
+    "name": "Bloemfontein Services",
+    "location": "Bloemfontein",
+    "contactPerson": "Peter Botha",
+    "phone": "+27 51 678 9012",
+    "email": "peter@bloemservices.co.za",
+    "provinceId": "FS"
+  },
+  {
+    "id": "8",
+    "name": "Welkom Energy Solutions",
+    "location": "Welkom",
+    "contactPerson": "Mary Naidoo",
+    "phone": "+27 57 789 0123",
+    "email": "mary@welkomenergy.co.za",
+    "provinceId": "FS"
+  },
+  {
+    "id": "9",
+    "name": "Durban Coastal Trading",
+    "location": "Durban",
+    "contactPerson": "James Zulu",
+    "phone": "+27 31 890 1234",
+    "email": "james@durbancoastal.co.za",
+    "provinceId": "KZN"
+  },
+  {
+    "id": "10",
+    "name": "Pietermaritzburg Distribution",
+    "location": "Pietermaritzburg",
+    "contactPerson": "Anna Dlamini",
+    "phone": "+27 33 901 2345",
+    "email": "anna@pmbdist.co.za",
+    "provinceId": "KZN"
+  },
+  {
+    "id": "11",
+    "name": "Richards Bay Port Services",
+    "location": "Richards Bay",
+    "contactPerson": "Tom Wilson",
+    "phone": "+27 35 012 3456",
+    "email": "tom@rbport.co.za",
+    "provinceId": "KZN"
+  },
+  {
+    "id": "12",
+    "name": "Mahikeng Traders",
+    "location": "Mahikeng",
+    "contactPerson": "Grace Mokwena",
+    "phone": "+27 18 123 4567",
+    "email": "grace@mahikengtraders.co.za",
+    "provinceId": "NW"
+  },
+  {
+    "id": "13",
+    "name": "Rustenburg Mining Services",
+    "location": "Rustenburg",
+    "contactPerson": "Robert Ngwenya",
+    "phone": "+27 14 234 5678",
+    "email": "robert@rustmine.co.za",
+    "provinceId": "NW"
+  },
+  {
+    "id": "14",
+    "name": "Johannesburg Tech Hub",
+    "location": "Johannesburg",
+    "contactPerson": "Jennifer Lee",
+    "phone": "+27 11 345 6789",
+    "email": "jennifer@jbgtechhub.co.za",
+    "provinceId": "GP"
+  },
+  {
+    "id": "15",
+    "name": "Pretoria Government Solutions",
+    "location": "Pretoria",
+    "contactPerson": "Andrew Steyn",
+    "phone": "+27 12 456 7890",
+    "email": "andrew@ptagov.co.za",
+    "provinceId": "GP"
+  },
+  {
+    "id": "16",
+    "name": "Sandton Financial Services",
+    "location": "Sandton",
+    "contactPerson": "Rachel Cohen",
+    "phone": "+27 11 567 8901",
+    "email": "rachel@sandtonfinance.co.za",
+    "provinceId": "GP"
+  },
+  {
+    "id": "17",
+    "name": "Nelspruit Agriculture",
+    "location": "Mbombela (Nelspruit)",
+    "contactPerson": "Paul Mabuza",
+    "phone": "+27 13 678 9012",
+    "email": "paul@nelsagri.co.za",
+    "provinceId": "MP"
+  },
+  {
+    "id": "18",
+    "name": "Witbank Coal Industries",
+    "location": "Emalahleni (Witbank)",
+    "contactPerson": "Catherine Sibiya",
+    "phone": "+27 13 789 0123",
+    "email": "catherine@witbankcoal.co.za",
+    "provinceId": "MP"
+  },
+  {
+    "id": "19",
+    "name": "Polokwane Business Center",
+    "location": "Polokwane",
+    "contactPerson": "Daniel Malema",
+    "phone": "+27 15 890 1234",
+    "email": "daniel@polokwanebiz.co.za",
+    "provinceId": "LP"
+  },
+  {
+    "id": "20",
+    "name": "Tzaneen Fruit Exports",
+    "location": "Tzaneen",
+    "contactPerson": "Elizabeth Baloyi",
+    "phone": "+27 15 901 2345",
+    "email": "elizabeth@tzaneenfruit.co.za",
+    "provinceId": "LP"
+  }
+]
