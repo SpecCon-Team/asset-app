@@ -26,5 +26,8 @@
     "swagger-ui-express": "^5.0.1",
     "xss-clean": "^0.1.4",
     "zxcvbn": "^4.4.2"
+  },
+  "devDependencies": {
+    "gh-pages": "^6.3.0"
   }
 }
