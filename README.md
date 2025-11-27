@@ -4,6 +4,9 @@ A comprehensive, secure, and GDPR-compliant asset management system built with m
 
 ## 🚀 Features
 
+## 🌐 Live Demo
+Experience the application live: [https://speccon-team.github.io/asset-app/](https://speccon-team.github.io/asset-app/)
+
 ### Core Functionality
 - **Asset Management** - Track hardware, software, and equipment
 - **Ticket System** - Support ticket creation and tracking
