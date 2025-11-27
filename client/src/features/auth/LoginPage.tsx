@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import api from '@/lib/api';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -24,6 +25,10 @@ export default function LoginPage() {
     setTouched({ ...touched, [field]: true });
   };
 
+  import api from '@/lib/api';
+
+// ... (rest of the component)
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -36,47 +41,9 @@ export default function LoginPage() {
     });
 
     try {
-      // Call backend API for authentication
-      const response = await fetch('http://localhost:4000/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!response.ok) {
-        // Handle rate limiting (plain text response)
-        const contentType = response.headers.get('content-type');
-        let data;
-
-        if (contentType && contentType.includes('application/json')) {
-          data = await response.json();
-        } else {
-          // Plain text response (rate limit)
-          const textError = await response.text();
-          data = { message: textError };
-        }
-
-        // Check for rate limiting
-        if (response.status === 429) {
-          toast.error('Too many login attempts. Please wait 15 minutes before trying again.', {
-            duration: 5000
-          });
-          throw new Error(data.message || 'Too many requests. Please try again later.');
-        }
-
-        // Check if email is not verified
-        if (response.status === 403 && data.emailVerified === false) {
-          toast.error(data.message || 'Please verify your email before logging in');
-          // Redirect to OTP verification page
-          navigate('/verify-otp', { state: { email: data.email || email } });
-          return;
-        }
-
-        throw new Error(data.message || 'Login failed');
-      }
-
-      const data = await response.json();
+      // Call backend API for authentication using the api client
+      const response = await api.post('/auth/login', { email, password });
+      const data = response.data;
 
       // Check if 2FA is required
       if (data.requiresTwoFactor) {
@@ -99,8 +66,21 @@ export default function LoginPage() {
       } else {
         navigate('/my-tickets');
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed. Please try again.');
+    } catch (err: any) {
+      const errorData = err.response?.data;
+      const status = err.response?.status;
+
+      if (status === 429) {
+        toast.error('Too many login attempts. Please wait 15 minutes before trying again.', {
+          duration: 5000
+        });
+        setError('Too many requests. Please try again later.');
+      } else if (status === 403 && errorData?.emailVerified === false) {
+        toast.error(errorData.message || 'Please verify your email before logging in');
+        navigate('/verify-otp', { state: { email: errorData.email || email } });
+      } else {
+        setError(errorData?.message || err.message || 'Login failed. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -112,19 +92,8 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:4000/api/auth/verify-2fa-login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ userId, token: twoFactorCode }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || '2FA verification failed');
-      }
-
-      const data = await response.json();
+      const response = await api.post('/auth/verify-2fa-login', { userId, token: twoFactorCode });
+      const data = response.data;
 
       // Store user info in localStorage
       localStorage.setItem('user', JSON.stringify(data.user));
@@ -139,12 +108,14 @@ export default function LoginPage() {
       } else {
         navigate('/my-tickets');
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '2FA verification failed. Please try again.');
+    } catch (err: any) {
+      const errorData = err.response?.data;
+      setError(errorData?.message || err.message || '2FA verification failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">

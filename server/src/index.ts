@@ -201,7 +201,8 @@ app.use(cookieParser());
 const allowedOrigins = [
   process.env.CLIENT_URL || 'http://localhost:5174',
   'http://localhost:5173', // Vite default port
-  'http://localhost:5174'  // Alternative port
+  'http://localhost:5174',  // Alternative port
+  'https://speccon-team.github.io' // Added for GitHub Pages
 ];
 
 app.use(cors({
