@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma';
-import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
+import { authenticate, requireRole } from '../middleware/auth';
 import { logAudit } from '../lib/auditLog';
 import { createNotificationIfNotExists } from '../lib/notificationHelper';
 import { slaEngine } from '../lib/slaEngine';
@@ -32,7 +32,7 @@ const createCommentSchema = z.object({
 });
 
 // Get all comments for a ticket
-router.get('/ticket/:ticketId', authenticate, async (req: AuthRequest, res) => {
+router.get('/ticket/:ticketId', authenticate, async (req: Request, res) => {
   try {
     // First check if user has access to this ticket
     const ticket = await prisma.ticket.findUnique({
@@ -68,7 +68,7 @@ router.get('/ticket/:ticketId', authenticate, async (req: AuthRequest, res) => {
 });
 
 // Create a comment
-router.post('/', authenticate, async (req: AuthRequest, res) => {
+router.post('/', authenticate, async (req: Request, res) => {
   // LOG EVERY INCOMING REQUEST IMMEDIATELY
   const requestId = req.headers['x-request-id'] as string;
   const timestamp = new Date().toISOString();
@@ -410,7 +410,7 @@ router.post('/', authenticate, async (req: AuthRequest, res) => {
 });
 
 // Delete a comment
-router.delete('/:id', authenticate, async (req: AuthRequest, res) => {
+router.delete('/:id', authenticate, async (req: Request, res) => {
   try {
     // Get the comment first to check ownership
     const comment = await prisma.comment.findUnique({

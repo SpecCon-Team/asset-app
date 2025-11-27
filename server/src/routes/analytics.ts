@@ -30,7 +30,7 @@ function convertBigIntsToNumbers(obj: any): any {
 const router = Router();
 
 // GET /api/analytics/overview - System-wide overview
-router.get('/overview', authenticate, cacheMiddleware(60000), async (req: any, res) => {
+router.get('/overview', authenticate, cacheMiddleware(60000), async (req: Request, res) => {
   try {
     const { startDate, endDate } = req.query;
 
@@ -143,7 +143,7 @@ router.get('/overview', authenticate, cacheMiddleware(60000), async (req: any, r
 });
 
 // GET /api/analytics/assets - Asset analytics
-router.get('/assets', authenticate, cacheMiddleware(60000), async (req: any, res) => {
+router.get('/assets', authenticate, cacheMiddleware(60000), async (req: Request, res) => {
   try {
     const [
       totalValue,
@@ -224,7 +224,7 @@ router.get('/assets', authenticate, cacheMiddleware(60000), async (req: any, res
 });
 
 // GET /api/analytics/tickets - Ticket analytics
-router.get('/tickets', authenticate, cacheMiddleware(60000), async (req: any, res) => {
+router.get('/tickets', authenticate, cacheMiddleware(60000), async (req: Request, res) => {
   try {
     const { startDate, endDate } = req.query;
 
@@ -362,7 +362,7 @@ router.get('/tickets', authenticate, cacheMiddleware(60000), async (req: any, re
 });
 
 // GET /api/analytics/users - User activity analytics
-router.get('/users', authenticate, requireRole(['ADMIN']), async (req: any, res) => {
+router.get('/users', authenticate, requireRole(['ADMIN']), async (req: Request, res) => {
   try {
     const [
       byRole,
@@ -420,7 +420,7 @@ router.get('/users', authenticate, requireRole(['ADMIN']), async (req: any, res)
 });
 
 // GET /api/analytics/maintenance - Maintenance analytics
-router.get('/maintenance', authenticate, async (req: any, res) => {
+router.get('/maintenance', authenticate, async (req: Request, res) => {
   try {
     const [
       totalScheduled,
@@ -468,7 +468,7 @@ router.get('/maintenance', authenticate, async (req: any, res) => {
 });
 
 // GET /api/analytics/inventory - Inventory analytics
-router.get('/inventory', authenticate, async (req: any, res) => {
+router.get('/inventory', authenticate, async (req: Request, res) => {
   try {
     const [
       totalItems,
@@ -532,7 +532,7 @@ router.get('/inventory', authenticate, async (req: any, res) => {
 });
 
 // GET /api/analytics/export - Export analytics data
-router.get('/export', authenticate, requireRole(['ADMIN']), async (req: any, res) => {
+router.get('/export', authenticate, requireRole(['ADMIN']), async (req: Request, res) => {
   try {
     const { type, format = 'json', startDate, endDate } = req.query;
 

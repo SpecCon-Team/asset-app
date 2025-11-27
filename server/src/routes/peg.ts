@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma';
-import { authenticate, AuthRequest } from '../middleware/auth';
+import { authenticate } from '../middleware/auth';
 import { logAudit } from '../lib/auditLog';
 
 const router = Router();
@@ -17,7 +17,7 @@ const pegClientSchema = z.object({
 });
 
 // Get all PEG clients for the authenticated user
-router.get('/', authenticate, async (req: AuthRequest, res) => {
+router.get('/', authenticate, async (req: Request, res) => {
   try {
     const userId = req.user!.id;
 
@@ -34,7 +34,7 @@ router.get('/', authenticate, async (req: AuthRequest, res) => {
 });
 
 // Get clients by province
-router.get('/province/:provinceId', authenticate, async (req: AuthRequest, res) => {
+router.get('/province/:provinceId', authenticate, async (req: Request, res) => {
   try {
     const userId = req.user!.id;
     const { provinceId } = req.params;
@@ -55,7 +55,7 @@ router.get('/province/:provinceId', authenticate, async (req: AuthRequest, res) 
 });
 
 // Create a new PEG client
-router.post('/', authenticate, async (req: AuthRequest, res) => {
+router.post('/', authenticate, async (req: Request, res) => {
   try {
     const userId = req.user!.id;
     const validatedData = pegClientSchema.parse(req.body);
@@ -89,7 +89,7 @@ router.post('/', authenticate, async (req: AuthRequest, res) => {
 });
 
 // Update a PEG client
-router.put('/:id', authenticate, async (req: AuthRequest, res) => {
+router.put('/:id', authenticate, async (req: Request, res) => {
   try {
     const userId = req.user!.id;
     const { id } = req.params;
@@ -137,7 +137,7 @@ router.put('/:id', authenticate, async (req: AuthRequest, res) => {
 });
 
 // Delete a PEG client
-router.delete('/:id', authenticate, async (req: AuthRequest, res) => {
+router.delete('/:id', authenticate, async (req: Request, res) => {
   try {
     const userId = req.user!.id;
     const { id } = req.params;
@@ -175,7 +175,7 @@ router.delete('/:id', authenticate, async (req: AuthRequest, res) => {
 });
 
 // Bulk delete all clients for the user
-router.delete('/', authenticate, async (req: AuthRequest, res) => {
+router.delete('/', authenticate, async (req: Request, res) => {
   try {
     const userId = req.user!.id;
 

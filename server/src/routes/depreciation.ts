@@ -33,7 +33,7 @@ const router = Router();
 // =====================================================
 
 // GET /api/depreciation - List all depreciation records
-router.get('/', authenticate, async (req: any, res) => {
+router.get('/', authenticate, async (req: Request, res) => {
   try {
     const { status, method, page = '1', limit = '50' } = req.query;
 
@@ -99,7 +99,7 @@ router.get('/', authenticate, async (req: any, res) => {
 });
 
 // GET /api/depreciation/stats - Get depreciation statistics
-router.get('/stats', authenticate, async (req: any, res) => {
+router.get('/stats', authenticate, async (req: Request, res) => {
   try {
     const [
       totalAssets,
@@ -154,7 +154,7 @@ router.get('/stats', authenticate, async (req: any, res) => {
 });
 
 // GET /api/depreciation/due - Get depreciation due this month
-router.get('/due', authenticate, async (req: any, res) => {
+router.get('/due', authenticate, async (req: Request, res) => {
   try {
     const dueItems = await prisma.$queryRaw`
       SELECT * FROM "DepreciationDueThisMonth"
@@ -171,7 +171,7 @@ router.get('/due', authenticate, async (req: any, res) => {
 });
 
 // GET /api/depreciation/:id - Get single depreciation record
-router.get('/:id', authenticate, async (req: any, res) => {
+router.get('/:id', authenticate, async (req: Request, res) => {
   try {
     const { id } = req.params;
 
@@ -209,7 +209,7 @@ router.get('/:id', authenticate, async (req: any, res) => {
 });
 
 // POST /api/depreciation - Create depreciation record
-router.post('/', authenticate, requireRole(['ADMIN']), async (req: any, res) => {
+router.post('/', authenticate, requireRole(['ADMIN']), async (req: Request, res) => {
   try {
     const {
       assetId,
@@ -294,7 +294,7 @@ router.post('/', authenticate, requireRole(['ADMIN']), async (req: any, res) => 
     await prisma.$executeRaw`SELECT generate_depreciation_schedule(${record.id})`;
 
     // Log audit
-    await logAudit(req.user.id, 'CREATE', 'AssetDepreciation', record.id, {
+    await logAudit(req, 'CREATE', 'AssetDepreciation', record.id, {
       assetId,
       depreciationMethod,
       purchasePrice
@@ -314,7 +314,7 @@ router.post('/', authenticate, requireRole(['ADMIN']), async (req: any, res) => 
 });
 
 // PUT /api/depreciation/:id - Update depreciation record
-router.put('/:id', authenticate, requireRole(['ADMIN']), async (req: any, res) => {
+router.put('/:id', authenticate, requireRole(['ADMIN']), async (req: Request, res) => {
   try {
     const { id } = req.params;
     const { salvageValue, notes, isActive } = req.body;
@@ -333,7 +333,7 @@ router.put('/:id', authenticate, requireRole(['ADMIN']), async (req: any, res) =
     });
 
     // Log audit
-    await logAudit(req.user.id, 'UPDATE', 'AssetDepreciation', id, req.body);
+    await logAudit(req, 'UPDATE', 'AssetDepreciation', id, req.body);
 
     res.json({
       message: 'Depreciation record updated successfully',
@@ -349,7 +349,7 @@ router.put('/:id', authenticate, requireRole(['ADMIN']), async (req: any, res) =
 });
 
 // POST /api/depreciation/:id/post - Post depreciation for period
-router.post('/:id/post', authenticate, requireRole(['ADMIN']), async (req: any, res) => {
+router.post('/:id/post', authenticate, requireRole(['ADMIN']), async (req: Request, res) => {
   try {
     const { id } = req.params;
     const { periodId } = req.body;
@@ -395,7 +395,7 @@ router.post('/:id/post', authenticate, requireRole(['ADMIN']), async (req: any, 
     });
 
     // Log audit
-    await logAudit(req.user.id, 'POST_DEPRECIATION', 'DepreciationSchedule', periodId, {
+    await logAudit(req, 'POST_DEPRECIATION', 'DepreciationSchedule', periodId, {
       depreciationId: id,
       amount: schedule.depreciationAmount
     });
@@ -418,7 +418,7 @@ router.post('/:id/post', authenticate, requireRole(['ADMIN']), async (req: any, 
 // =====================================================
 
 // POST /api/depreciation/valuations - Create valuation
-router.post('/valuations', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: any, res) => {
+router.post('/valuations', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: Request, res) => {
   try {
     const {
       assetId,
@@ -454,7 +454,7 @@ router.post('/valuations', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), a
       }
     });
 
-    await logAudit(req.user.id, 'CREATE', 'AssetValuation', valuation.id, { assetId });
+    await logAudit(req, 'CREATE', 'AssetValuation', valuation.id, { assetId });
 
     res.status(201).json({
       message: 'Valuation created successfully',
@@ -470,7 +470,7 @@ router.post('/valuations', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), a
 });
 
 // GET /api/depreciation/valuations/:assetId - Get valuations for asset
-router.get('/valuations/:assetId', authenticate, async (req: any, res) => {
+router.get('/valuations/:assetId', authenticate, async (req: Request, res) => {
   try {
     const { assetId } = req.params;
 
@@ -505,7 +505,7 @@ router.get('/valuations/:assetId', authenticate, async (req: any, res) => {
 // =====================================================
 
 // POST /api/depreciation/disposals - Create disposal record
-router.post('/disposals', authenticate, requireRole(['ADMIN']), async (req: any, res) => {
+router.post('/disposals', authenticate, requireRole(['ADMIN']), async (req: Request, res) => {
   try {
     const {
       assetId,
@@ -550,7 +550,7 @@ router.post('/disposals', authenticate, requireRole(['ADMIN']), async (req: any,
       }
     });
 
-    await logAudit(req.user.id, 'CREATE', 'AssetDisposal', disposal.id, { assetId });
+    await logAudit(req, 'CREATE', 'AssetDisposal', disposal.id, { assetId });
 
     res.status(201).json({
       message: 'Disposal record created successfully',
@@ -566,7 +566,7 @@ router.post('/disposals', authenticate, requireRole(['ADMIN']), async (req: any,
 });
 
 // GET /api/depreciation/disposals - List disposals
-router.get('/disposals', authenticate, async (req: any, res) => {
+router.get('/disposals', authenticate, async (req: Request, res) => {
   try {
     const disposals = await prisma.assetDisposal.findMany({
       include: {

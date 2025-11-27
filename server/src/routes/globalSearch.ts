@@ -1,12 +1,12 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
-import { authenticateToken } from '../middleware/auth';
+import { authenticate } from '../middleware/auth';
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
 // Global search across all modules
-router.get('/global', authenticateToken, async (req, res) => {
+router.get('/global', authenticate, async (req: Request, res) => {
   try {
     const { q } = req.query;
     const searchQuery = String(q || '').trim();

@@ -3,15 +3,14 @@
  * Automatically filters response data based on user role permissions
  */
 
-import { Response, NextFunction } from 'express';
-import { AuthRequest } from './auth';
+import { Response, NextFunction, Request } from 'express';
 import { filterFieldsByPermission, Role } from '../lib/permissions';
 
 /**
  * Middleware to filter response data based on field permissions
  */
 export function applyFieldVisibility(entityType: 'asset' | 'user' | 'ticket') {
-  return (req: AuthRequest, res: Response, next: NextFunction) => {
+  return (req: Request, res: Response, next: NextFunction) => {
     const originalJson = res.json.bind(res);
     const userRole = req.user?.role as Role || 'USER';
 

@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from 'express';
-import { AuthRequest } from './auth';
 
 interface CacheStore {
   [key: string]: {
@@ -23,7 +22,7 @@ setInterval(() => {
 }, 5 * 60 * 1000);
 
 export function cacheMiddleware(ttl: number = DEFAULT_TTL) {
-  return (req: AuthRequest, res: Response, next: NextFunction) => {
+  return (req: Request, res: Response, next: NextFunction) => {
     // Only cache GET requests
     if (req.method !== 'GET') {
       return next();

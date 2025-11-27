@@ -1,12 +1,12 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
-import { authenticateToken } from '../middleware/auth';
+import { authenticate } from '../middleware/auth';
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
 // Get all reservations (with filters)
-router.get('/', authenticateToken, async (req, res) => {
+router.get('/', authenticate, async (req: Request, res) => {
   try {
     const { assetId, userId, status } = req.query;
 
@@ -53,7 +53,7 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 // Create new reservation
-router.post('/', authenticateToken, async (req, res) => {
+router.post('/', authenticate, async (req: Request, res) => {
   try {
     const { assetId, reservationStart, reservationEnd, purpose, notes } = req.body;
 
@@ -109,7 +109,7 @@ router.post('/', authenticateToken, async (req, res) => {
 });
 
 // Update reservation status (approve/reject)
-router.patch('/:id/status', authenticateToken, async (req, res) => {
+router.patch('/:id/status', authenticate, async (req: Request, res) => {
   try {
     const { id } = req.params;
     const { status, rejectedReason } = req.body;
@@ -147,7 +147,7 @@ router.patch('/:id/status', authenticateToken, async (req, res) => {
 });
 
 // Cancel reservation
-router.delete('/:id', authenticateToken, async (req, res) => {
+router.delete('/:id', authenticate, async (req: Request, res) => {
   try {
     const { id } = req.params;
 

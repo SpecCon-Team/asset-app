@@ -5,7 +5,7 @@
 
 import { Router } from 'express';
 import { z } from 'zod';
-import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
+import { authenticate, requireRole } from '../middleware/auth';
 import {
   exportUserData,
   anonymizeUserData,
@@ -22,7 +22,7 @@ const router = Router();
  * GET /api/gdpr/export
  * Export all user data (GDPR Article 20 - Right to Data Portability)
  */
-router.get('/export', authenticate, async (req: AuthRequest, res) => {
+router.get('/export', authenticate, async (req: Request, res) => {
   try {
     const userId = req.user!.id;
 
@@ -48,7 +48,7 @@ router.get('/export', authenticate, async (req: AuthRequest, res) => {
  * GET /api/gdpr/retention-summary
  * Get data retention summary for current user
  */
-router.get('/retention-summary', authenticate, async (req: AuthRequest, res) => {
+router.get('/retention-summary', authenticate, async (req: Request, res) => {
   try {
     const userId = req.user!.id;
     const summary = await getDataRetentionSummary(userId);
@@ -63,7 +63,7 @@ router.get('/retention-summary', authenticate, async (req: AuthRequest, res) => 
  * GET /api/gdpr/privacy-report
  * Generate privacy report for current user
  */
-router.get('/privacy-report', authenticate, async (req: AuthRequest, res) => {
+router.get('/privacy-report', authenticate, async (req: Request, res) => {
   try {
     const userId = req.user!.id;
     const report = await generatePrivacyReport(userId);
@@ -83,7 +83,7 @@ router.get('/privacy-report', authenticate, async (req: AuthRequest, res) => {
  * Request account anonymization (GDPR Article 17 - Right to Erasure)
  * Requires password confirmation
  */
-router.post('/anonymize', authenticate, async (req: AuthRequest, res) => {
+router.post('/anonymize', authenticate, async (req: Request, res) => {
   const schema = z.object({
     password: z.string(),
     confirmation: z.literal('I understand this action cannot be undone'),
@@ -133,7 +133,7 @@ router.post('/anonymize', authenticate, async (req: AuthRequest, res) => {
  * Permanently delete user account (ADMIN only)
  * This is for compliance with legal deletion requirements
  */
-router.delete('/delete/:userId', authenticate, requireRole('ADMIN'), async (req: AuthRequest, res) => {
+router.delete('/delete/:userId', authenticate, requireRole('ADMIN'), async (req: Request, res) => {
   const schema = z.object({
     reason: z.string().min(10, 'Deletion reason must be at least 10 characters'),
     confirmation: z.literal('PERMANENTLY DELETE'),
@@ -181,7 +181,7 @@ router.delete('/delete/:userId', authenticate, requireRole('ADMIN'), async (req:
  * POST /api/gdpr/cleanup
  * Clean up old data based on retention policies (ADMIN only)
  */
-router.post('/cleanup', authenticate, requireRole('ADMIN'), async (req: AuthRequest, res) => {
+router.post('/cleanup', authenticate, requireRole('ADMIN'), async (req: Request, res) => {
   const schema = z.object({
     daysToRetain: z.number().min(30).max(3650).optional(),
   });
@@ -220,7 +220,7 @@ router.post('/cleanup', authenticate, requireRole('ADMIN'), async (req: AuthRequ
  * GET /api/gdpr/admin/retention-stats
  * Get overall data retention statistics (ADMIN only)
  */
-router.get('/admin/retention-stats', authenticate, requireRole('ADMIN'), async (req: AuthRequest, res) => {
+router.get('/admin/retention-stats', authenticate, requireRole('ADMIN'), async (req: Request, res) => {
   try {
     const { prisma } = require('../lib/prisma');
 

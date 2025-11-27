@@ -80,7 +80,7 @@ const upload = multer({
 // =====================================================
 
 // GET /api/documents - List all documents
-router.get('/', authenticate, async (req: any, res) => {
+router.get('/', authenticate, async (req: Request, res) => {
   try {
     const { categoryId, status = 'active', search, page = '1', limit = '50' } = req.query;
 
@@ -150,7 +150,7 @@ router.get('/', authenticate, async (req: any, res) => {
 });
 
 // GET /api/documents/stats - Get document statistics
-router.get('/stats', authenticate, async (req: any, res) => {
+router.get('/stats', authenticate, async (req: Request, res) => {
   try {
     const [
       totalDocs,
@@ -218,7 +218,7 @@ router.get('/stats', authenticate, async (req: any, res) => {
 });
 
 // GET /api/documents/recent - Get recent documents
-router.get('/recent', authenticate, async (req: any, res) => {
+router.get('/recent', authenticate, async (req: Request, res) => {
   try {
     const { limit = '10' } = req.query;
 
@@ -254,7 +254,7 @@ router.get('/recent', authenticate, async (req: any, res) => {
 });
 
 // GET /api/documents/:id - Get single document
-router.get('/:id', authenticate, async (req: any, res) => {
+router.get('/:id', authenticate, async (req: Request, res) => {
   try {
     const { id } = req.params;
 
@@ -338,7 +338,7 @@ router.get('/:id', authenticate, async (req: any, res) => {
 });
 
 // POST /api/documents/upload - Upload new document
-router.post('/upload', authenticate, upload.single('file'), async (req: any, res) => {
+router.post('/upload', authenticate, upload.single('file'), async (req: Request, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
@@ -378,7 +378,7 @@ router.post('/upload', authenticate, upload.single('file'), async (req: any, res
       }
     });
 
-    await logAudit(req.user.id, 'CREATE', 'Document', document.id, {
+    await logAudit(req, 'CREATE', 'Document', document.id, {
       title,
       fileName: req.file.originalname
     });
@@ -407,7 +407,7 @@ router.post('/upload', authenticate, upload.single('file'), async (req: any, res
 });
 
 // PUT /api/documents/:id - Update document metadata
-router.put('/:id', authenticate, async (req: any, res) => {
+router.put('/:id', authenticate, async (req: Request, res) => {
   try {
     const { id } = req.params;
     const { title, description, categoryId, tags, metadata, status } = req.body;
@@ -447,7 +447,7 @@ router.put('/:id', authenticate, async (req: any, res) => {
       }
     });
 
-    await logAudit(req.user.id, 'UPDATE', 'Document', id, req.body);
+    await logAudit(req, 'UPDATE', 'Document', id, req.body);
 
     res.json({
       message: 'Document updated successfully',
@@ -463,7 +463,7 @@ router.put('/:id', authenticate, async (req: any, res) => {
 });
 
 // DELETE /api/documents/:id - Delete document
-router.delete('/:id', authenticate, async (req: any, res) => {
+router.delete('/:id', authenticate, async (req: Request, res) => {
   try {
     const { id } = req.params;
 
@@ -486,7 +486,7 @@ router.delete('/:id', authenticate, async (req: any, res) => {
       data: { status: 'deleted' }
     });
 
-    await logAudit(req.user.id, 'DELETE', 'Document', id, {});
+    await logAudit(req, 'DELETE', 'Document', id, {});
 
     res.json({ message: 'Document deleted successfully' });
   } catch (error: any) {
@@ -499,7 +499,7 @@ router.delete('/:id', authenticate, async (req: any, res) => {
 });
 
 // GET /api/documents/:id/download - Download document
-router.get('/:id/download', authenticate, async (req: any, res) => {
+router.get('/:id/download', authenticate, async (req: Request, res) => {
   try {
     const { id } = req.params;
 
@@ -533,7 +533,7 @@ router.get('/:id/download', authenticate, async (req: any, res) => {
 });
 
 // POST /api/documents/:id/version - Upload new version
-router.post('/:id/version', authenticate, upload.single('file'), async (req: any, res) => {
+router.post('/:id/version', authenticate, upload.single('file'), async (req: Request, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
@@ -593,7 +593,7 @@ router.post('/:id/version', authenticate, upload.single('file'), async (req: any
       }
     });
 
-    await logAudit(req.user.id, 'VERSION', 'Document', id, {
+    await logAudit(req, 'VERSION', 'Document', id, {
       newVersion: newVersion.version
     });
 
@@ -620,7 +620,7 @@ router.post('/:id/version', authenticate, upload.single('file'), async (req: any
 });
 
 // GET /api/documents/:id/versions - Get version history
-router.get('/:id/versions', authenticate, async (req: any, res) => {
+router.get('/:id/versions', authenticate, async (req: Request, res) => {
   try {
     const { id } = req.params;
 
@@ -660,7 +660,7 @@ router.get('/:id/versions', authenticate, async (req: any, res) => {
 // =====================================================
 
 // GET /api/documents/categories/all - List all categories
-router.get('/categories/all', authenticate, async (req: any, res) => {
+router.get('/categories/all', authenticate, async (req: Request, res) => {
   try {
     const categories = await prisma.documentCategory.findMany({
       where: { isActive: true },
@@ -678,7 +678,7 @@ router.get('/categories/all', authenticate, async (req: any, res) => {
 });
 
 // POST /api/documents/categories - Create category
-router.post('/categories', authenticate, requireRole(['ADMIN']), async (req: any, res) => {
+router.post('/categories', authenticate, requireRole(['ADMIN']), async (req: Request, res) => {
   try {
     const { name, description, icon, color, parentCategoryId, sortOrder } = req.body;
 
@@ -697,7 +697,7 @@ router.post('/categories', authenticate, requireRole(['ADMIN']), async (req: any
       }
     });
 
-    await logAudit(req.user.id, 'CREATE', 'DocumentCategory', category.id, { name });
+    await logAudit(req, 'CREATE', 'DocumentCategory', category.id, { name });
 
     res.status(201).json({
       message: 'Category created successfully',
@@ -717,7 +717,7 @@ router.post('/categories', authenticate, requireRole(['ADMIN']), async (req: any
 // =====================================================
 
 // POST /api/documents/:id/share - Share document
-router.post('/:id/share', authenticate, async (req: any, res) => {
+router.post('/:id/share', authenticate, async (req: Request, res) => {
   try {
     const { id } = req.params;
     const { sharedWithUserId, sharedWithRole, permissions, expiresAt, message } = req.body;
@@ -748,7 +748,7 @@ router.post('/:id/share', authenticate, async (req: any, res) => {
       }
     });
 
-    await logAudit(req.user.id, 'SHARE', 'Document', id, {
+    await logAudit(req, 'SHARE', 'Document', id, {
       sharedWith: sharedWithUserId || sharedWithRole
     });
 
@@ -770,7 +770,7 @@ router.post('/:id/share', authenticate, async (req: any, res) => {
 // =====================================================
 
 // POST /api/documents/:id/comments - Add comment
-router.post('/:id/comments', authenticate, async (req: any, res) => {
+router.post('/:id/comments', authenticate, async (req: Request, res) => {
   try {
     const { id } = req.params;
     const { comment, parentCommentId } = req.body;

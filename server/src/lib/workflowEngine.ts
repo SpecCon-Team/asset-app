@@ -411,7 +411,10 @@ class WorkflowEngine {
       let sentCount = 0;
       for (const user of users) {
         if (user.phone) {
-          await whatsappService.sendMessage(user.phone, message);
+          await whatsappService.sendTextMessage({
+            to: user.phone,
+            message: message
+          });
           sentCount++;
         }
       }

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { authenticate, AuthRequest } from '../middleware/auth';
+import { authenticate } from '../middleware/auth';
 import {
   getUserSessions,
   terminateSession,
@@ -15,7 +15,7 @@ const router = Router();
  * GET /api/sessions - Get user's active sessions
  * Returns all active sessions across devices
  */
-router.get('/', authenticate, async (req: AuthRequest, res) => {
+router.get('/', authenticate, async (req: Request, res) => {
   try {
     const sessions = await getUserSessions(req.user!.id);
 
@@ -37,7 +37,7 @@ router.get('/', authenticate, async (req: AuthRequest, res) => {
  * DELETE /api/sessions/:id - Terminate specific session
  * Allows user to logout from a specific device
  */
-router.delete('/:id', authenticate, async (req: AuthRequest, res) => {
+router.delete('/:id', authenticate, async (req: Request, res) => {
   try {
     const { id } = req.params;
 
@@ -75,7 +75,7 @@ router.delete('/:id', authenticate, async (req: AuthRequest, res) => {
  * POST /api/sessions/terminate-others - Logout other devices
  * Keeps current session active, terminates all others
  */
-router.post('/terminate-others', authenticate, async (req: AuthRequest, res) => {
+router.post('/terminate-others', authenticate, async (req: Request, res) => {
   try {
     const currentSessionToken = req.headers['x-session-token'] as string;
 
@@ -114,7 +114,7 @@ router.post('/terminate-others', authenticate, async (req: AuthRequest, res) => 
  * POST /api/sessions/terminate-all - Logout all devices
  * Terminates ALL sessions including current one
  */
-router.post('/terminate-all', authenticate, async (req: AuthRequest, res) => {
+router.post('/terminate-all', authenticate, async (req: Request, res) => {
   try {
     // Terminate all sessions
     const sessionCount = await terminateAllSessions(req.user!.id);
@@ -151,7 +151,7 @@ router.post('/terminate-all', authenticate, async (req: AuthRequest, res) => {
  * GET /api/sessions/active-tokens - Get active refresh tokens
  * Shows all refresh tokens (login sessions) for the user
  */
-router.get('/active-tokens', authenticate, async (req: AuthRequest, res) => {
+router.get('/active-tokens', authenticate, async (req: Request, res) => {
   try {
     const tokens = await getUserActiveSessions(req.user!.id);
 
@@ -169,7 +169,7 @@ router.get('/active-tokens', authenticate, async (req: AuthRequest, res) => {
  * DELETE /api/sessions/token/:id - Revoke specific refresh token
  * Allows revoking a specific refresh token (login session)
  */
-router.delete('/token/:id', authenticate, async (req: AuthRequest, res) => {
+router.delete('/token/:id', authenticate, async (req: Request, res) => {
   try {
     const { id } = req.params;
 

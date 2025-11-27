@@ -65,10 +65,10 @@ const upload = multer({
 });
 
 // Upload attachment to ticket
-router.post('/:ticketId', authenticate, uploadRateLimiter, upload.single('file'), async (req, res) => {
+router.post('/:ticketId', authenticate, uploadRateLimiter, upload.single('file'), async (req: Request, res) => {
   try {
     const { ticketId } = req.params;
-    const user = (req as any).user;
+    const user = req.user;
 
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
@@ -159,10 +159,10 @@ router.get('/ticket/:ticketId', authenticate, async (req, res) => {
 });
 
 // Delete attachment
-router.delete('/:id', authenticate, async (req, res) => {
+router.delete('/:id', authenticate, async (req: Request, res) => {
   try {
     const { id } = req.params;
-    const user = (req as any).user;
+    const user = req.user;
 
     const attachment = await prisma.attachment.findUnique({
       where: { id },

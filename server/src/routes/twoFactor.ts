@@ -4,7 +4,7 @@ import speakeasy from 'speakeasy';
 import QRCode from 'qrcode';
 import crypto from 'crypto';
 import { prisma } from '../lib/prisma';
-import { authenticate, AuthRequest } from '../middleware/auth';
+import { authenticate } from '../middleware/auth';
 import { logAudit } from '../lib/auditLog';
 
 const router = Router();
@@ -13,7 +13,7 @@ const router = Router();
  * POST /api/2fa/setup
  * Generate 2FA secret and QR code
  */
-router.post('/setup', authenticate, async (req: AuthRequest, res) => {
+router.post('/setup', authenticate, async (req: Request, res) => {
   try {
     const user = req.user!;
 
@@ -58,7 +58,7 @@ router.post('/setup', authenticate, async (req: AuthRequest, res) => {
  * POST /api/2fa/verify-setup
  * Verify 2FA token and enable 2FA
  */
-router.post('/verify-setup', authenticate, async (req: AuthRequest, res) => {
+router.post('/verify-setup', authenticate, async (req: Request, res) => {
   const schema = z.object({
     token: z.string().length(6),
   });
@@ -107,7 +107,7 @@ router.post('/verify-setup', authenticate, async (req: AuthRequest, res) => {
  * POST /api/2fa/verify
  * Verify 2FA token during login
  */
-router.post('/verify', async (req, res) => {
+router.post('/verify', async (req: Request, res) => {
   const schema = z.object({
     userId: z.string(),
     token: z.string().min(6).max(8), // 6 for TOTP, 8 for backup code
@@ -144,10 +144,9 @@ router.post('/verify', async (req, res) => {
       });
 
       // Log audit
-      await logAudit(
-        req as AuthRequest,
-        'LOGIN_2FA_BACKUP',
-        'User',
+          await logAudit(
+            req,
+            'LOGIN_2FA_BACKUP',        'User',
         user.id,
         undefined,
         { backupCodesRemaining: backupCodes.length }
@@ -169,7 +168,7 @@ router.post('/verify', async (req, res) => {
     }
 
     // Log audit
-    await logAudit(req as AuthRequest, 'LOGIN_2FA_SUCCESS', 'User', user.id);
+    await logAudit(req, 'LOGIN_2FA_SUCCESS', 'User', user.id);
 
     res.json({ verified: true });
   } catch (error) {
@@ -182,7 +181,7 @@ router.post('/verify', async (req, res) => {
  * POST /api/2fa/disable
  * Disable 2FA for current user
  */
-router.post('/disable', authenticate, async (req: AuthRequest, res) => {
+router.post('/disable', authenticate, async (req: Request, res) => {
   const schema = z.object({
     token: z.string().length(6),
   });
@@ -235,7 +234,7 @@ router.post('/disable', authenticate, async (req: AuthRequest, res) => {
  * GET /api/2fa/status
  * Get 2FA status for current user
  */
-router.get('/status', authenticate, async (req: AuthRequest, res) => {
+router.get('/status', authenticate, async (req: Request, res) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user!.id },
@@ -265,7 +264,7 @@ router.get('/status', authenticate, async (req: AuthRequest, res) => {
  * POST /api/2fa/regenerate-backup-codes
  * Regenerate backup codes
  */
-router.post('/regenerate-backup-codes', authenticate, async (req: AuthRequest, res) => {
+router.post('/regenerate-backup-codes', authenticate, async (req: Request, res) => {
   const schema = z.object({
     token: z.string().length(6),
   });
@@ -319,7 +318,7 @@ router.post('/regenerate-backup-codes', authenticate, async (req: AuthRequest, r
  * Admin endpoint to reset 2FA for a locked-out user
  * ADMIN ONLY
  */
-router.post('/admin/reset', authenticate, async (req: AuthRequest, res) => {
+router.post('/admin/reset', authenticate, async (req: Request, res) => {
   // Check if requester is admin
   if (req.user?.role !== 'ADMIN') {
     return res.status(403).json({ message: 'Admin access required' });
@@ -399,7 +398,7 @@ router.post('/admin/reset', authenticate, async (req: AuthRequest, res) => {
  * GET /api/2fa/admin/users-with-2fa
  * Get list of users with 2FA enabled (admin only)
  */
-router.get('/admin/users-with-2fa', authenticate, async (req: AuthRequest, res) => {
+router.get('/admin/users-with-2fa', authenticate, async (req: Request, res) => {
   // Check if requester is admin
   if (req.user?.role !== 'ADMIN') {
     return res.status(403).json({ message: 'Admin access required' });

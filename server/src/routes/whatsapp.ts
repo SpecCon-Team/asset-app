@@ -1,6 +1,6 @@
 import express from 'express';
 import { whatsappService } from '../lib/whatsapp';
-import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
+import { authenticate, requireRole } from '../middleware/auth';
 import { prisma } from '../lib/prisma';
 
 const router = express.Router();
@@ -9,7 +9,7 @@ const router = express.Router();
  * Get WhatsApp configuration status
  * GET /api/whatsapp/status
  */
-router.get('/status', authenticate, requireRole('ADMIN'), (req: AuthRequest, res) => {
+router.get('/status', authenticate, requireRole('ADMIN'), (req: Request, res) => {
   try {
     const isConfigured = whatsappService.isConfigured();
 
@@ -30,7 +30,7 @@ router.get('/status', authenticate, requireRole('ADMIN'), (req: AuthRequest, res
  * POST /api/whatsapp/test
  * Body: { phoneNumber: string }
  */
-router.post('/test', authenticate, requireRole('ADMIN'), async (req: AuthRequest, res) => {
+router.post('/test', authenticate, requireRole('ADMIN'), async (req: Request, res) => {
   try {
     const { phoneNumber } = req.body;
 
@@ -76,7 +76,7 @@ router.post('/test', authenticate, requireRole('ADMIN'), async (req: AuthRequest
  * POST /api/whatsapp/send
  * Body: { phoneNumber: string, message: string }
  */
-router.post('/send', authenticate, requireRole('ADMIN'), async (req: AuthRequest, res) => {
+router.post('/send', authenticate, requireRole('ADMIN'), async (req: Request, res) => {
   try {
     const { phoneNumber, message } = req.body;
 
@@ -117,7 +117,7 @@ router.post('/send', authenticate, requireRole('ADMIN'), async (req: AuthRequest
  * POST /api/whatsapp/notify/ticket
  * Body: { phoneNumber: string, ticketData: object }
  */
-router.post('/notify/ticket', authenticate, async (req: AuthRequest, res) => {
+router.post('/notify/ticket', authenticate, async (req: Request, res) => {
   try {
     const { phoneNumber, ticketData } = req.body;
 
@@ -158,7 +158,7 @@ router.post('/notify/ticket', authenticate, async (req: AuthRequest, res) => {
  * POST /api/whatsapp/notify/asset
  * Body: { phoneNumber: string, assetData: object }
  */
-router.post('/notify/asset', authenticate, async (req: AuthRequest, res) => {
+router.post('/notify/asset', authenticate, async (req: Request, res) => {
   try {
     const { phoneNumber, assetData } = req.body;
 

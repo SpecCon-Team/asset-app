@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../lib/prisma';
 import multer from 'multer';
 import { parse } from 'csv-parse/sync';
-import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
+import { authenticate, requireRole } from '../middleware/auth';
 import { logAudit } from '../lib/auditLog';
 import { applyFieldVisibility } from '../middleware/fieldVisibility';
 import { validateFieldUpdates, Role } from '../lib/permissions';
@@ -25,7 +25,7 @@ const createSchema = z.object({
   assetId: z.string().nullable().optional(),
 });
 
-router.get('/', authenticate, cacheMiddleware(20000), applyFieldVisibility('ticket'), async (req: AuthRequest, res) => {
+router.get('/', authenticate, cacheMiddleware(20000), applyFieldVisibility('ticket'), async (req: Request, res) => {
   try {
     const { page = '1', limit = '100' } = req.query;
 
@@ -72,7 +72,7 @@ router.get('/', authenticate, cacheMiddleware(20000), applyFieldVisibility('tick
   }
 });
 
-router.get('/:id', authenticate, applyFieldVisibility('ticket'), async (req: AuthRequest, res) => {
+router.get('/:id', authenticate, applyFieldVisibility('ticket'), async (req: Request, res) => {
   try {
     const { id } = req.params;
 
@@ -106,7 +106,7 @@ router.get('/:id', authenticate, applyFieldVisibility('ticket'), async (req: Aut
   }
 });
 
-router.post('/', authenticate, async (req: AuthRequest, res) => {
+router.post('/', authenticate, async (req: Request, res) => {
   const parsed = createSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json(parsed.error.flatten());
 
@@ -186,7 +186,7 @@ router.post('/', authenticate, async (req: AuthRequest, res) => {
   }
 });
 
-router.patch('/bulk', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: AuthRequest, res) => {
+router.patch('/bulk', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: Request, res) => {
   const schema = z.object({
     ticketIds: z.array(z.string()),
     updates: z.object({
@@ -223,7 +223,7 @@ router.patch('/bulk', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (r
   }
 });
 
-router.patch('/:id', authenticate, async (req: AuthRequest, res) => {
+router.patch('/:id', authenticate, async (req: Request, res) => {
   const parsed = createSchema.partial().extend({
     status: z.string().optional(),
     resolution: z.string().optional(),
@@ -419,7 +419,7 @@ Type *MENU* for more options.`,
   }
 });
 
-router.delete('/bulk', authenticate, requireRole('ADMIN'), async (req: AuthRequest, res) => {
+router.delete('/bulk', authenticate, requireRole('ADMIN'), async (req: Request, res) => {
   const schema = z.object({
     ticketIds: z.array(z.string()),
   });
@@ -453,7 +453,7 @@ router.delete('/bulk', authenticate, requireRole('ADMIN'), async (req: AuthReque
   }
 });
 
-router.delete('/:id', authenticate, requireRole('ADMIN'), async (req: AuthRequest, res) => {
+router.delete('/:id', authenticate, requireRole('ADMIN'), async (req: Request, res) => {
   try {
     const { id } = req.params;
 
@@ -498,7 +498,7 @@ router.delete('/:id', authenticate, requireRole('ADMIN'), async (req: AuthReques
 });
 
 // POST /api/tickets/import-csv - Import tickets from CSV (ADMIN or TECHNICIAN only)
-router.post('/import-csv', authenticate, requireRole('ADMIN', 'TECHNICIAN'), upload.single('file'), async (req: AuthRequest, res) => {
+router.post('/import-csv', authenticate, requireRole('ADMIN', 'TECHNICIAN'), upload.single('file'), async (req: Request, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
@@ -585,7 +585,7 @@ router.post('/import-csv', authenticate, requireRole('ADMIN', 'TECHNICIAN'), upl
 });
 
 // Bulk close tickets
-router.post('/bulk/close', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: AuthRequest, res) => {
+router.post('/bulk/close', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: Request, res) => {
   const schema = z.object({
     ticketIds: z.array(z.string()),
     resolution: z.string().optional(),
@@ -649,7 +649,7 @@ router.post('/bulk/close', authenticate, requireRole('ADMIN', 'TECHNICIAN'), asy
 });
 
 // Bulk export tickets
-router.post('/bulk/export', authenticate, async (req: AuthRequest, res) => {
+router.post('/bulk/export', authenticate, async (req: Request, res) => {
   const schema = z.object({
     ticketIds: z.array(z.string()),
     format: z.enum(['json', 'csv']).default('json'),
@@ -727,7 +727,7 @@ router.post('/bulk/export', authenticate, async (req: AuthRequest, res) => {
 });
 
 // Bulk delete tickets (admin only)
-router.delete('/bulk', authenticate, requireRole('ADMIN'), async (req: AuthRequest, res) => {
+router.delete('/bulk', authenticate, requireRole('ADMIN'), async (req: Request, res) => {
   const schema = z.object({
     ticketIds: z.array(z.string()),
   });

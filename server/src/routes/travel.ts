@@ -6,7 +6,7 @@ const router = express.Router();
 const prisma = new PrismaClient();
 
 // Get all trips for current user
-router.get('/', authenticate, async (req, res) => {
+router.get('/', authenticate, async (req: Request, res) => {
   try {
     const trips = await prisma.trip.findMany({
       where: {
@@ -25,7 +25,7 @@ router.get('/', authenticate, async (req, res) => {
 });
 
 // Get single trip
-router.get('/:id', authenticate, async (req, res) => {
+router.get('/:id', authenticate, async (req: Request, res) => {
   try {
     const trip = await prisma.trip.findFirst({
       where: {
@@ -46,7 +46,7 @@ router.get('/:id', authenticate, async (req, res) => {
 });
 
 // Create new trip
-router.post('/', authenticate, async (req, res) => {
+router.post('/', authenticate, async (req: Request, res) => {
   try {
     const {
       destination,
@@ -92,7 +92,7 @@ router.post('/', authenticate, async (req, res) => {
 });
 
 // Update trip
-router.put('/:id', authenticate, async (req, res) => {
+router.put('/:id', authenticate, async (req: Request, res) => {
   try {
     const {
       destination,
@@ -145,7 +145,7 @@ router.put('/:id', authenticate, async (req, res) => {
 });
 
 // Delete trip
-router.delete('/:id', authenticate, async (req, res) => {
+router.delete('/:id', authenticate, async (req: Request, res) => {
   try {
     // Check if trip exists and belongs to user
     const existingTrip = await prisma.trip.findFirst({
@@ -173,7 +173,7 @@ router.delete('/:id', authenticate, async (req, res) => {
 });
 
 // Get trip statistics
-router.get('/stats/summary', authenticate, async (req, res) => {
+router.get('/stats/summary', authenticate, async (req: Request, res) => {
   try {
     const trips = await prisma.trip.findMany({
       where: {

@@ -30,7 +30,7 @@ const router = Router();
 const prisma = new PrismaClient();
 
 // Get all maintenance schedules
-router.get('/', authenticate, async (req: any, res) => {
+router.get('/', authenticate, async (req: Request, res) => {
   try {
     const { assetId, status, priority, assignedToId } = req.query;
 
@@ -65,7 +65,7 @@ router.get('/', authenticate, async (req: any, res) => {
 });
 
 // Get upcoming maintenance (due within X days)
-router.get('/upcoming', authenticate, async (req: any, res) => {
+router.get('/upcoming', authenticate, async (req: Request, res) => {
   try {
     const days = parseInt(req.query.days as string) || 7;
     const now = new Date();
@@ -94,7 +94,7 @@ router.get('/upcoming', authenticate, async (req: any, res) => {
 });
 
 // Get overdue maintenance
-router.get('/overdue', authenticate, async (req: any, res) => {
+router.get('/overdue', authenticate, async (req: Request, res) => {
   try {
     const now = new Date();
 
@@ -119,7 +119,7 @@ router.get('/overdue', authenticate, async (req: any, res) => {
 });
 
 // Get single maintenance schedule
-router.get('/:id', authenticate, async (req: any, res) => {
+router.get('/:id', authenticate, async (req: Request, res) => {
   try {
     const schedule = await prisma.maintenanceSchedule.findUnique({
       where: { id: req.params.id },
@@ -152,7 +152,7 @@ router.get('/:id', authenticate, async (req: any, res) => {
 });
 
 // Create maintenance schedule
-router.post('/', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: any, res) => {
+router.post('/', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: Request, res) => {
   try {
     const {
       assetId,
@@ -190,7 +190,7 @@ router.post('/', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req:
       },
     });
 
-    await logAudit(req.user.id, 'CREATE', 'MaintenanceSchedule', schedule.id, { created: schedule });
+    await logAudit(req, 'CREATE', 'MaintenanceSchedule', schedule.id, { created: schedule });
 
     res.status(201).json(schedule);
   } catch (error) {
@@ -200,7 +200,7 @@ router.post('/', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req:
 });
 
 // Update maintenance schedule
-router.put('/:id', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: any, res) => {
+router.put('/:id', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: Request, res) => {
   try {
     const {
       title,
@@ -242,7 +242,7 @@ router.put('/:id', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (re
       },
     });
 
-    await logAudit(req.user.id, 'UPDATE', 'MaintenanceSchedule', schedule.id, { old: oldSchedule, new: schedule });
+    await logAudit(req, 'UPDATE', 'MaintenanceSchedule', schedule.id, { old: oldSchedule, new: schedule });
 
     res.json(convertBigIntsToNumbers(schedule));
   } catch (error) {
@@ -252,7 +252,7 @@ router.put('/:id', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (re
 });
 
 // Delete maintenance schedule
-router.delete('/:id', authenticate, requireRole(['ADMIN']), async (req: any, res) => {
+router.delete('/:id', authenticate, requireRole(['ADMIN']), async (req: Request, res) => {
   try {
     const schedule = await prisma.maintenanceSchedule.findUnique({
       where: { id: req.params.id },
@@ -266,7 +266,7 @@ router.delete('/:id', authenticate, requireRole(['ADMIN']), async (req: any, res
       where: { id: req.params.id },
     });
 
-    await logAudit(req.user.id, 'DELETE', 'MaintenanceSchedule', req.params.id, { deleted: schedule });
+    await logAudit(req, 'DELETE', 'MaintenanceSchedule', req.params.id, { deleted: schedule });
 
     res.json({ message: 'Maintenance schedule deleted successfully' });
   } catch (error) {
@@ -276,7 +276,7 @@ router.delete('/:id', authenticate, requireRole(['ADMIN']), async (req: any, res
 });
 
 // Complete maintenance task
-router.post('/:id/complete', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: any, res) => {
+router.post('/:id/complete', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: Request, res) => {
   try {
     const {
       status,
@@ -342,7 +342,7 @@ router.post('/:id/complete', authenticate, requireRole(['ADMIN', 'TECHNICIAN']),
       },
     });
 
-    await logAudit(req.user.id, 'UPDATE', 'MaintenanceSchedule', schedule.id, { action: 'completed', history });
+    await logAudit(req, 'UPDATE', 'MaintenanceSchedule', schedule.id, { action: 'completed', history });
 
     res.json(convertBigIntsToNumbers({ schedule: updatedSchedule, history }));
   } catch (error) {
@@ -352,7 +352,7 @@ router.post('/:id/complete', authenticate, requireRole(['ADMIN', 'TECHNICIAN']),
 });
 
 // Get maintenance history
-router.get('/:id/history', authenticate, async (req: any, res) => {
+router.get('/:id/history', authenticate, async (req: Request, res) => {
   try {
     const history = await prisma.maintenanceHistory.findMany({
       where: { scheduleId: req.params.id },
@@ -376,7 +376,7 @@ router.get('/:id/history', authenticate, async (req: any, res) => {
 });
 
 // Get maintenance statistics
-router.get('/stats/overview', authenticate, async (req: any, res) => {
+router.get('/stats/overview', authenticate, async (req: Request, res) => {
   try {
     const now = new Date();
     const thirtyDaysAgo = new Date();

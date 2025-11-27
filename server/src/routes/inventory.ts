@@ -33,7 +33,7 @@ const router = Router();
 // =====================================================
 
 // GET /api/inventory - List all inventory items
-router.get('/', authenticate, async (req: any, res) => {
+router.get('/', authenticate, async (req: Request, res) => {
   try {
     const {
       search,
@@ -118,7 +118,7 @@ router.get('/', authenticate, async (req: any, res) => {
 });
 
 // GET /api/inventory/low-stock - Get low stock items
-router.get('/low-stock', authenticate, async (req: any, res) => {
+router.get('/low-stock', authenticate, async (req: Request, res) => {
   try {
     const items = await prisma.$queryRaw`
       SELECT * FROM "LowStockItems"
@@ -135,7 +135,7 @@ router.get('/low-stock', authenticate, async (req: any, res) => {
 });
 
 // GET /api/inventory/stats - Get inventory statistics
-router.get('/stats', authenticate, async (req: any, res) => {
+router.get('/stats', authenticate, async (req: Request, res) => {
   try {
     const [
       totalItems,
@@ -203,7 +203,7 @@ router.get('/stats', authenticate, async (req: any, res) => {
 });
 
 // GET /api/inventory/:id - Get single inventory item
-router.get('/:id', authenticate, async (req: any, res) => {
+router.get('/:id', authenticate, async (req: Request, res) => {
   try {
     const { id } = req.params;
 
@@ -265,7 +265,7 @@ router.get('/:id', authenticate, async (req: any, res) => {
 });
 
 // POST /api/inventory - Create new inventory item
-router.post('/', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: any, res) => {
+router.post('/', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: Request, res) => {
   try {
     const {
       itemCode,
@@ -328,7 +328,7 @@ router.post('/', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req:
     });
 
     // Log audit
-    await logAudit(req.user.id, 'CREATE', 'InventoryItem', item.id, {
+    await logAudit(req, 'CREATE', 'InventoryItem', item.id, {
       itemCode,
       name,
       category
@@ -356,7 +356,7 @@ router.post('/', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req:
 });
 
 // PUT /api/inventory/:id - Update inventory item
-router.put('/:id', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: any, res) => {
+router.put('/:id', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: Request, res) => {
   try {
     const { id } = req.params;
     const {
@@ -409,7 +409,7 @@ router.put('/:id', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (re
     });
 
     // Log audit
-    await logAudit(req.user.id, 'UPDATE', 'InventoryItem', id, req.body);
+    await logAudit(req, 'UPDATE', 'InventoryItem', id, req.body);
 
     res.json({
       message: 'Inventory item updated successfully',
@@ -425,7 +425,7 @@ router.put('/:id', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (re
 });
 
 // DELETE /api/inventory/:id - Delete inventory item
-router.delete('/:id', authenticate, requireRole(['ADMIN']), async (req: any, res) => {
+router.delete('/:id', authenticate, requireRole(['ADMIN']), async (req: Request, res) => {
   try {
     const { id } = req.params;
 
@@ -434,7 +434,7 @@ router.delete('/:id', authenticate, requireRole(['ADMIN']), async (req: any, res
     });
 
     // Log audit
-    await logAudit(req.user.id, 'DELETE', 'InventoryItem', id, {});
+    await logAudit(req, 'DELETE', 'InventoryItem', id, {});
 
     res.json({ message: 'Inventory item deleted successfully' });
   } catch (error: any) {
@@ -451,7 +451,7 @@ router.delete('/:id', authenticate, requireRole(['ADMIN']), async (req: any, res
 // =====================================================
 
 // POST /api/inventory/:id/transaction - Create stock transaction
-router.post('/:id/transaction', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: any, res) => {
+router.post('/:id/transaction', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: Request, res) => {
   try {
     const { id } = req.params;
     const {
@@ -523,7 +523,7 @@ router.post('/:id/transaction', authenticate, requireRole(['ADMIN', 'TECHNICIAN'
     });
 
     // Log audit
-    await logAudit(req.user.id, 'STOCK_TRANSACTION', 'StockTransaction', transaction.id, {
+    await logAudit(req, 'STOCK_TRANSACTION', 'StockTransaction', transaction.id, {
       itemId: id,
       transactionType,
       quantity,
@@ -544,7 +544,7 @@ router.post('/:id/transaction', authenticate, requireRole(['ADMIN', 'TECHNICIAN'
 });
 
 // GET /api/inventory/:id/transactions - Get transactions for item
-router.get('/:id/transactions', authenticate, async (req: any, res) => {
+router.get('/:id/transactions', authenticate, async (req: Request, res) => {
   try {
     const { id } = req.params;
     const { limit = '100' } = req.query;
@@ -594,7 +594,7 @@ router.get('/:id/transactions', authenticate, async (req: any, res) => {
 // =====================================================
 
 // GET /api/inventory/suppliers - List all suppliers
-router.get('/suppliers/list', authenticate, async (req: any, res) => {
+router.get('/suppliers/list', authenticate, async (req: Request, res) => {
   try {
     const { search, active } = req.query;
 
@@ -643,7 +643,7 @@ router.get('/suppliers/list', authenticate, async (req: any, res) => {
 });
 
 // POST /api/inventory/suppliers - Create supplier
-router.post('/suppliers/create', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: any, res) => {
+router.post('/suppliers/create', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: Request, res) => {
   try {
     const {
       supplierCode,
@@ -679,7 +679,7 @@ router.post('/suppliers/create', authenticate, requireRole(['ADMIN', 'TECHNICIAN
       }
     });
 
-    await logAudit(req.user.id, 'CREATE', 'Supplier', supplier.id, { supplierCode, name });
+    await logAudit(req, 'CREATE', 'Supplier', supplier.id, { supplierCode, name });
 
     res.status(201).json({
       message: 'Supplier created successfully',
@@ -707,7 +707,7 @@ router.post('/suppliers/create', authenticate, requireRole(['ADMIN', 'TECHNICIAN
 // =====================================================
 
 // GET /api/inventory/alerts - Get stock alerts
-router.get('/alerts/list', authenticate, async (req: any, res) => {
+router.get('/alerts/list', authenticate, async (req: Request, res) => {
   try {
     const { resolved } = req.query;
 
@@ -754,7 +754,7 @@ router.get('/alerts/list', authenticate, async (req: any, res) => {
 });
 
 // POST /api/inventory/alerts/:id/acknowledge - Acknowledge alert
-router.post('/alerts/:id/acknowledge', authenticate, async (req: any, res) => {
+router.post('/alerts/:id/acknowledge', authenticate, async (req: Request, res) => {
   try {
     const { id } = req.params;
 

@@ -25,10 +25,6 @@ export default function LoginPage() {
     setTouched({ ...touched, [field]: true });
   };
 
-  import api from '@/lib/api';
-
-// ... (rest of the component)
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -115,7 +111,6 @@ export default function LoginPage() {
       setIsLoading(false);
     }
   };
-
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">

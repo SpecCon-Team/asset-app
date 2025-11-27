@@ -3,16 +3,16 @@ import jwt from 'jsonwebtoken';
 import { prisma } from '../lib/prisma';
 
 // Extend Express Request type to include user
-export interface AuthRequest extends Request {
-  user?: {
-    id: string;
-    role: string;
-    email: string;
-  };
-  body: Request['body'];
-  params: Request['params'];
-  query: Request['query'];
-  originalUrl: Request['originalUrl'];
+declare global {
+  namespace Express {
+    interface Request {
+      user?: {
+        id: string;
+        role: string;
+        email: string;
+      };
+    }
+  }
 }
 
 /**
@@ -20,7 +20,7 @@ export interface AuthRequest extends Request {
  * Adds user information to request object
  */
 export const authenticate = async (
-  req: AuthRequest,
+  req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
