@@ -55,6 +55,59 @@ const createTransporter = async () => {
     });
   }
 
+  // Check if OAuth2 is configured
+  const useOAuth2 = process.env.GMAIL_CLIENT_ID && 
+                     process.env.GMAIL_CLIENT_SECRET && 
+                     process.env.GMAIL_REFRESH_TOKEN;
+
+  if (useOAuth2) {
+    console.log(`🔐 Using Gmail OAuth2 authentication`);
+    
+    try {
+      // Set up OAuth2 client
+      const oauth2Client = new google.auth.OAuth2(
+        process.env.GMAIL_CLIENT_ID,
+        process.env.GMAIL_CLIENT_SECRET,
+        'https://developers.google.com/oauthplayground' // Redirect URL (not used for refresh token)
+      );
+
+      oauth2Client.setCredentials({
+        refresh_token: process.env.GMAIL_REFRESH_TOKEN,
+      });
+
+      // Get access token
+      const accessTokenResponse = await oauth2Client.getAccessToken();
+      const accessToken = accessTokenResponse.token;
+
+      if (!accessToken) {
+        throw new Error('Failed to get OAuth2 access token');
+      }
+
+      const emailConfig = {
+        service: 'gmail',
+        auth: {
+          type: 'OAuth2',
+          user: process.env.EMAIL_USER,
+          clientId: process.env.GMAIL_CLIENT_ID,
+          clientSecret: process.env.GMAIL_CLIENT_SECRET,
+          refreshToken: process.env.GMAIL_REFRESH_TOKEN,
+          accessToken: accessToken,
+        },
+        // Connection timeout settings
+        connectionTimeout: 30000,
+        greetingTimeout: 30000,
+        socketTimeout: 30000,
+      };
+
+      console.log(`✅ Gmail OAuth2 configured: ${process.env.EMAIL_USER}`);
+      return createTransport(emailConfig);
+    } catch (oauthError: any) {
+      console.error('❌ OAuth2 setup failed:', oauthError.message);
+      throw new Error(`OAuth2 authentication failed: ${oauthError.message}`);
+    }
+  }
+
+  // Fallback to App Password authentication
   const emailConfig = {
     host: process.env.EMAIL_HOST || 'smtp.gmail.com',
     port: parseInt(process.env.EMAIL_PORT || '587'),
