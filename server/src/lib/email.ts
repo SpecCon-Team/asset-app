@@ -117,30 +117,36 @@ const createTransporter = async () => {
   }
 
   // Fallback to App Password authentication
+  // Use port 587 with STARTTLS (more reliable on cloud platforms like Render)
+  const port = parseInt(process.env.EMAIL_PORT || '587');
+  const useSecure = process.env.EMAIL_SECURE === 'true';
+  
   const emailConfig = {
     host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.EMAIL_PORT || '587'),
-    secure: process.env.EMAIL_SECURE === 'true', // true for 465, false for other ports
+    port: port,
+    secure: useSecure, // true for 465 (SSL), false for 587 (STARTTLS)
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASSWORD,
     },
     // Connection timeout settings for Render/cloud environments
-    connectionTimeout: 60000, // 60 seconds (increased from 30)
-    greetingTimeout: 60000, // 60 seconds (increased from 30)
-    socketTimeout: 60000, // 60 seconds (increased from 30)
+    connectionTimeout: 60000, // 60 seconds
+    greetingTimeout: 60000, // 60 seconds
+    socketTimeout: 60000, // 60 seconds
     // Retry configuration
-    pool: true,
+    pool: false, // Disable pooling for better compatibility
     maxConnections: 1,
-    maxMessages: 3,
+    maxMessages: 1,
     // Additional options for cloud environments
     tls: {
       rejectUnauthorized: false, // Allow self-signed certificates if needed
-      ciphers: 'SSLv3', // Try different cipher if needed
+      minVersion: 'TLSv1.2', // Use modern TLS
     },
     // Enable debug for troubleshooting (set EMAIL_DEBUG=true to enable)
     debug: process.env.EMAIL_DEBUG === 'true',
     logger: process.env.EMAIL_DEBUG === 'true',
+    // For port 587, require STARTTLS
+    requireTLS: port === 587,
   };
 
   console.log(`✅ Email service configured: ${process.env.EMAIL_USER} via ${emailConfig.host}:${emailConfig.port}`);
