@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { History, CheckCircle, XCircle, Clock, Filter, Search, Calendar } from 'lucide-react';
 import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
+import { getApiBaseUrl } from '@/lib/apiConfig';
 
 interface WorkflowExecution {
   id: string;
@@ -37,7 +38,7 @@ export default function WorkflowHistoryPage() {
       if (entityTypeFilter !== 'all') params.append('entityType', entityTypeFilter);
       if (dateRange !== 'all') params.append('dateRange', dateRange);
 
-      const response = await fetch(`http://localhost:4000/api/workflows/executions?${params.toString()}`, {
+      const response = await fetch(`${getApiBaseUrl()}/workflows/executions?${params.toString()}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json',
@@ -63,7 +64,13 @@ export default function WorkflowHistoryPage() {
 
       const data = await response.json();
       setExecutions(Array.isArray(data) ? data : []);
-    } catch (error) {
+    } catch (error: any) {
+      // Silently handle network errors (server not running)
+      if (error?.message?.includes('Failed to fetch') || error?.code === 'ERR_NETWORK') {
+        setExecutions([]);
+        setLoading(false);
+        return;
+      }
       console.error('Failed to fetch workflow executions:', error);
       setExecutions([]);
     } finally {

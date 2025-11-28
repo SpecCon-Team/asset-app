@@ -3,6 +3,7 @@ import { Plus, Play, Pause, Trash2, Edit, Activity } from 'lucide-react';
 import WorkflowForm from '../components/WorkflowForm';
 import { showDeleteConfirm, showSuccess, showError } from '@/lib/sweetalert';
 import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
+import { getApiBaseUrl } from '@/lib/apiConfig';
 
 interface Workflow {
   id: string;
@@ -31,7 +32,7 @@ export default function WorkflowsPage() {
 
   const fetchWorkflows = async () => {
     try {
-      const response = await fetch('http://localhost:4000/api/workflows/templates', {
+      const response = await fetch(`${getApiBaseUrl()}/workflows/templates`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
@@ -56,7 +57,13 @@ export default function WorkflowsPage() {
         console.error('API returned non-array data:', data);
         setWorkflows([]);
       }
-    } catch (error) {
+    } catch (error: any) {
+      // Silently handle network errors (server not running)
+      if (error?.message?.includes('Failed to fetch') || error?.code === 'ERR_NETWORK') {
+        setWorkflows([]);
+        setLoading(false);
+        return;
+      }
       console.error('Failed to fetch workflows:', error);
       setWorkflows([]);
     } finally {
@@ -66,15 +73,24 @@ export default function WorkflowsPage() {
 
   const toggleWorkflow = async (id: string) => {
     try {
-      const response = await fetch(`http://localhost:4000/api/workflows/templates/${id}/toggle`, {
+      const response = await fetch(`${getApiBaseUrl()}/workflows/templates/${id}/toggle`, {
         method: 'PATCH',
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
       });
+      
+      if (!response.ok) {
+        throw new Error('Failed to toggle workflow');
+      }
+      
       const updated = await response.json();
       setWorkflows(workflows.map(w => w.id === id ? updated : w));
-    } catch (error) {
+    } catch (error: any) {
+      // Silently handle network errors
+      if (error?.message?.includes('Failed to fetch') || error?.code === 'ERR_NETWORK') {
+        return;
+      }
       console.error('Failed to toggle workflow:', error);
     }
   };
@@ -89,7 +105,7 @@ export default function WorkflowsPage() {
     if (!result.isConfirmed) return;
 
     try {
-      const response = await fetch(`http://localhost:4000/api/workflows/templates/${id}`, {
+      const response = await fetch(`${getApiBaseUrl()}/workflows/templates/${id}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -100,7 +116,12 @@ export default function WorkflowsPage() {
 
       setWorkflows(workflows.filter(w => w.id !== id));
       showSuccess('Workflow deleted successfully');
-    } catch (error) {
+    } catch (error: any) {
+      // Silently handle network errors
+      if (error?.message?.includes('Failed to fetch') || error?.code === 'ERR_NETWORK') {
+        showError('Cannot connect to server. Please ensure the backend is running.');
+        return;
+      }
       console.error('Failed to delete workflow:', error);
       showError('Failed to delete workflow. Please try again.');
     }
@@ -108,32 +129,41 @@ export default function WorkflowsPage() {
 
   const handleSaveWorkflow = async (data: any) => {
     const url = editingWorkflow
-      ? `http://localhost:4000/api/workflows/templates/${editingWorkflow.id}`
-      : 'http://localhost:4000/api/workflows/templates';
+      ? `${getApiBaseUrl()}/workflows/templates/${editingWorkflow.id}`
+      : `${getApiBaseUrl()}/workflows/templates`;
 
     const method = editingWorkflow ? 'PUT' : 'POST';
 
-    const response = await fetch(url, {
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('token')}`,
-      },
-      body: JSON.stringify(data),
-    });
+    try {
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify(data),
+      });
 
-    if (!response.ok) throw new Error('Failed to save workflow');
+      if (!response.ok) throw new Error('Failed to save workflow');
 
-    const saved = await response.json();
+      const saved = await response.json();
 
-    if (editingWorkflow) {
-      setWorkflows(workflows.map(w => w.id === saved.id ? saved : w));
-    } else {
-      setWorkflows([...workflows, saved]);
+      if (editingWorkflow) {
+        setWorkflows(workflows.map(w => w.id === saved.id ? saved : w));
+      } else {
+        setWorkflows([...workflows, saved]);
+      }
+
+      setShowCreateModal(false);
+      setEditingWorkflow(null);
+    } catch (error: any) {
+      // Silently handle network errors
+      if (error?.message?.includes('Failed to fetch') || error?.code === 'ERR_NETWORK') {
+        showError('Cannot connect to server. Please ensure the backend is running.');
+        return;
+      }
+      throw error;
     }
-
-    setShowCreateModal(false);
-    setEditingWorkflow(null);
   };
 
   const getTriggerLabel = (trigger: string) => {

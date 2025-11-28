@@ -1,11 +1,12 @@
 import axios, { AxiosInstance } from 'axios';
+import { getApiBaseUrl } from '@/lib/apiConfig';
 
 let client: AxiosInstance | null = null;
 
 export function getApiClient(): AxiosInstance {
   if (client) return client;
   client = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api',
+    baseURL: getApiBaseUrl(),
     withCredentials: true,
     timeout: 10000, // 10 seconds timeout for faster failure
   });

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X, Plus, Trash2 } from 'lucide-react';
 import { showError, showSuccess } from '@/lib/sweetalert';
+import { getApiBaseUrl } from '@/lib/apiConfig';
 
 interface AssignmentRuleFormProps {
   rule?: any;
@@ -29,7 +30,7 @@ export default function AssignmentRuleForm({ rule, onSave, onCancel }: Assignmen
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch('http://localhost:4000/api/users', {
+      const response = await fetch(`${getApiBaseUrl()}/users`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },

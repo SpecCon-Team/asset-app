@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { Notification } from './types';
+import { getApiBaseUrl } from '@/lib/apiConfig';
 
 interface NotificationsState {
   notifications: Notification[];
@@ -8,7 +9,7 @@ interface NotificationsState {
   error: string | null;
 
   // Actions
-  fetchNotifications: (userId: string) => Promise<void>;
+  fetchNotifications: (userId: string, limit?: number) => Promise<void>;
   fetchUnreadCount: (userId: string) => Promise<void>;
   markAsRead: (notificationId: string) => Promise<void>;
   markAllAsRead: (userId: string) => Promise<void>;
@@ -34,15 +35,13 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      // Add limit parameter to control notification count (default 50 for performance)
-      const url = `http://localhost:4000/api/notifications/user/${userId}?limit=${limit}`;
+      const url = `${getApiBaseUrl()}/notifications/user/${userId}?limit=${limit}`;
 
       const response = await fetch(url, {
         credentials: 'include',
         headers,
       });
 
-      // Handle authentication errors silently
       if (response.status === 401 || response.status === 403) {
         set({ notifications: [], isLoading: false, error: null });
         return;
@@ -54,7 +53,11 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
 
       const data = await response.json();
       set({ notifications: data, isLoading: false });
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.message?.includes('Failed to fetch') || error?.code === 'ERR_NETWORK') {
+        set({ notifications: [], isLoading: false, error: null });
+        return;
+      }
       console.error('Error fetching notifications:', error);
       set({ error: (error as Error).message, isLoading: false, notifications: [] });
     }
@@ -71,12 +74,11 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const response = await fetch(`http://localhost:4000/api/notifications/user/${userId}/unread-count`, {
+      const response = await fetch(`${getApiBaseUrl()}/notifications/user/${userId}/unread-count`, {
         credentials: 'include',
         headers,
       });
 
-      // Handle authentication errors silently
       if (response.status === 401 || response.status === 403) {
         set({ unreadCount: 0 });
         return;
@@ -88,7 +90,11 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
 
       const data = await response.json();
       set({ unreadCount: data.count });
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.message?.includes('Failed to fetch') || error?.code === 'ERR_NETWORK') {
+        set({ unreadCount: 0 });
+        return;
+      }
       console.error('Failed to fetch unread count:', error);
       set({ unreadCount: 0 });
     }
@@ -105,7 +111,7 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const response = await fetch(`http://localhost:4000/api/notifications/${notificationId}/read`, {
+      const response = await fetch(`${getApiBaseUrl()}/notifications/${notificationId}/read`, {
         method: 'PATCH',
         credentials: 'include',
         headers,
@@ -113,12 +119,14 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
 
       if (!response.ok) throw new Error('Failed to mark as read');
 
-      // Update local state
       const notifications = get().notifications.map((n) =>
         n.id === notificationId ? { ...n, read: true } : n
       );
       set({ notifications, unreadCount: notifications.filter((n) => !n.read).length });
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.message?.includes('Failed to fetch') || error?.code === 'ERR_NETWORK') {
+        return;
+      }
       console.error('Failed to mark notification as read:', error);
     }
   },
@@ -134,7 +142,7 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const response = await fetch(`http://localhost:4000/api/notifications/user/${userId}/read-all`, {
+      const response = await fetch(`${getApiBaseUrl()}/notifications/user/${userId}/read-all`, {
         method: 'PATCH',
         credentials: 'include',
         headers,
@@ -142,10 +150,12 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
 
       if (!response.ok) throw new Error('Failed to mark all as read');
 
-      // Update local state
       const notifications = get().notifications.map((n) => ({ ...n, read: true }));
       set({ notifications, unreadCount: 0 });
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.message?.includes('Failed to fetch') || error?.code === 'ERR_NETWORK') {
+        return;
+      }
       console.error('Failed to mark all as read:', error);
     }
   },
@@ -161,7 +171,7 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const response = await fetch(`http://localhost:4000/api/notifications/${notificationId}`, {
+      const response = await fetch(`${getApiBaseUrl()}/notifications/${notificationId}`, {
         method: 'DELETE',
         credentials: 'include',
         headers,
@@ -169,10 +179,12 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
 
       if (!response.ok) throw new Error('Failed to delete notification');
 
-      // Update local state
       const notifications = get().notifications.filter((n) => n.id !== notificationId);
       set({ notifications, unreadCount: notifications.filter((n) => !n.read).length });
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.message?.includes('Failed to fetch') || error?.code === 'ERR_NETWORK') {
+        return;
+      }
       console.error('Failed to delete notification:', error);
     }
   },
@@ -188,7 +200,7 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const response = await fetch(`http://localhost:4000/api/notifications/user/${userId}/dismiss-all`, {
+      const response = await fetch(`${getApiBaseUrl()}/notifications/user/${userId}/dismiss-all`, {
         method: 'DELETE',
         credentials: 'include',
         headers,
@@ -196,9 +208,11 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
 
       if (!response.ok) throw new Error('Failed to dismiss all notifications');
 
-      // Clear all notifications from local state
       set({ notifications: [], unreadCount: 0 });
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.message?.includes('Failed to fetch') || error?.code === 'ERR_NETWORK') {
+        return;
+      }
       console.error('Failed to dismiss all notifications:', error);
     }
   },

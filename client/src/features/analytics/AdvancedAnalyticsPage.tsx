@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getApiClient } from '@/features/assets/lib/apiClient';
 import { showError } from '@/lib/sweetalert';
 import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
+import { getApiBaseUrl } from '@/lib/apiConfig';
 
 interface OverviewData {
   overview: {
@@ -311,19 +312,19 @@ const AdvancedAnalyticsPage: React.FC = () => {
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Export Data</h2>
         <div className="flex flex-wrap gap-3">
           <a
-            href={`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api/analytics/export?type=assets&format=csv`}
+            href={`${getApiBaseUrl()}/analytics/export?type=assets&format=csv`}
             className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors shadow-sm"
           >
             Export Assets (CSV)
           </a>
           <a
-            href={`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api/analytics/export?type=tickets&format=csv`}
+            href={`${getApiBaseUrl()}/analytics/export?type=tickets&format=csv`}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors shadow-sm"
           >
             Export Tickets (CSV)
           </a>
           <a
-            href={`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api/analytics/export?type=audit&format=csv`}
+            href={`${getApiBaseUrl()}/analytics/export?type=audit&format=csv`}
             className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors shadow-sm"
           >
             Export Audit Logs (CSV)

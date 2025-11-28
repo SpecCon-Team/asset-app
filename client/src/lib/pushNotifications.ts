@@ -1,4 +1,5 @@
 // Push Notifications Utility
+import { getApiBaseUrl } from './apiConfig';
 
 interface PushSubscriptionData {
   endpoint: string;
@@ -228,7 +229,7 @@ export async function savePushSubscription(
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch('http://localhost:4000/api/push-subscriptions', {
+    const response = await fetch(`${getApiBaseUrl()}/push-subscriptions`, {
       method: 'POST',
       headers,
       credentials: 'include',
@@ -263,7 +264,7 @@ export async function deletePushSubscription(userId: string): Promise<void> {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(`http://localhost:4000/api/push-subscriptions/${userId}`, {
+    const response = await fetch(`${getApiBaseUrl()}/push-subscriptions/${userId}`, {
       method: 'DELETE',
       headers,
       credentials: 'include',

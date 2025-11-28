@@ -4,6 +4,7 @@ import type { User } from '@/features/users/types';
 import { getCurrentUserEmail, isAdmin, isTechnician } from '@/features/auth/hooks';
 import { showWarning, showError, showSuccess, showConfirm } from '@/lib/sweetalert';
 import { formatDateTime } from '@/lib/dateFormatter';
+import { getApiBaseUrl } from '@/lib/apiConfig';
 
 interface Comment {
   id: string;
@@ -107,7 +108,7 @@ export default function CommentSection({ ticketId }: CommentSectionProps) {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const response = await fetch(`http://localhost:4000/api/comments/ticket/${ticketId}`, {
+      const response = await fetch(`${getApiBaseUrl()}/comments/ticket/${ticketId}`, {
         credentials: 'include',
         headers,
       });
@@ -213,7 +214,7 @@ export default function CommentSection({ ticketId }: CommentSectionProps) {
       // Generate unique request ID to help backend detect duplicates
       const requestId = `${authorId}-${ticketId}-${Date.now()}`;
 
-      const response = await fetch('http://localhost:4000/api/comments', {
+      const response = await fetch(`${getApiBaseUrl()}/comments`, {
         method: 'POST',
         headers: {
           ...headers,
@@ -294,7 +295,7 @@ export default function CommentSection({ ticketId }: CommentSectionProps) {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const response = await fetch(`http://localhost:4000/api/comments/${commentId}`, {
+      const response = await fetch(`${getApiBaseUrl()}/comments/${commentId}`, {
         method: 'DELETE',
         credentials: 'include',
         headers,

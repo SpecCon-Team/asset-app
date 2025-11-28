@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Users, Play, Pause, Edit, Trash2, BarChart3 } from 'lucide-react';
 import AssignmentRuleForm from '../components/AssignmentRuleForm';
 import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
+import { getApiBaseUrl } from '@/lib/apiConfig';
 
 interface AssignmentRule {
   id: string;
@@ -42,14 +43,25 @@ export default function AssignmentRulesPage() {
 
   const fetchRules = async () => {
     try {
-      const response = await fetch('http://localhost:4000/api/workflows/assignment-rules', {
+      const response = await fetch(`${getApiBaseUrl()}/workflows/assignment-rules`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
       });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
       setRules(data);
-    } catch (error) {
+    } catch (error: any) {
+      // Silently handle network errors (server not running)
+      if (error?.message?.includes('Failed to fetch') || error?.code === 'ERR_NETWORK') {
+        setRules([]);
+        setLoading(false);
+        return;
+      }
       console.error('Failed to fetch assignment rules:', error);
     } finally {
       setLoading(false);
@@ -58,29 +70,47 @@ export default function AssignmentRulesPage() {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch('http://localhost:4000/api/workflows/assignment-stats', {
+      const response = await fetch(`${getApiBaseUrl()}/workflows/assignment-stats`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
       });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
       setStats(data);
-    } catch (error) {
+    } catch (error: any) {
+      // Silently handle network errors
+      if (error?.message?.includes('Failed to fetch') || error?.code === 'ERR_NETWORK') {
+        return;
+      }
       console.error('Failed to fetch assignment stats:', error);
     }
   };
 
   const toggleRule = async (id: string) => {
     try {
-      const response = await fetch(`http://localhost:4000/api/workflows/assignment-rules/${id}/toggle`, {
+      const response = await fetch(`${getApiBaseUrl()}/workflows/assignment-rules/${id}/toggle`, {
         method: 'PATCH',
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
       });
+      
+      if (!response.ok) {
+        throw new Error('Failed to toggle rule');
+      }
+      
       const updated = await response.json();
       setRules(rules.map(r => r.id === id ? updated : r));
-    } catch (error) {
+    } catch (error: any) {
+      // Silently handle network errors
+      if (error?.message?.includes('Failed to fetch') || error?.code === 'ERR_NETWORK') {
+        return;
+      }
       console.error('Failed to toggle rule:', error);
     }
   };
@@ -97,7 +127,7 @@ export default function AssignmentRulesPage() {
     if (!result.isConfirmed) return;
 
     try {
-      const response = await fetch(`http://localhost:4000/api/workflows/assignment-rules/${id}`, {
+      const response = await fetch(`${getApiBaseUrl()}/workflows/assignment-rules/${id}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -109,7 +139,12 @@ export default function AssignmentRulesPage() {
       setRules(rules.filter(r => r.id !== id));
       fetchStats(); // Refresh stats after deletion
       showSuccess('Assignment rule deleted successfully');
-    } catch (error) {
+    } catch (error: any) {
+      // Silently handle network errors
+      if (error?.message?.includes('Failed to fetch') || error?.code === 'ERR_NETWORK') {
+        showError('Cannot connect to server. Please ensure the backend is running.');
+        return;
+      }
       console.error('Failed to delete rule:', error);
       showError('Failed to delete assignment rule. Please try again.');
     }
@@ -117,8 +152,8 @@ export default function AssignmentRulesPage() {
 
   const handleSaveRule = async (data: any) => {
     const url = editingRule
-      ? `http://localhost:4000/api/workflows/assignment-rules/${editingRule.id}`
-      : 'http://localhost:4000/api/workflows/assignment-rules';
+      ? `${getApiBaseUrl()}/workflows/assignment-rules/${editingRule.id}`
+      : `${getApiBaseUrl()}/workflows/assignment-rules`;
 
     const method = editingRule ? 'PUT' : 'POST';
 

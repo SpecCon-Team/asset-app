@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { showError, showSuccess } from '@/lib/sweetalert';
+import { getApiBaseUrl } from '@/lib/apiConfig';
 
 interface SLAPolicyFormProps {
   policy?: any;
@@ -30,7 +31,7 @@ export default function SLAPolicyForm({ policy, onSave, onCancel }: SLAPolicyFor
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch('http://localhost:4000/api/users', {
+      const response = await fetch(`${getApiBaseUrl()}/users`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Clock, AlertTriangle, CheckCircle, Edit, Trash2 } from 'lucide-react';
 import SLAPolicyForm from '../components/SLAPolicyForm';
 import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
+import { getApiBaseUrl } from '@/lib/apiConfig';
 
 interface SLAPolicy {
   id: string;
@@ -42,14 +43,25 @@ export default function SLAPoliciesPage() {
 
   const fetchPolicies = async () => {
     try {
-      const response = await fetch('http://localhost:4000/api/workflows/sla-policies', {
+      const response = await fetch(`${getApiBaseUrl()}/workflows/sla-policies`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
       });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
       setPolicies(data);
-    } catch (error) {
+    } catch (error: any) {
+      // Silently handle network errors (server not running)
+      if (error?.message?.includes('Failed to fetch') || error?.code === 'ERR_NETWORK') {
+        setPolicies([]);
+        setLoading(false);
+        return;
+      }
       console.error('Failed to fetch SLA policies:', error);
     } finally {
       setLoading(false);
@@ -58,14 +70,23 @@ export default function SLAPoliciesPage() {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch('http://localhost:4000/api/workflows/sla-stats', {
+      const response = await fetch(`${getApiBaseUrl()}/workflows/sla-stats`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
       });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
       setStats(data);
-    } catch (error) {
+    } catch (error: any) {
+      // Silently handle network errors
+      if (error?.message?.includes('Failed to fetch') || error?.code === 'ERR_NETWORK') {
+        return;
+      }
       console.error('Failed to fetch SLA stats:', error);
     }
   };
@@ -82,7 +103,7 @@ export default function SLAPoliciesPage() {
     if (!result.isConfirmed) return;
 
     try {
-      const response = await fetch(`http://localhost:4000/api/workflows/sla-policies/${id}`, {
+      const response = await fetch(`${getApiBaseUrl()}/workflows/sla-policies/${id}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -93,7 +114,12 @@ export default function SLAPoliciesPage() {
 
       setPolicies(policies.filter(p => p.id !== id));
       showSuccess('SLA policy deleted successfully');
-    } catch (error) {
+    } catch (error: any) {
+      // Silently handle network errors
+      if (error?.message?.includes('Failed to fetch') || error?.code === 'ERR_NETWORK') {
+        showError('Cannot connect to server. Please ensure the backend is running.');
+        return;
+      }
       console.error('Failed to delete SLA policy:', error);
       showError('Failed to delete SLA policy. Please try again.');
     }
@@ -101,8 +127,8 @@ export default function SLAPoliciesPage() {
 
   const handleSavePolicy = async (data: any) => {
     const url = editingPolicy
-      ? `http://localhost:4000/api/workflows/sla-policies/${editingPolicy.id}`
-      : 'http://localhost:4000/api/workflows/sla-policies';
+      ? `${getApiBaseUrl()}/workflows/sla-policies/${editingPolicy.id}`
+      : `${getApiBaseUrl()}/workflows/sla-policies`;
 
     const method = editingPolicy ? 'PUT' : 'POST';
 

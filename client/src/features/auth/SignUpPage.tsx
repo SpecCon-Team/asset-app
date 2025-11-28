@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Eye, EyeOff, Info } from 'lucide-react';
 import { ButtonLoader } from '@/components/LoadingSpinner';
+import { getApiBaseUrl } from '@/lib/apiConfig';
 
 export default function SignUpPage() {
   const navigate = useNavigate();
@@ -81,7 +82,7 @@ export default function SignUpPage() {
 
     try {
       // Call backend API for registration
-      const response = await fetch('http://localhost:4000/api/auth/register', {
+      const response = await fetch(`${getApiBaseUrl()}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, name }),

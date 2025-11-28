@@ -3,8 +3,7 @@ import { MessageCircle, CheckCircle, AlertCircle, Eye, EyeOff } from 'lucide-rea
 import toast from 'react-hot-toast';
 import axios from 'axios';
 import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api';
+import { getApiBaseUrl } from '@/lib/apiConfig';
 
 export default function WhatsAppSetup() {
   const [testPhoneNumber, setTestPhoneNumber] = useState('');
@@ -21,7 +20,7 @@ export default function WhatsAppSetup() {
     setIsChecking(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_BASE_URL}/whatsapp/status`, {
+      const response = await axios.get(`${getApiBaseUrl()}/whatsapp/status`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setIsConnected(response.data.configured);
@@ -43,7 +42,7 @@ export default function WhatsAppSetup() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `${API_BASE_URL}/whatsapp/test`,
+        `${getApiBaseUrl()}/whatsapp/test`,
         { phoneNumber: testPhoneNumber },
         { headers: { Authorization: `Bearer ${token}` } }
       );

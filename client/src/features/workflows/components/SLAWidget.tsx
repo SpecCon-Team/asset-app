@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Clock, AlertTriangle, CheckCircle, TrendingUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { getApiBaseUrl } from '@/lib/apiConfig';
 
 interface SLAStats {
   total: number;
@@ -26,14 +27,24 @@ export default function SLAWidget() {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch('http://localhost:4000/api/workflows/sla-stats', {
+      const response = await fetch(`${getApiBaseUrl()}/workflows/sla-stats`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
       });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
       setStats(data);
-    } catch (error) {
+    } catch (error: any) {
+      // Silently handle network errors (server not running)
+      if (error?.message?.includes('Failed to fetch') || error?.code === 'ERR_NETWORK') {
+        // Don't log to console to prevent spam
+        return;
+      }
       console.error('Failed to fetch SLA stats:', error);
     } finally {
       setLoading(false);

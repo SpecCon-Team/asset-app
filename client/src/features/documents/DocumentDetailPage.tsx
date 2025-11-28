@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getApiClient } from '../assets/lib/apiClient';
 import { showSuccess, showError, showConfirmDialog } from '@/lib/sweetalert';
 import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
+import { getApiBaseUrl } from '@/lib/apiConfig';
 
 interface Document {
   id: string;
@@ -51,7 +52,7 @@ const DocumentDetailPage: React.FC = () => {
 
   const handleDownload = async () => {
     try {
-      window.open(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api/documents/${id}/download`, '_blank');
+      window.open(`${getApiBaseUrl()}/documents/${id}/download`, '_blank');
     } catch (error) {
       showError('Failed to download document');
     }
