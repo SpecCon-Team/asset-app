@@ -60,6 +60,15 @@ const createTransporter = async () => {
                      process.env.GMAIL_CLIENT_SECRET && 
                      process.env.GMAIL_REFRESH_TOKEN;
 
+  // Log which method will be used
+  if (useOAuth2) {
+    console.log('🔍 Email auth method: OAuth2 (Gmail)');
+  } else if (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) {
+    console.log('🔍 Email auth method: App Password (SMTP)');
+  } else {
+    console.log('🔍 Email auth method: Test Account (Ethereal)');
+  }
+
   if (useOAuth2) {
     console.log(`🔐 Using Gmail OAuth2 authentication`);
     
@@ -117,9 +126,9 @@ const createTransporter = async () => {
       pass: process.env.EMAIL_PASSWORD,
     },
     // Connection timeout settings for Render/cloud environments
-    connectionTimeout: 30000, // 30 seconds
-    greetingTimeout: 30000, // 30 seconds
-    socketTimeout: 30000, // 30 seconds
+    connectionTimeout: 60000, // 60 seconds (increased from 30)
+    greetingTimeout: 60000, // 60 seconds (increased from 30)
+    socketTimeout: 60000, // 60 seconds (increased from 30)
     // Retry configuration
     pool: true,
     maxConnections: 1,
@@ -127,11 +136,20 @@ const createTransporter = async () => {
     // Additional options for cloud environments
     tls: {
       rejectUnauthorized: false, // Allow self-signed certificates if needed
+      ciphers: 'SSLv3', // Try different cipher if needed
     },
+    // Enable debug for troubleshooting (set EMAIL_DEBUG=true to enable)
+    debug: process.env.EMAIL_DEBUG === 'true',
+    logger: process.env.EMAIL_DEBUG === 'true',
   };
 
   console.log(`✅ Email service configured: ${process.env.EMAIL_USER} via ${emailConfig.host}:${emailConfig.port}`);
   console.log(`📧 Connection timeout: ${emailConfig.connectionTimeout}ms`);
+  console.log(`📧 Secure (SSL/TLS): ${emailConfig.secure}`);
+  if (process.env.EMAIL_PASSWORD) {
+    const passLength = process.env.EMAIL_PASSWORD.length;
+    console.log(`📧 Password length: ${passLength} characters (should be 16 for App Password)`);
+  }
   
   return createTransport(emailConfig);
 };
