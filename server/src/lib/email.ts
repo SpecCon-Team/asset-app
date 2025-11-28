@@ -52,9 +52,22 @@ const createTransporter = async () => {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASSWORD,
     },
+    // Connection timeout settings for Render/cloud environments
+    connectionTimeout: 30000, // 30 seconds
+    greetingTimeout: 30000, // 30 seconds
+    socketTimeout: 30000, // 30 seconds
+    // Retry configuration
+    pool: true,
+    maxConnections: 1,
+    maxMessages: 3,
+    // Additional options for cloud environments
+    tls: {
+      rejectUnauthorized: false, // Allow self-signed certificates if needed
+    },
   };
 
   console.log(`✅ Email service configured: ${process.env.EMAIL_USER} via ${emailConfig.host}:${emailConfig.port}`);
+  console.log(`📧 Connection timeout: ${emailConfig.connectionTimeout}ms`);
   
   return createTransport(emailConfig);
 };
@@ -164,8 +177,17 @@ export const sendVerificationOTP = async (to: string, otp: string, userName: str
     console.log(`📧 From: ${process.env.EMAIL_USER}`);
     console.log(`📧 SMTP: ${process.env.EMAIL_HOST || 'smtp.gmail.com'}:${process.env.EMAIL_PORT || '587'}`);
     
+    // Verify transporter connection before sending
     const transporter = await createTransporter();
     console.log(`✅ Transporter created successfully`);
+    
+    // Verify connection (optional but helpful for debugging)
+    try {
+      await transporter.verify();
+      console.log(`✅ SMTP connection verified successfully`);
+    } catch (verifyError: any) {
+      console.warn(`⚠️  SMTP verification failed (will still attempt to send):`, verifyError.message);
+    }
 
     const mailOptions = {
       from: `"Asset Management System" <${process.env.EMAIL_USER}>`,
