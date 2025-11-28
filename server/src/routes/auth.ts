@@ -556,15 +556,25 @@ router.get('/test-email', async (req, res) => {
   }
 
   try {
-    const testEmail = process.env.EMAIL_USER || 'test@example.com';
+    // Use Mailgun from email if configured, otherwise use EMAIL_USER
+    const testEmail = process.env.MAILGUN_FROM_EMAIL?.match(/<(.+)>/)?.[1] || 
+                      process.env.EMAIL_USER || 
+                      'test@example.com';
     const testOTP = '123456';
     
     console.log('🧪 Testing email configuration...');
+    if (process.env.MAILGUN_API_KEY && process.env.MAILGUN_DOMAIN) {
+      console.log('📧 Using Mailgun for test email');
+    } else {
+      console.log('📧 Using SMTP for test email');
+    }
+    
     await sendVerificationOTP(testEmail, testOTP, 'Test User');
     
     res.json({ 
       message: 'Test email sent successfully!',
       to: testEmail,
+      method: process.env.MAILGUN_API_KEY ? 'Mailgun' : 'SMTP',
       note: 'Check your inbox and server logs for details'
     });
   } catch (error: any) {

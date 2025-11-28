@@ -1,36 +1,47 @@
 import { createTransport, createTestAccount, getTestMessageUrl } from 'nodemailer';
 import { google } from 'googleapis';
+import Mailgun from 'mailgun.js';
+import formData from 'form-data';
+
+// Check if Mailgun is configured
+const isMailgunConfigured = process.env.MAILGUN_API_KEY && 
+                            process.env.MAILGUN_DOMAIN &&
+                            process.env.MAILGUN_FROM_EMAIL;
 
 // Email configuration
 const createTransporter = async () => {
-  // For development, use a test account or Gmail
-  // For production, use your actual email service
+  // Priority order: Mailgun > OAuth2 > App Password > Test Account
+  // Mailgun uses HTTP API (better for cloud platforms like Render)
 
-  // Check if email is configured (OAuth2 or App Password)
+  // Check if email is configured
   const isOAuth2Configured = process.env.GMAIL_CLIENT_ID && 
                               process.env.GMAIL_CLIENT_SECRET && 
                               process.env.GMAIL_REFRESH_TOKEN;
   const isAppPasswordConfigured = process.env.EMAIL_USER && 
                                    process.env.EMAIL_USER !== 'your-email@gmail.com' &&
                                    process.env.EMAIL_PASSWORD;
-  const isEmailConfigured = isOAuth2Configured || isAppPasswordConfigured;
+  const isEmailConfigured = isMailgunConfigured || isOAuth2Configured || isAppPasswordConfigured;
 
   // In production, require email configuration
   if (process.env.NODE_ENV === 'production' && !isEmailConfigured) {
     console.error('❌ EMAIL NOT CONFIGURED IN PRODUCTION!');
     console.error('⚠️  Email service is required for production. Please configure:');
-    console.error('   Option 1 - OAuth2 (Recommended):');
+    console.error('   Option 1 - Mailgun (Recommended for cloud platforms):');
+    console.error('     - MAILGUN_API_KEY (your Mailgun API key)');
+    console.error('     - MAILGUN_DOMAIN (your Mailgun domain)');
+    console.error('     - MAILGUN_FROM_EMAIL (sender email, e.g., noreply@yourdomain.com)');
+    console.error('   Option 2 - Gmail OAuth2:');
     console.error('     - EMAIL_USER (your sending email address)');
     console.error('     - GMAIL_CLIENT_ID');
     console.error('     - GMAIL_CLIENT_SECRET');
     console.error('     - GMAIL_REFRESH_TOKEN');
-    console.error('   Option 2 - App Password:');
+    console.error('   Option 3 - Gmail App Password:');
     console.error('     - EMAIL_USER (your sending email address)');
     console.error('     - EMAIL_PASSWORD (your email password or app password)');
     console.error('     - EMAIL_HOST (optional, defaults to smtp.gmail.com)');
     console.error('     - EMAIL_PORT (optional, defaults to 587)');
     console.error('     - EMAIL_SECURE (optional, defaults to false)');
-    throw new Error('Email service not configured in production. Please set OAuth2 or App Password environment variables.');
+    throw new Error('Email service not configured in production. Please set Mailgun, OAuth2, or App Password environment variables.');
   }
 
   // If email credentials are not configured (development only), create a test account
@@ -53,6 +64,15 @@ const createTransporter = async () => {
         pass: testAccount.pass,
       },
     });
+  }
+
+  // Log which method will be used
+  if (isMailgunConfigured) {
+    console.log('🔍 Email service: Mailgun (HTTP API)');
+    console.log(`✅ Mailgun configured: ${process.env.MAILGUN_DOMAIN}`);
+    console.log(`📧 From email: ${process.env.MAILGUN_FROM_EMAIL}`);
+    // Return null for Mailgun - we'll handle it differently in send functions
+    return null;
   }
 
   // Check if OAuth2 is configured
@@ -165,26 +185,45 @@ const createTransporter = async () => {
   return createTransport(emailConfig);
 };
 
+// Helper function to send email via Mailgun
+const sendViaMailgun = async (to: string, subject: string, html: string, text: string) => {
+  if (!isMailgunConfigured) {
+    throw new Error('Mailgun not configured');
+  }
+
+  const mailgun = new Mailgun(formData);
+  const mg = mailgun.client({
+    username: 'api',
+    key: process.env.MAILGUN_API_KEY!,
+  });
+
+  const messageData = {
+    from: process.env.MAILGUN_FROM_EMAIL!,
+    to: [to],
+    subject,
+    html,
+    text,
+  };
+
+  try {
+    const response = await mg.messages.create(process.env.MAILGUN_DOMAIN!, messageData);
+    console.log(`✅ Mailgun email sent: ${response.id}`);
+    return response;
+  } catch (error: any) {
+    console.error('❌ Mailgun error:', error);
+    throw new Error(`Mailgun send failed: ${error.message}`);
+  }
+};
+
 export const sendPasswordResetEmail = async (to: string, resetToken: string, userName: string) => {
   try {
-    const transporter = await createTransporter();
-
     // Create reset link with proper base path and hash router
-    // GitHub Pages: https://speccon-team.github.io/asset-app/#/reset-password/{token}
-    // Render/Other: https://assettrack-client.onrender.com/#/reset-password/{token}
-    // Local: http://localhost:5173/asset-app/#/reset-password/{token}
     const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
-    
-    // Only add /asset-app base path for GitHub Pages or local development
     const isGitHubPages = clientUrl.includes('github.io') || clientUrl.includes('localhost');
     const basePath = isGitHubPages ? '/asset-app' : '';
     const resetLink = `${clientUrl}${basePath}/#/reset-password/${resetToken}`;
 
-    const mailOptions = {
-      from: `"Asset Management System" <${process.env.EMAIL_USER}>`,
-      to,
-      subject: 'Password Reset Request',
-      html: `
+    const html = `
       <!DOCTYPE html>
       <html>
         <head>
@@ -231,8 +270,9 @@ export const sendPasswordResetEmail = async (to: string, resetToken: string, use
           </div>
         </body>
       </html>
-    `,
-    text: `
+    `;
+
+    const text = `
       Hi ${userName || 'there'},
 
       We received a request to reset your password for your Asset Management System account.
@@ -246,8 +286,35 @@ export const sendPasswordResetEmail = async (to: string, resetToken: string, use
 
       Best regards,
       Asset Management Team
-    `,
-  };
+    `;
+
+    // Use Mailgun if configured, otherwise use SMTP
+    if (isMailgunConfigured) {
+      await sendViaMailgun(to, 'Password Reset Request', html, text);
+      console.log(`✅ Password reset email sent to ${to} via Mailgun`);
+      return true;
+    }
+
+    const transporter = await createTransporter();
+
+    // Create reset link with proper base path and hash router
+    // GitHub Pages: https://speccon-team.github.io/asset-app/#/reset-password/{token}
+    // Render/Other: https://assettrack-client.onrender.com/#/reset-password/{token}
+    // Local: http://localhost:5173/asset-app/#/reset-password/{token}
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+    
+    // Only add /asset-app base path for GitHub Pages or local development
+    const isGitHubPages = clientUrl.includes('github.io') || clientUrl.includes('localhost');
+    const basePath = isGitHubPages ? '/asset-app' : '';
+    const resetLink = `${clientUrl}${basePath}/#/reset-password/${resetToken}`;
+
+    const mailOptions = {
+      from: `"Asset Management System" <${process.env.EMAIL_USER}>`,
+      to,
+      subject: 'Password Reset Request',
+      html,
+      text,
+    };
 
     const info = await transporter.sendMail(mailOptions);
     console.log(`✅ Password reset email sent to ${to}`);
@@ -267,26 +334,8 @@ export const sendPasswordResetEmail = async (to: string, resetToken: string, use
 export const sendVerificationOTP = async (to: string, otp: string, userName: string) => {
   try {
     console.log(`📧 Attempting to send OTP email to: ${to}`);
-    console.log(`📧 From: ${process.env.EMAIL_USER}`);
-    console.log(`📧 SMTP: ${process.env.EMAIL_HOST || 'smtp.gmail.com'}:${process.env.EMAIL_PORT || '587'}`);
     
-    // Verify transporter connection before sending
-    const transporter = await createTransporter();
-    console.log(`✅ Transporter created successfully`);
-    
-    // Verify connection (optional but helpful for debugging)
-    try {
-      await transporter.verify();
-      console.log(`✅ SMTP connection verified successfully`);
-    } catch (verifyError: any) {
-      console.warn(`⚠️  SMTP verification failed (will still attempt to send):`, verifyError.message);
-    }
-
-    const mailOptions = {
-      from: `"Asset Management System" <${process.env.EMAIL_USER}>`,
-      to,
-      subject: 'Verify Your Email - OTP Code',
-      html: `
+    const html = `
       <!DOCTYPE html>
       <html>
         <head>
@@ -331,8 +380,9 @@ export const sendVerificationOTP = async (to: string, otp: string, userName: str
           </div>
         </body>
       </html>
-    `,
-      text: `
+    `;
+
+    const text = `
       Hi ${userName || 'there'},
 
       Thank you for registering with Asset Management System!
@@ -345,7 +395,36 @@ export const sendVerificationOTP = async (to: string, otp: string, userName: str
 
       Best regards,
       Asset Management Team
-    `,
+    `;
+
+    // Use Mailgun if configured, otherwise use SMTP
+    if (isMailgunConfigured) {
+      await sendViaMailgun(to, 'Verify Your Email - OTP Code', html, text);
+      console.log(`✅ Verification OTP sent to ${to} via Mailgun`);
+      return true;
+    }
+
+    console.log(`📧 From: ${process.env.EMAIL_USER}`);
+    console.log(`📧 SMTP: ${process.env.EMAIL_HOST || 'smtp.gmail.com'}:${process.env.EMAIL_PORT || '587'}`);
+    
+    // Verify transporter connection before sending
+    const transporter = await createTransporter();
+    console.log(`✅ Transporter created successfully`);
+    
+    // Verify connection (optional but helpful for debugging)
+    try {
+      await transporter.verify();
+      console.log(`✅ SMTP connection verified successfully`);
+    } catch (verifyError: any) {
+      console.warn(`⚠️  SMTP verification failed (will still attempt to send):`, verifyError.message);
+    }
+
+    const mailOptions = {
+      from: `"Asset Management System" <${process.env.EMAIL_USER}>`,
+      to,
+      subject: 'Verify Your Email - OTP Code',
+      html,
+      text,
     };
 
     console.log(`📤 Sending email...`);
@@ -396,13 +475,7 @@ export const sendVerificationOTP = async (to: string, otp: string, userName: str
 };
 
 export const sendPasswordChangedEmail = async (to: string, userName: string) => {
-  const transporter = await createTransporter();
-
-  const mailOptions = {
-    from: `"Asset Management System" <${process.env.EMAIL_USER}>`,
-    to,
-    subject: 'Password Changed Successfully',
-    html: `
+  const html = `
       <!DOCTYPE html>
       <html>
         <head>
@@ -439,10 +512,37 @@ export const sendPasswordChangedEmail = async (to: string, userName: string) => 
           </div>
         </body>
       </html>
-    `,
-  };
+    `;
+
+  const text = `
+    Hi ${userName || 'there'},
+
+    Your password has been changed successfully.
+
+    If you did not make this change, please contact our support team immediately.
+
+    Best regards,
+    Asset Management Team
+  `;
 
   try {
+    // Use Mailgun if configured, otherwise use SMTP
+    if (isMailgunConfigured) {
+      await sendViaMailgun(to, 'Password Changed Successfully', html, text);
+      console.log(`✅ Password changed email sent to ${to} via Mailgun`);
+      return true;
+    }
+
+    const transporter = await createTransporter();
+
+    const mailOptions = {
+      from: `"Asset Management System" <${process.env.EMAIL_USER}>`,
+      to,
+      subject: 'Password Changed Successfully',
+      html,
+      text,
+    };
+
     await transporter.sendMail(mailOptions);
     console.log(`Password changed email sent to ${to}`);
     return true;
