@@ -80,7 +80,18 @@ const createTransporter = async () => {
     console.log(`✅ SendGrid configured`);
     console.log(`📧 From email: ${process.env.SENDGRID_FROM_EMAIL}`);
     // Initialize SendGrid
-    sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
+    const apiKey = process.env.SENDGRID_API_KEY!;
+    if (apiKey) {
+      // Log first 10 and last 4 characters for verification (security: don't log full key)
+      const maskedKey = apiKey.length > 14 
+        ? `${apiKey.substring(0, 10)}...${apiKey.substring(apiKey.length - 4)}`
+        : '***';
+      console.log(`🔑 API Key: ${maskedKey} (length: ${apiKey.length})`);
+      sgMail.setApiKey(apiKey);
+      console.log('✅ SendGrid API key initialized');
+    } else {
+      console.error('❌ SENDGRID_API_KEY is empty!');
+    }
     // Return null for SendGrid - we'll handle it differently in send functions
     return null;
   }
@@ -209,6 +220,12 @@ const sendViaSendGrid = async (to: string, subject: string, html: string, text: 
     throw new Error('SendGrid not configured');
   }
 
+  // Ensure API key is set (in case createTransporter wasn't called)
+  if (!sgMail.client.request.defaults.headers['authorization']) {
+    sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
+    console.log('🔑 SendGrid API key initialized');
+  }
+
   const msg = {
     to,
     from: process.env.SENDGRID_FROM_EMAIL!,
@@ -218,15 +235,29 @@ const sendViaSendGrid = async (to: string, subject: string, html: string, text: 
   };
 
   try {
+    console.log(`📤 Sending email via SendGrid to: ${to}`);
+    console.log(`📧 From: ${process.env.SENDGRID_FROM_EMAIL}`);
+    console.log(`📧 Subject: ${subject}`);
     await sgMail.send(msg);
     console.log(`✅ SendGrid email sent to ${to}`);
     return true;
   } catch (error: any) {
     console.error('❌ SendGrid error:', error);
+    console.error('   Error message:', error.message);
     if (error.response) {
-      console.error('   Response body:', error.response.body);
+      console.error('   Status code:', error.response.statusCode);
+      console.error('   Response body:', JSON.stringify(error.response.body, null, 2));
+      console.error('   Response headers:', error.response.headers);
     }
-    throw new Error(`SendGrid send failed: ${error.message}`);
+    
+    // Provide helpful error messages
+    if (error.response?.statusCode === 401) {
+      throw new Error(`SendGrid send failed: Unauthorized - Check that SENDGRID_API_KEY is correct and has Mail Send permission`);
+    } else if (error.response?.statusCode === 403) {
+      throw new Error(`SendGrid send failed: Forbidden - Check that sender email (${process.env.SENDGRID_FROM_EMAIL}) is verified in SendGrid`);
+    } else {
+      throw new Error(`SendGrid send failed: ${error.message}`);
+    }
   }
 };
 
