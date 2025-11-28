@@ -29,23 +29,23 @@ async function createProductionAdmin() {
 
     console.log('🔍 Checking for admin user: admin@example.com');
     
-    const existingUser = await prisma.user.findUnique({
+    const existingAdmin = await prisma.user.findUnique({
       where: { email: 'admin@example.com' }
     });
 
-    if (existingUser) {
+    if (existingAdmin) {
       console.log('✅ Admin user already exists in production!');
-      console.log('Email:', existingUser.email);
-      console.log('Name:', existingUser.name);
-      console.log('Role:', existingUser.role);
-      console.log('Email Verified:', existingUser.emailVerified);
+      console.log('Email:', existingAdmin.email);
+      console.log('Name:', existingAdmin.name);
+      console.log('Role:', existingAdmin.role);
+      console.log('Email Verified:', existingAdmin.emailVerified);
       
       // Reset password to default
       const newPassword = 'Admin@123456';
       const hashedPassword = await bcrypt.hash(newPassword, 10);
       
       await prisma.user.update({
-        where: { id: existingUser.id },
+        where: { id: existingAdmin.id },
         data: {
           password: hashedPassword,
           emailVerified: true,
@@ -80,11 +80,93 @@ async function createProductionAdmin() {
       console.log('Role:', newAdmin.role);
     }
     
-    console.log('\n🎉 You can now login to your production app with:');
+    // Create/Update User account
+    console.log('\n🔍 Checking for user: test@example.com');
+    const existingRegularUser = await prisma.user.findUnique({
+      where: { email: 'test@example.com' }
+    });
+
+    if (existingRegularUser) {
+      const userPassword = 'User@123456';
+      const hashedUserPassword = await bcrypt.hash(userPassword, 10);
+      await prisma.user.update({
+        where: { id: existingRegularUser.id },
+        data: {
+          password: hashedUserPassword,
+          emailVerified: true,
+          loginAttempts: 0,
+          lockoutUntil: null
+        }
+      });
+      console.log('✅ User account updated!');
+    } else {
+      const userPassword = 'User@123456';
+      const hashedUserPassword = await bcrypt.hash(userPassword, 10);
+      await prisma.user.create({
+        data: {
+          email: 'test@example.com',
+          password: hashedUserPassword,
+          name: 'Test User',
+          role: 'USER',
+          emailVerified: true,
+          loginAttempts: 0
+        }
+      });
+      console.log('✅ User account created!');
+    }
+
+    // Create/Update Technician account
+    console.log('\n🔍 Checking for technician: tech@example.com');
+    const existingTech = await prisma.user.findUnique({
+      where: { email: 'tech@example.com' }
+    });
+
+    if (existingTech) {
+      const techPassword = 'Tech@123456';
+      const hashedTechPassword = await bcrypt.hash(techPassword, 10);
+      await prisma.user.update({
+        where: { id: existingTech.id },
+        data: {
+          password: hashedTechPassword,
+          emailVerified: true,
+          loginAttempts: 0,
+          lockoutUntil: null,
+          isAvailable: true
+        }
+      });
+      console.log('✅ Technician account updated!');
+    } else {
+      const techPassword = 'Tech@123456';
+      const hashedTechPassword = await bcrypt.hash(techPassword, 10);
+      await prisma.user.create({
+        data: {
+          email: 'tech@example.com',
+          password: hashedTechPassword,
+          name: 'Technician User',
+          role: 'TECHNICIAN',
+          emailVerified: true,
+          loginAttempts: 0,
+          isAvailable: true
+        }
+      });
+      console.log('✅ Technician account created!');
+    }
+    
+    console.log('\n🎉 Production Accounts Ready!');
+    console.log('\n📋 Login Credentials:');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('👑 Admin:');
     console.log('   Email: admin@example.com');
     console.log('   Password: Admin@123456');
+    console.log('\n👤 User:');
+    console.log('   Email: test@example.com');
+    console.log('   Password: User@123456');
+    console.log('\n🔧 Technician:');
+    console.log('   Email: tech@example.com');
+    console.log('   Password: Tech@123456');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('\n   Login at: https://speccon-team.github.io/asset-app/#/login');
-    console.log('\n⚠️  Remember to change your password after first login!');
+    console.log('\n⚠️  Remember to change passwords after first login!');
     
   } catch (error) {
     console.error('❌ Error:', error);
