@@ -556,15 +556,21 @@ router.get('/test-email', async (req, res) => {
   }
 
   try {
-    // Use Mailgun from email if configured, otherwise use EMAIL_USER
-    const testEmail = process.env.MAILGUN_FROM_EMAIL?.match(/<(.+)>/)?.[1] || 
+    // Use SendGrid/Mailgun from email if configured, otherwise use EMAIL_USER
+    const testEmail = process.env.SENDGRID_FROM_EMAIL?.match(/<(.+)>/)?.[1] || 
+                      process.env.MAILGUN_FROM_EMAIL?.match(/<(.+)>/)?.[1] || 
                       process.env.EMAIL_USER || 
                       'test@example.com';
     const testOTP = '123456';
     
     console.log('🧪 Testing email configuration...');
-    if (process.env.MAILGUN_API_KEY && process.env.MAILGUN_DOMAIN) {
+    let method = 'SMTP';
+    if (process.env.SENDGRID_API_KEY) {
+      console.log('📧 Using SendGrid for test email');
+      method = 'SendGrid';
+    } else if (process.env.MAILGUN_API_KEY && process.env.MAILGUN_DOMAIN) {
       console.log('📧 Using Mailgun for test email');
+      method = 'Mailgun';
     } else {
       console.log('📧 Using SMTP for test email');
     }
@@ -574,7 +580,7 @@ router.get('/test-email', async (req, res) => {
     res.json({ 
       message: 'Test email sent successfully!',
       to: testEmail,
-      method: process.env.MAILGUN_API_KEY ? 'Mailgun' : 'SMTP',
+      method,
       note: 'Check your inbox and server logs for details'
     });
   } catch (error: any) {

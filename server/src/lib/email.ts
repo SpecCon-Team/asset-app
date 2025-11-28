@@ -2,6 +2,11 @@ import { createTransport, createTestAccount, getTestMessageUrl } from 'nodemaile
 import { google } from 'googleapis';
 import Mailgun from 'mailgun.js';
 import formData from 'form-data';
+import sgMail from '@sendgrid/mail';
+
+// Check if SendGrid is configured
+const isSendGridConfigured = process.env.SENDGRID_API_KEY && 
+                             process.env.SENDGRID_FROM_EMAIL;
 
 // Check if Mailgun is configured
 const isMailgunConfigured = process.env.MAILGUN_API_KEY && 
@@ -10,8 +15,8 @@ const isMailgunConfigured = process.env.MAILGUN_API_KEY &&
 
 // Email configuration
 const createTransporter = async () => {
-  // Priority order: Mailgun > OAuth2 > App Password > Test Account
-  // Mailgun uses HTTP API (better for cloud platforms like Render)
+  // Priority order: SendGrid > Mailgun > OAuth2 > App Password > Test Account
+  // SendGrid and Mailgun use HTTP API (better for cloud platforms like Render)
 
   // Check if email is configured
   const isOAuth2Configured = process.env.GMAIL_CLIENT_ID && 
@@ -20,28 +25,31 @@ const createTransporter = async () => {
   const isAppPasswordConfigured = process.env.EMAIL_USER && 
                                    process.env.EMAIL_USER !== 'your-email@gmail.com' &&
                                    process.env.EMAIL_PASSWORD;
-  const isEmailConfigured = isMailgunConfigured || isOAuth2Configured || isAppPasswordConfigured;
+  const isEmailConfigured = isSendGridConfigured || isMailgunConfigured || isOAuth2Configured || isAppPasswordConfigured;
 
   // In production, require email configuration
   if (process.env.NODE_ENV === 'production' && !isEmailConfigured) {
     console.error('❌ EMAIL NOT CONFIGURED IN PRODUCTION!');
     console.error('⚠️  Email service is required for production. Please configure:');
-    console.error('   Option 1 - Mailgun (Recommended for cloud platforms):');
+    console.error('   Option 1 - SendGrid (Recommended for cloud platforms):');
+    console.error('     - SENDGRID_API_KEY (your SendGrid API key)');
+    console.error('     - SENDGRID_FROM_EMAIL (sender email, e.g., noreply@yourdomain.com)');
+    console.error('   Option 2 - Mailgun:');
     console.error('     - MAILGUN_API_KEY (your Mailgun API key)');
     console.error('     - MAILGUN_DOMAIN (your Mailgun domain)');
     console.error('     - MAILGUN_FROM_EMAIL (sender email, e.g., noreply@yourdomain.com)');
-    console.error('   Option 2 - Gmail OAuth2:');
+    console.error('   Option 3 - Gmail OAuth2:');
     console.error('     - EMAIL_USER (your sending email address)');
     console.error('     - GMAIL_CLIENT_ID');
     console.error('     - GMAIL_CLIENT_SECRET');
     console.error('     - GMAIL_REFRESH_TOKEN');
-    console.error('   Option 3 - Gmail App Password:');
+    console.error('   Option 4 - Gmail App Password:');
     console.error('     - EMAIL_USER (your sending email address)');
     console.error('     - EMAIL_PASSWORD (your email password or app password)');
     console.error('     - EMAIL_HOST (optional, defaults to smtp.gmail.com)');
     console.error('     - EMAIL_PORT (optional, defaults to 587)');
     console.error('     - EMAIL_SECURE (optional, defaults to false)');
-    throw new Error('Email service not configured in production. Please set Mailgun, OAuth2, or App Password environment variables.');
+    throw new Error('Email service not configured in production. Please set SendGrid, Mailgun, OAuth2, or App Password environment variables.');
   }
 
   // If email credentials are not configured (development only), create a test account
@@ -67,6 +75,16 @@ const createTransporter = async () => {
   }
 
   // Log which method will be used
+  if (isSendGridConfigured) {
+    console.log('🔍 Email service: SendGrid (HTTP API)');
+    console.log(`✅ SendGrid configured`);
+    console.log(`📧 From email: ${process.env.SENDGRID_FROM_EMAIL}`);
+    // Initialize SendGrid
+    sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
+    // Return null for SendGrid - we'll handle it differently in send functions
+    return null;
+  }
+
   if (isMailgunConfigured) {
     console.log('🔍 Email service: Mailgun (HTTP API)');
     console.log(`✅ Mailgun configured: ${process.env.MAILGUN_DOMAIN}`);
@@ -185,6 +203,33 @@ const createTransporter = async () => {
   return createTransport(emailConfig);
 };
 
+// Helper function to send email via SendGrid
+const sendViaSendGrid = async (to: string, subject: string, html: string, text: string) => {
+  if (!isSendGridConfigured) {
+    throw new Error('SendGrid not configured');
+  }
+
+  const msg = {
+    to,
+    from: process.env.SENDGRID_FROM_EMAIL!,
+    subject,
+    text,
+    html,
+  };
+
+  try {
+    await sgMail.send(msg);
+    console.log(`✅ SendGrid email sent to ${to}`);
+    return true;
+  } catch (error: any) {
+    console.error('❌ SendGrid error:', error);
+    if (error.response) {
+      console.error('   Response body:', error.response.body);
+    }
+    throw new Error(`SendGrid send failed: ${error.message}`);
+  }
+};
+
 // Helper function to send email via Mailgun
 const sendViaMailgun = async (to: string, subject: string, html: string, text: string) => {
   if (!isMailgunConfigured) {
@@ -288,7 +333,13 @@ export const sendPasswordResetEmail = async (to: string, resetToken: string, use
       Asset Management Team
     `;
 
-    // Use Mailgun if configured, otherwise use SMTP
+    // Use SendGrid if configured, then Mailgun, otherwise use SMTP
+    if (isSendGridConfigured) {
+      await sendViaSendGrid(to, 'Password Reset Request', html, text);
+      console.log(`✅ Password reset email sent to ${to} via SendGrid`);
+      return true;
+    }
+
     if (isMailgunConfigured) {
       await sendViaMailgun(to, 'Password Reset Request', html, text);
       console.log(`✅ Password reset email sent to ${to} via Mailgun`);
@@ -397,7 +448,13 @@ export const sendVerificationOTP = async (to: string, otp: string, userName: str
       Asset Management Team
     `;
 
-    // Use Mailgun if configured, otherwise use SMTP
+    // Use SendGrid if configured, then Mailgun, otherwise use SMTP
+    if (isSendGridConfigured) {
+      await sendViaSendGrid(to, 'Verify Your Email - OTP Code', html, text);
+      console.log(`✅ Verification OTP sent to ${to} via SendGrid`);
+      return true;
+    }
+
     if (isMailgunConfigured) {
       await sendViaMailgun(to, 'Verify Your Email - OTP Code', html, text);
       console.log(`✅ Verification OTP sent to ${to} via Mailgun`);
@@ -526,7 +583,13 @@ export const sendPasswordChangedEmail = async (to: string, userName: string) => 
   `;
 
   try {
-    // Use Mailgun if configured, otherwise use SMTP
+    // Use SendGrid if configured, then Mailgun, otherwise use SMTP
+    if (isSendGridConfigured) {
+      await sendViaSendGrid(to, 'Password Changed Successfully', html, text);
+      console.log(`✅ Password changed email sent to ${to} via SendGrid`);
+      return true;
+    }
+
     if (isMailgunConfigured) {
       await sendViaMailgun(to, 'Password Changed Successfully', html, text);
       console.log(`✅ Password changed email sent to ${to} via Mailgun`);
