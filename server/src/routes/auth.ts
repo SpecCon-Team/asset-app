@@ -547,6 +547,35 @@ router.post('/resend-otp', otpResendLimiter, async (req, res) => {
   }
 });
 
+// GET /api/auth/test-email - Test email configuration (development only)
+router.get('/test-email', async (req, res) => {
+  // Only allow in development or with special debug flag
+  if (process.env.NODE_ENV === 'production' && !process.env.ENABLE_DEBUG_OTP) {
+    return res.status(403).json({ message: 'Debug endpoint disabled in production' });
+  }
+
+  try {
+    const testEmail = process.env.EMAIL_USER || 'test@example.com';
+    const testOTP = '123456';
+    
+    console.log('🧪 Testing email configuration...');
+    await sendVerificationOTP(testEmail, testOTP, 'Test User');
+    
+    res.json({ 
+      message: 'Test email sent successfully!',
+      to: testEmail,
+      note: 'Check your inbox and server logs for details'
+    });
+  } catch (error: any) {
+    console.error('❌ Test email failed:', error);
+    res.status(500).json({ 
+      message: 'Test email failed',
+      error: error.message,
+      note: 'Check server logs for detailed error information'
+    });
+  }
+});
+
 // GET /api/auth/debug-otp/:email - Debug endpoint to get current OTP (development only)
 router.get('/debug-otp/:email', async (req, res) => {
   // Only allow in development or with special debug flag

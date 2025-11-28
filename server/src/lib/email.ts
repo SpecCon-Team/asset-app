@@ -338,10 +338,16 @@ export const sendVerificationOTP = async (to: string, otp: string, userName: str
     };
 
     console.log(`📤 Sending email...`);
+    console.log(`📧 To: ${to}`);
+    console.log(`📧 From: ${mailOptions.from}`);
+    console.log(`📧 Subject: ${mailOptions.subject}`);
+    
     const info = await transporter.sendMail(mailOptions);
     console.log(`✅ Verification OTP sent to ${to}`);
     console.log(`📧 Message ID: ${info.messageId}`);
     console.log(`📧 Response: ${info.response}`);
+    console.log(`📧 Accepted: ${info.accepted}`);
+    console.log(`📧 Rejected: ${info.rejected}`);
 
     // If using test account, show preview URL
     if (getTestMessageUrl(info)) {
@@ -354,7 +360,11 @@ export const sendVerificationOTP = async (to: string, otp: string, userName: str
     console.error(`   Error Type: ${error.name || 'Unknown'}`);
     console.error(`   Error Message: ${error.message || 'No message'}`);
     console.error(`   Error Code: ${error.code || 'No code'}`);
-    console.error(`   Full Error:`, error);
+    console.error(`   Error Command: ${error.command || 'N/A'}`);
+    console.error(`   Error Response: ${error.response || 'N/A'}`);
+    console.error(`   Error ResponseCode: ${error.responseCode || 'N/A'}`);
+    console.error(`   Full Error Stack:`, error.stack);
+    console.error(`   Full Error Object:`, JSON.stringify(error, Object.getOwnPropertyNames(error)));
     
     // Gmail-specific error messages
     if (error.code === 'EAUTH') {
