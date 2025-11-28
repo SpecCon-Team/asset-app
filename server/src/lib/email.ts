@@ -297,10 +297,20 @@ const sendViaMailgun = async (to: string, subject: string, html: string, text: s
 export const sendPasswordResetEmail = async (to: string, resetToken: string, userName: string) => {
   try {
     // Create reset link with proper base path and hash router
-    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+    // Default to GitHub Pages if CLIENT_URL is not set or points to wrong domain
+    let clientUrl = process.env.CLIENT_URL || 'https://speccon-team.github.io/asset-app';
+    
+    // If CLIENT_URL points to assettrack-client.onrender.com, use GitHub Pages instead
+    if (clientUrl.includes('assettrack-client.onrender.com')) {
+      clientUrl = 'https://speccon-team.github.io/asset-app';
+      console.log('⚠️  CLIENT_URL points to assettrack-client.onrender.com, using GitHub Pages instead');
+    }
+    
     const isGitHubPages = clientUrl.includes('github.io') || clientUrl.includes('localhost');
     const basePath = isGitHubPages ? '/asset-app' : '';
     const resetLink = `${clientUrl}${basePath}/#/reset-password/${resetToken}`;
+    
+    console.log(`📧 Password reset link: ${resetLink}`);
 
     const html = `
       <!DOCTYPE html>
