@@ -13,12 +13,16 @@ async function main() {
         password: adminPassword,
         role: 'ADMIN',
         name: 'Admin User',
+        emailVerified: true,
+        loginAttempts: 0,
+        lockoutUntil: null,
       },
       create: {
         email: 'admin@example.com',
         name: 'Admin User',
         password: adminPassword,
         role: 'ADMIN',
+        emailVerified: true,
       },
     });
 
@@ -32,12 +36,16 @@ async function main() {
         password: userPassword,
         role: 'USER',
         name: 'Test User',
+        emailVerified: true,
+        loginAttempts: 0,
+        lockoutUntil: null,
       },
       create: {
         email: 'test@example.com',
         name: 'Test User',
         password: userPassword,
         role: 'USER',
+        emailVerified: true,
       },
     });
 
@@ -52,6 +60,9 @@ async function main() {
         role: 'TECHNICIAN',
         name: 'Technician User',
         isAvailable: true,
+        emailVerified: true,
+        loginAttempts: 0,
+        lockoutUntil: null,
       },
       create: {
         email: 'tech@example.com',
@@ -59,6 +70,7 @@ async function main() {
         password: techPassword,
         role: 'TECHNICIAN',
         isAvailable: true,
+        emailVerified: true,
       },
     });
 
