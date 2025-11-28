@@ -6,21 +6,31 @@ const createTransporter = async () => {
   // For development, use a test account or Gmail
   // For production, use your actual email service
 
-  // Check if email is configured
-  const isEmailConfigured = process.env.EMAIL_USER && 
-                             process.env.EMAIL_USER !== 'your-email@gmail.com' &&
-                             process.env.EMAIL_PASSWORD;
+  // Check if email is configured (OAuth2 or App Password)
+  const isOAuth2Configured = process.env.GMAIL_CLIENT_ID && 
+                              process.env.GMAIL_CLIENT_SECRET && 
+                              process.env.GMAIL_REFRESH_TOKEN;
+  const isAppPasswordConfigured = process.env.EMAIL_USER && 
+                                   process.env.EMAIL_USER !== 'your-email@gmail.com' &&
+                                   process.env.EMAIL_PASSWORD;
+  const isEmailConfigured = isOAuth2Configured || isAppPasswordConfigured;
 
   // In production, require email configuration
   if (process.env.NODE_ENV === 'production' && !isEmailConfigured) {
     console.error('❌ EMAIL NOT CONFIGURED IN PRODUCTION!');
     console.error('⚠️  Email service is required for production. Please configure:');
-    console.error('   - EMAIL_USER (your sending email address)');
-    console.error('   - EMAIL_PASSWORD (your email password or app password)');
-    console.error('   - EMAIL_HOST (optional, defaults to smtp.gmail.com)');
-    console.error('   - EMAIL_PORT (optional, defaults to 587)');
-    console.error('   - EMAIL_SECURE (optional, defaults to false)');
-    throw new Error('Email service not configured in production. Please set EMAIL_USER and EMAIL_PASSWORD environment variables.');
+    console.error('   Option 1 - OAuth2 (Recommended):');
+    console.error('     - EMAIL_USER (your sending email address)');
+    console.error('     - GMAIL_CLIENT_ID');
+    console.error('     - GMAIL_CLIENT_SECRET');
+    console.error('     - GMAIL_REFRESH_TOKEN');
+    console.error('   Option 2 - App Password:');
+    console.error('     - EMAIL_USER (your sending email address)');
+    console.error('     - EMAIL_PASSWORD (your email password or app password)');
+    console.error('     - EMAIL_HOST (optional, defaults to smtp.gmail.com)');
+    console.error('     - EMAIL_PORT (optional, defaults to 587)');
+    console.error('     - EMAIL_SECURE (optional, defaults to false)');
+    throw new Error('Email service not configured in production. Please set OAuth2 or App Password environment variables.');
   }
 
   // If email credentials are not configured (development only), create a test account
