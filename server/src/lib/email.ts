@@ -306,8 +306,13 @@ export const sendPasswordResetEmail = async (to: string, resetToken: string, use
       console.log('⚠️  CLIENT_URL points to assettrack-client.onrender.com, using GitHub Pages instead');
     }
     
+    // Remove trailing slash if present
+    clientUrl = clientUrl.replace(/\/$/, '');
+    
+    // Only add /asset-app if it's GitHub Pages and not already in the URL
     const isGitHubPages = clientUrl.includes('github.io') || clientUrl.includes('localhost');
-    const basePath = isGitHubPages ? '/asset-app' : '';
+    const needsBasePath = isGitHubPages && !clientUrl.endsWith('/asset-app');
+    const basePath = needsBasePath ? '/asset-app' : '';
     const resetLink = `${clientUrl}${basePath}/#/reset-password/${resetToken}`;
     
     console.log(`📧 Password reset link: ${resetLink}`);
