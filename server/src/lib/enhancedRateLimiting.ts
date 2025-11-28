@@ -25,7 +25,7 @@ function getUserKey(req: Request): string | undefined {
  */
 export const authRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: process.env.NODE_ENV === 'development' ? 50 : 15, // Increased from 5 to 15 for production
+  max: process.env.NODE_ENV === 'development' ? 100 : 30, // Increased to 30 for production (was 15)
   message: 'Too many authentication attempts. Please try again after 15 minutes.',
   standardHeaders: true,
   legacyHeaders: false,
