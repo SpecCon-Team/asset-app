@@ -220,10 +220,13 @@ const sendViaSendGrid = async (to: string, subject: string, html: string, text: 
     throw new Error('SendGrid not configured');
   }
 
-  // Ensure API key is set (in case createTransporter wasn't called)
-  if (!sgMail.client.request.defaults.headers['authorization']) {
-    sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
+  // Ensure API key is set (always set it to be safe)
+  const apiKey = process.env.SENDGRID_API_KEY!;
+  if (apiKey) {
+    sgMail.setApiKey(apiKey);
     console.log('🔑 SendGrid API key initialized');
+  } else {
+    throw new Error('SENDGRID_API_KEY is not set');
   }
 
   const msg = {
