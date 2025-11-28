@@ -81,13 +81,18 @@ export default function SignUpPage() {
     }
 
     try {
-      // Call backend API for registration
+      // Call backend API for registration with timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
       const response = await fetch(`${getApiBaseUrl()}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, name }),
+        signal: controller.signal,
       });
 
+      clearTimeout(timeoutId);
       const data = await response.json();
 
       if (!response.ok) {
@@ -108,7 +113,11 @@ export default function SignUpPage() {
       navigate('/verify-otp', { state: { email } });
     } catch (err) {
       setEmailExists(false);
-      setError(err instanceof Error ? err.message : 'Sign up failed. Please try again.');
+      if (err instanceof Error && err.name === 'AbortError') {
+        setError('Request timed out. Please check your internet connection and try again.');
+      } else {
+        setError(err instanceof Error ? err.message : 'Sign up failed. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }

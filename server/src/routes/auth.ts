@@ -113,19 +113,32 @@ router.post('/register', registerLimiter, async (req, res) => {
           }
         });
 
-        // Send OTP email
-        try {
-          await sendVerificationOTP(email, otp, existing.name || '');
-          if (process.env.NODE_ENV === 'development') {
-            console.log(`Verification OTP resent to ${email}: ${otp}`);
-          } else {
-            console.log(`Verification OTP resent to ${email}`);
-          }
-        } catch (emailError) {
+        // Send OTP email asynchronously (don't block the response)
+        const emailPromise = sendVerificationOTP(email, otp, existing.name || '').catch((emailError) => {
           console.error('Failed to send verification email:', emailError);
-          return res.status(500).json({ message: 'Failed to send verification email. Please try again.' });
-        }
+          return false;
+        });
 
+        // Set a timeout for email sending (10 seconds max)
+        const timeoutPromise = new Promise((resolve) => {
+          setTimeout(() => {
+            console.warn(`Email sending timeout for ${email}`);
+            resolve(false);
+          }, 10000);
+        });
+
+        // Try to send email, but don't wait more than 10 seconds
+        Promise.race([emailPromise, timeoutPromise]).then((emailSent) => {
+          if (emailSent && process.env.NODE_ENV === 'development') {
+            console.log(`Verification OTP resent to ${email}: ${otp}`);
+          } else if (emailSent) {
+            console.log(`Verification OTP resent to ${email}`);
+          } else {
+            console.warn(`Email sending failed or timed out for ${email}. OTP: ${otp}`);
+          }
+        });
+
+        // Respond immediately without waiting for email
         return res.json({
           id: existing.id,
           email: existing.email,
@@ -158,21 +171,35 @@ router.post('/register', registerLimiter, async (req, res) => {
       }
     });
 
-    // Send OTP email
-    try {
-      await sendVerificationOTP(email, otp, name);
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`Verification OTP sent to ${email}: ${otp}`);
-      } else {
-        console.log(`Verification OTP sent to ${email}`);
-      }
-    } catch (emailError) {
+    // Send OTP email asynchronously (don't block the response)
+    // Use Promise.race with timeout to prevent hanging
+    const emailPromise = sendVerificationOTP(email, otp, name).catch((emailError) => {
       console.error('Failed to send verification email:', emailError);
-      // Delete user if email failed to send
-      await prisma.user.delete({ where: { id: user.id } });
-      return res.status(500).json({ message: 'Failed to send verification email. Please try again.' });
-    }
+      // Log error but don't block registration
+      return false;
+    });
 
+    // Set a timeout for email sending (10 seconds max)
+    const timeoutPromise = new Promise((resolve) => {
+      setTimeout(() => {
+        console.warn(`Email sending timeout for ${email}`);
+        resolve(false);
+      }, 10000); // 10 second timeout
+    });
+
+    // Try to send email, but don't wait more than 10 seconds
+    Promise.race([emailPromise, timeoutPromise]).then((emailSent) => {
+      if (emailSent && process.env.NODE_ENV === 'development') {
+        console.log(`Verification OTP sent to ${email}: ${otp}`);
+      } else if (emailSent) {
+        console.log(`Verification OTP sent to ${email}`);
+      } else {
+        console.warn(`Email sending failed or timed out for ${email}, but user account created. OTP: ${otp}`);
+        // In production, you might want to log this to a monitoring service
+      }
+    });
+
+    // Respond immediately without waiting for email
     res.json({
       id: user.id,
       email: user.email,
