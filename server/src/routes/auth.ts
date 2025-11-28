@@ -508,8 +508,10 @@ router.post('/resend-otp', otpResendLimiter, async (req, res) => {
     });
 
     // Send new OTP email
+    let emailSent = false;
     try {
       await sendVerificationOTP(email, otp, user.name || '');
+      emailSent = true;
       if (process.env.NODE_ENV === 'development') {
         console.log(`✅ New verification OTP sent to ${email}: ${otp}`);
       } else {
@@ -519,20 +521,23 @@ router.post('/resend-otp', otpResendLimiter, async (req, res) => {
       console.error('❌ Failed to send verification email:', emailError);
       console.error(`📧 OTP Code for ${email}: ${otp}`);
       console.error(`⚠️  User can verify with this OTP code if email service is not configured`);
-      // Don't fail the request - OTP is still valid, just email failed
-      // Return success but warn user to check logs or spam folder
+      emailSent = false;
     }
 
-    // Return OTP in response if email failed (for debugging - remove in production)
-    const emailSent = await sendVerificationOTP(email, otp, user.name || '').catch(() => false);
-    
+    // If email failed, return OTP in response for debugging (development only)
     if (!emailSent) {
-      // If email failed, include OTP in response for debugging
-      // TODO: Remove this in production or make it admin-only
-      return res.json({ 
-        message: 'New OTP generated. Email sending failed - check server logs for OTP code.',
-        debug: process.env.NODE_ENV === 'development' ? { otp } : undefined
-      });
+      if (process.env.NODE_ENV === 'development') {
+        return res.json({ 
+          message: 'New OTP generated. Email sending failed.',
+          debug: { otp },
+          note: 'Check server logs or use /api/auth/debug-otp/:email endpoint'
+        });
+      } else {
+        return res.json({ 
+          message: 'New OTP generated. Email sending failed - check server logs for OTP code.',
+          note: 'OTP is logged in server console. Use /api/auth/debug-otp/:email endpoint if enabled.'
+        });
+      }
     }
 
     res.json({ message: 'New OTP sent to your email' });
