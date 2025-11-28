@@ -1,4 +1,5 @@
 import { createTransport, createTestAccount, getTestMessageUrl } from 'nodemailer';
+import { google } from 'googleapis';
 
 // Email configuration
 const createTransporter = async () => {
