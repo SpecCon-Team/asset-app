@@ -348,17 +348,6 @@ export const sendPasswordResetEmail = async (to: string, resetToken: string, use
 
     const transporter = await createTransporter();
 
-    // Create reset link with proper base path and hash router
-    // GitHub Pages: https://speccon-team.github.io/asset-app/#/reset-password/{token}
-    // Render/Other: https://assettrack-client.onrender.com/#/reset-password/{token}
-    // Local: http://localhost:5173/asset-app/#/reset-password/{token}
-    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
-    
-    // Only add /asset-app base path for GitHub Pages or local development
-    const isGitHubPages = clientUrl.includes('github.io') || clientUrl.includes('localhost');
-    const basePath = isGitHubPages ? '/asset-app' : '';
-    const resetLink = `${clientUrl}${basePath}/#/reset-password/${resetToken}`;
-
     const mailOptions = {
       from: `"Asset Management System" <${process.env.EMAIL_USER}>`,
       to,
