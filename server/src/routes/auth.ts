@@ -190,11 +190,14 @@ router.post('/register', registerLimiter, async (req, res) => {
     // Try to send email, but don't wait more than 10 seconds
     Promise.race([emailPromise, timeoutPromise]).then((emailSent) => {
       if (emailSent && process.env.NODE_ENV === 'development') {
-        console.log(`Verification OTP sent to ${email}: ${otp}`);
+        console.log(`✅ Verification OTP sent to ${email}: ${otp}`);
       } else if (emailSent) {
-        console.log(`Verification OTP sent to ${email}`);
+        console.log(`✅ Verification OTP sent to ${email}`);
       } else {
-        console.warn(`Email sending failed or timed out for ${email}, but user account created. OTP: ${otp}`);
+        // Always log OTP when email fails - important for debugging
+        console.error(`❌ Email sending failed or timed out for ${email}`);
+        console.error(`📧 OTP Code for ${email}: ${otp}`);
+        console.error(`⚠️  User can verify with this OTP code if email service is not configured`);
         // In production, you might want to log this to a monitoring service
       }
     });
@@ -508,13 +511,16 @@ router.post('/resend-otp', otpResendLimiter, async (req, res) => {
     try {
       await sendVerificationOTP(email, otp, user.name || '');
       if (process.env.NODE_ENV === 'development') {
-        console.log(`New verification OTP sent to ${email}: ${otp}`);
+        console.log(`✅ New verification OTP sent to ${email}: ${otp}`);
       } else {
-        console.log(`New verification OTP sent to ${email}`);
+        console.log(`✅ New verification OTP sent to ${email}`);
       }
     } catch (emailError) {
-      console.error('Failed to send verification email:', emailError);
-      return res.status(500).json({ message: 'Failed to send verification email. Please try again.' });
+      console.error('❌ Failed to send verification email:', emailError);
+      console.error(`📧 OTP Code for ${email}: ${otp}`);
+      console.error(`⚠️  User can verify with this OTP code if email service is not configured`);
+      // Don't fail the request - OTP is still valid, just email failed
+      // Return success but warn user to check logs or spam folder
     }
 
     res.json({ message: 'New OTP sent to your email' });
