@@ -44,8 +44,12 @@ export const sendPasswordResetEmail = async (to: string, resetToken: string, use
   try {
     const transporter = await createTransporter();
 
-    // Create reset link
-    const resetLink = `${process.env.CLIENT_URL || 'http://localhost:5174'}/reset-password/${resetToken}`;
+    // Create reset link with proper base path and hash router
+    // Production: https://speccon-team.github.io/asset-app/#/reset-password/{token}
+    // Local: http://localhost:5173/asset-app/#/reset-password/{token}
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+    const basePath = '/asset-app';
+    const resetLink = `${clientUrl}${basePath}/#/reset-password/${resetToken}`;
 
     const mailOptions = {
       from: `"Asset Management System" <${process.env.EMAIL_USER}>`,
