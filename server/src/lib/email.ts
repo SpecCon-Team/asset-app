@@ -160,7 +160,12 @@ export const sendPasswordResetEmail = async (to: string, resetToken: string, use
 
 export const sendVerificationOTP = async (to: string, otp: string, userName: string) => {
   try {
+    console.log(`📧 Attempting to send OTP email to: ${to}`);
+    console.log(`📧 From: ${process.env.EMAIL_USER}`);
+    console.log(`📧 SMTP: ${process.env.EMAIL_HOST || 'smtp.gmail.com'}:${process.env.EMAIL_PORT || '587'}`);
+    
     const transporter = await createTransporter();
+    console.log(`✅ Transporter created successfully`);
 
     const mailOptions = {
       from: `"Asset Management System" <${process.env.EMAIL_USER}>`,
@@ -228,8 +233,11 @@ export const sendVerificationOTP = async (to: string, otp: string, userName: str
     `,
     };
 
+    console.log(`📤 Sending email...`);
     const info = await transporter.sendMail(mailOptions);
     console.log(`✅ Verification OTP sent to ${to}`);
+    console.log(`📧 Message ID: ${info.messageId}`);
+    console.log(`📧 Response: ${info.response}`);
 
     // If using test account, show preview URL
     if (getTestMessageUrl(info)) {
@@ -237,9 +245,28 @@ export const sendVerificationOTP = async (to: string, otp: string, userName: str
     }
 
     return true;
-  } catch (error) {
-    console.error('Error sending verification OTP:', error);
-    throw new Error('Failed to send verification email');
+  } catch (error: any) {
+    console.error('❌ Error sending verification OTP:');
+    console.error(`   Error Type: ${error.name || 'Unknown'}`);
+    console.error(`   Error Message: ${error.message || 'No message'}`);
+    console.error(`   Error Code: ${error.code || 'No code'}`);
+    console.error(`   Full Error:`, error);
+    
+    // Gmail-specific error messages
+    if (error.code === 'EAUTH') {
+      console.error('⚠️  Authentication failed! Check:');
+      console.error('   1. EMAIL_USER is correct');
+      console.error('   2. EMAIL_PASSWORD is a Gmail App Password (not regular password)');
+      console.error('   3. 2-Step Verification is enabled on Gmail account');
+      console.error('   4. App Password was generated correctly');
+    } else if (error.code === 'ECONNECTION' || error.code === 'ETIMEDOUT') {
+      console.error('⚠️  Connection failed! Check:');
+      console.error('   1. EMAIL_HOST is correct (smtp.gmail.com)');
+      console.error('   2. EMAIL_PORT is correct (587)');
+      console.error('   3. Firewall/network allows SMTP connections');
+    }
+    
+    throw new Error(`Failed to send verification email: ${error.message || 'Unknown error'}`);
   }
 };
 
