@@ -198,6 +198,7 @@ router.post('/register', registerLimiter, async (req, res) => {
         console.error(`❌ Email sending failed or timed out for ${email}`);
         console.error(`📧 OTP Code for ${email}: ${otp}`);
         console.error(`⚠️  User can verify with this OTP code if email service is not configured`);
+        console.error(`🔗 Debug endpoint: https://assettrack-api.onrender.com/api/auth/debug-otp/${encodeURIComponent(email)}`);
         // In production, you might want to log this to a monitoring service
       }
     });

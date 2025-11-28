@@ -121,6 +121,11 @@ const createTransporter = async () => {
   const port = parseInt(process.env.EMAIL_PORT || '587');
   const useSecure = process.env.EMAIL_SECURE === 'true';
   
+  console.log(`🔍 Email configuration check:`);
+  console.log(`   EMAIL_PORT: ${process.env.EMAIL_PORT || '587 (default)'}`);
+  console.log(`   EMAIL_SECURE: ${process.env.EMAIL_SECURE || 'false (default)'}`);
+  console.log(`   Using port: ${port}, secure: ${useSecure}`);
+  
   const emailConfig = {
     host: process.env.EMAIL_HOST || 'smtp.gmail.com',
     port: port,
