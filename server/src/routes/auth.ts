@@ -523,10 +523,68 @@ router.post('/resend-otp', otpResendLimiter, async (req, res) => {
       // Return success but warn user to check logs or spam folder
     }
 
+    // Return OTP in response if email failed (for debugging - remove in production)
+    const emailSent = await sendVerificationOTP(email, otp, user.name || '').catch(() => false);
+    
+    if (!emailSent) {
+      // If email failed, include OTP in response for debugging
+      // TODO: Remove this in production or make it admin-only
+      return res.json({ 
+        message: 'New OTP generated. Email sending failed - check server logs for OTP code.',
+        debug: process.env.NODE_ENV === 'development' ? { otp } : undefined
+      });
+    }
+
     res.json({ message: 'New OTP sent to your email' });
   } catch (error) {
     console.error('Resend OTP error:', error);
     res.status(500).json({ message: 'An error occurred while resending OTP' });
+  }
+});
+
+// GET /api/auth/debug-otp/:email - Debug endpoint to get current OTP (development only)
+router.get('/debug-otp/:email', async (req, res) => {
+  // Only allow in development or with special debug flag
+  if (process.env.NODE_ENV === 'production' && !process.env.ENABLE_DEBUG_OTP) {
+    return res.status(403).json({ message: 'Debug endpoint disabled in production' });
+  }
+
+  try {
+    const { email } = req.params;
+    const user = await prisma.user.findUnique({ 
+      where: { email },
+      select: { 
+        email: true, 
+        emailVerified: true, 
+        verificationOTP: true, 
+        verificationExpiry: true 
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (user.emailVerified) {
+      return res.json({ message: 'Email already verified', emailVerified: true });
+    }
+
+    if (!user.verificationOTP) {
+      return res.json({ message: 'No OTP found. Please request a new one.' });
+    }
+
+    const isExpired = user.verificationExpiry && user.verificationExpiry < new Date();
+    
+    res.json({
+      email: user.email,
+      otp: user.verificationOTP,
+      expiresAt: user.verificationExpiry,
+      isExpired,
+      message: isExpired ? 'OTP has expired. Please request a new one.' : 'Current OTP code'
+    });
+  } catch (error) {
+    console.error('Debug OTP error:', error);
+    res.status(500).json({ message: 'An error occurred' });
   }
 });
 
