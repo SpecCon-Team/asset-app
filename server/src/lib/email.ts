@@ -5,9 +5,26 @@ const createTransporter = async () => {
   // For development, use a test account or Gmail
   // For production, use your actual email service
 
-  // If email credentials are not configured, create a test account
-  if (!process.env.EMAIL_USER || process.env.EMAIL_USER === 'your-email@gmail.com') {
-    console.log('⚠️  Email not configured. Creating test email account...');
+  // Check if email is configured
+  const isEmailConfigured = process.env.EMAIL_USER && 
+                             process.env.EMAIL_USER !== 'your-email@gmail.com' &&
+                             process.env.EMAIL_PASSWORD;
+
+  // In production, require email configuration
+  if (process.env.NODE_ENV === 'production' && !isEmailConfigured) {
+    console.error('❌ EMAIL NOT CONFIGURED IN PRODUCTION!');
+    console.error('⚠️  Email service is required for production. Please configure:');
+    console.error('   - EMAIL_USER (your sending email address)');
+    console.error('   - EMAIL_PASSWORD (your email password or app password)');
+    console.error('   - EMAIL_HOST (optional, defaults to smtp.gmail.com)');
+    console.error('   - EMAIL_PORT (optional, defaults to 587)');
+    console.error('   - EMAIL_SECURE (optional, defaults to false)');
+    throw new Error('Email service not configured in production. Please set EMAIL_USER and EMAIL_PASSWORD environment variables.');
+  }
+
+  // If email credentials are not configured (development only), create a test account
+  if (!isEmailConfigured) {
+    console.log('⚠️  Email not configured. Creating test email account (development only)...');
     const testAccount = await createTestAccount();
 
     console.log('✉️  Test Email Account Created:');
@@ -37,6 +54,8 @@ const createTransporter = async () => {
     },
   };
 
+  console.log(`✅ Email service configured: ${process.env.EMAIL_USER} via ${emailConfig.host}:${emailConfig.port}`);
+  
   return createTransport(emailConfig);
 };
 
