@@ -143,7 +143,7 @@ export default function QRScannerPage() {
         {/* Phone Scanner Instructions */}
         {!scannedAsset && (
           <div className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-lg shadow p-8 mb-6 border border-purple-200 dark:border-purple-800">
-            <div className="flex items-start gap-4">
+            <div className="flex items-start gap-4 mb-6">
               <div className="flex-shrink-0">
                 <div className="w-16 h-16 bg-purple-600 dark:bg-purple-500 rounded-full flex items-center justify-center">
                   <Smartphone className="w-8 h-8 text-white" />
@@ -153,92 +153,96 @@ export default function QRScannerPage() {
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
                   Scan QR Code with Your Phone
                 </h2>
-                <p className="text-gray-700 dark:text-gray-300 mb-4">
+                <p className="text-gray-700 dark:text-gray-300">
                   The easiest way to scan QR codes is using your phone's camera. When you scan an asset QR code, 
                   it will automatically open this web app and process the scan!
                 </p>
-                
-                {/* QR Code Display Box */}
-                <div className="mt-6 p-6 bg-white dark:bg-gray-800 rounded-lg border-2 border-purple-300 dark:border-purple-700 shadow-lg">
-                  <div className="text-center mb-4">
-                    <p className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
-                      Test QR Code
-                    </p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">
-                      Scan this QR code with your phone camera to test
-                    </p>
-                  </div>
-                  <div className="flex justify-center p-4 bg-white dark:bg-gray-900 rounded-lg">
-                    <div className="bg-white p-6 rounded-lg border-2 border-gray-200 dark:border-gray-700 shadow-inner">
-                      <QRCodeSVG
-                        value={`${window.location.origin}${window.location.pathname}#/checkout/scan?qr=ASSET:TEST001:test-asset-id`}
-                        size={200}
-                        level="H"
-                        includeMargin={true}
-                        fgColor="#000000"
-                        bgColor="#FFFFFF"
-                      />
-                    </div>
-                  </div>
-                  <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border-2 border-red-200 dark:border-red-800">
-                    <p className="text-xs text-red-800 dark:text-red-300 font-semibold mb-2 flex items-center gap-2">
-                      <AlertCircle className="w-4 h-4" />
-                      Test QR Code - For Demonstration Only
-                    </p>
-                    <p className="text-xs text-red-700 dark:text-red-400 mb-3">
-                      This test QR code will open this page when scanned, but it will show an error because it's not a real asset in the database.
-                    </p>
-                    <div className="bg-white dark:bg-gray-800 p-3 rounded border border-red-300 dark:border-red-700">
-                      <p className="text-xs font-semibold text-gray-900 dark:text-white mb-2">
-                        ✅ To test with a real asset:
-                      </p>
-                      <ol className="text-xs text-gray-700 dark:text-gray-300 space-y-1 list-decimal list-inside">
-                        <li>Go to <span className="font-mono text-purple-600 dark:text-purple-400">/checkout/qr/generate</span></li>
-                        <li>Select a real asset from your database</li>
-                        <li>Click "Generate QR Code"</li>
-                        <li>Scan that QR code with your phone</li>
-                        <li>It will automatically show the asset details!</li>
-                      </ol>
-                    </div>
+              </div>
+            </div>
+            
+            {/* QR Code Display Box - Centered */}
+            <div className="flex justify-center w-full mb-6">
+              <div className="p-6 bg-white dark:bg-gray-800 rounded-lg border-2 border-purple-300 dark:border-purple-700 shadow-lg max-w-md w-full">
+                <div className="text-center mb-4">
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
+                    Test QR Code
+                  </p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    Scan this QR code with your phone camera to test
+                  </p>
+                </div>
+                <div className="flex justify-center p-4 bg-white dark:bg-gray-900 rounded-lg">
+                  <div className="bg-white p-6 rounded-lg border-2 border-gray-200 dark:border-gray-700 shadow-inner">
+                    <QRCodeSVG
+                      value={`${window.location.origin}${window.location.pathname}#/checkout/scan?qr=ASSET:TEST001:test-asset-id`}
+                      size={200}
+                      level="H"
+                      includeMargin={true}
+                      fgColor="#000000"
+                      bgColor="#FFFFFF"
+                    />
                   </div>
                 </div>
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-sm font-semibold">
-                      1
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">Open your phone's camera app</p>
-                      <p className="text-xs text-gray-600 dark:text-gray-400">Use the built-in camera app (not a third-party scanner)</p>
-                    </div>
+                <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border-2 border-red-200 dark:border-red-800">
+                  <p className="text-xs text-red-800 dark:text-red-300 font-semibold mb-2 flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4" />
+                    Test QR Code - For Demonstration Only
+                  </p>
+                  <p className="text-xs text-red-700 dark:text-red-400 mb-3">
+                    This test QR code will open this page when scanned, but it will show an error because it's not a real asset in the database.
+                  </p>
+                  <div className="bg-white dark:bg-gray-800 p-3 rounded border border-red-300 dark:border-red-700">
+                    <p className="text-xs font-semibold text-gray-900 dark:text-white mb-2">
+                      ✅ To test with a real asset:
+                    </p>
+                    <ol className="text-xs text-gray-700 dark:text-gray-300 space-y-1 list-decimal list-inside">
+                      <li>Go to <span className="font-mono text-purple-600 dark:text-purple-400">/checkout/qr/generate</span></li>
+                      <li>Select a real asset from your database</li>
+                      <li>Click "Generate QR Code"</li>
+                      <li>Scan that QR code with your phone</li>
+                      <li>It will automatically show the asset details!</li>
+                    </ol>
                   </div>
-                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-sm font-semibold">
-                      2
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">Point at the QR code</p>
-                      <p className="text-xs text-gray-600 dark:text-gray-400">Position the QR code in the camera viewfinder</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-sm font-semibold">
-                      3
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">Tap the notification</p>
-                      <p className="text-xs text-gray-600 dark:text-gray-400">When your phone detects the QR code, tap the notification to open the web app</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-sm font-semibold">
-                      4
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">Automatic processing</p>
-                      <p className="text-xs text-gray-600 dark:text-gray-400">The web app will automatically detect and process the QR code!</p>
-                    </div>
-                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Instructions */}
+            <div className="space-y-3">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-sm font-semibold">
+                  1
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">Open your phone's camera app</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">Use the built-in camera app (not a third-party scanner)</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-sm font-semibold">
+                  2
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">Point at the QR code</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">Position the QR code in the camera viewfinder</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-sm font-semibold">
+                  3
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">Tap the notification</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">When your phone detects the QR code, tap the notification to open the web app</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-sm font-semibold">
+                  4
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">Automatic processing</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">The web app will automatically detect and process the QR code!</p>
                 </div>
               </div>
             </div>

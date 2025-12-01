@@ -163,53 +163,56 @@ export default function QRGeneratorPage() {
   };
 
   return (
-    <div className="flex flex-col p-4 md:p-6 lg:p-8">
-      {/* Header */}
-      <div className="mb-6">
-        <button
-          onClick={() => navigate('/checkout')}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white mb-4"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          Back to Checkouts
-        </button>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-          <QrCode className="w-8 h-8 text-purple-600 dark:text-purple-400" />
-          QR Code Generator
-        </h1>
-        <p className="text-gray-600 dark:text-gray-300 mt-2">
-          Generate QR codes for quick asset scanning and checkout
-        </p>
-      </div>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+        {/* Header */}
+        <div className="mb-6 md:mb-8">
+          <button
+            onClick={() => navigate('/checkout')}
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white mb-4 transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            Back to Checkouts
+          </button>
+          <div className="text-center md:text-left">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white flex items-center justify-center md:justify-start gap-3">
+              <QrCode className="w-7 h-7 md:w-8 md:h-8 text-purple-600 dark:text-purple-400" />
+              QR Code Generator
+            </h1>
+            <p className="text-gray-600 dark:text-gray-300 mt-2 text-sm md:text-base">
+              Generate QR codes for quick asset scanning and checkout
+            </p>
+          </div>
+        </div>
 
-      <div className="max-w-4xl mx-auto w-full">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Generator Form */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <Package className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-              Select Asset
-            </h2>
+        <div className="max-w-6xl mx-auto w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+            {/* Generator Form */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 md:p-6">
+              <h2 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <Package className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                Select Asset
+              </h2>
 
-            <form onSubmit={handleGenerate} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Asset <span className="text-red-500">*</span>
-                </label>
-                <select
-                  value={selectedAssetId}
-                  onChange={(e) => setSelectedAssetId(e.target.value)}
-                  required
-                  className="w-full px-4 py-2 border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
-                >
-                  <option value="">Select an asset</option>
-                  {assets.map((asset) => (
-                    <option key={asset.id} value={asset.id}>
-                      {asset.name} ({asset.asset_code}) - {asset.asset_type}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <form onSubmit={handleGenerate} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Asset <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={selectedAssetId}
+                    onChange={(e) => setSelectedAssetId(e.target.value)}
+                    required
+                    className="w-full px-3 md:px-4 py-2 md:py-2.5 border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 text-sm md:text-base"
+                  >
+                    <option value="">Select an asset</option>
+                    {assets.map((asset) => (
+                      <option key={asset.id} value={asset.id}>
+                        {asset.name} ({asset.asset_code}) - {asset.asset_type}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
               <button
                 type="submit"
@@ -245,8 +248,8 @@ export default function QRGeneratorPage() {
             </div>
           </div>
 
-          {/* Generated QR Code Display */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            {/* Generated QR Code Display */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 md:p-6">
             {generatedQR ? (
               <div className="space-y-4">
                 <div className="flex items-center gap-2 mb-4">
@@ -333,38 +336,39 @@ export default function QRGeneratorPage() {
               </div>
             )}
           </div>
-        </div>
+          </div>
 
-        {/* Test QR Code Link */}
-        <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-400 mb-2 flex items-center gap-2">
-            <QrCode className="w-5 h-5" />
-            Test QR Code Scanner
-          </h3>
-          <p className="text-sm text-blue-800 dark:text-blue-300 mb-3">
-            Want to see how QR codes automatically open the web app? Try our test page!
-          </p>
-          <a
-            href="/qr-test.html"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-          >
-            <QrCode className="w-4 h-4" />
-            Open Test Page
-          </a>
-        </div>
+          {/* Test QR Code Link */}
+          <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 md:p-6">
+            <h3 className="text-base md:text-lg font-semibold text-blue-900 dark:text-blue-400 mb-2 flex items-center gap-2">
+              <QrCode className="w-5 h-5" />
+              Test QR Code Scanner
+            </h3>
+            <p className="text-sm text-blue-800 dark:text-blue-300 mb-3">
+              Want to see how QR codes automatically open the web app? Try our test page!
+            </p>
+            <a
+              href="/qr-test.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+            >
+              <QrCode className="w-4 h-4" />
+              Open Test Page
+            </a>
+          </div>
 
-        {/* Batch Generation Info */}
-        <div className="mt-6 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-yellow-900 dark:text-yellow-400 mb-2 flex items-center gap-2">
-            <Package className="w-5 h-5" />
-            Bulk QR Code Generation
-          </h3>
-          <p className="text-sm text-yellow-800 dark:text-yellow-300">
-            Need to generate QR codes for multiple assets at once? Contact your administrator
-            to enable bulk generation or use the API endpoint for batch operations.
-          </p>
+          {/* Batch Generation Info */}
+          <div className="mt-6 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4 md:p-6">
+            <h3 className="text-base md:text-lg font-semibold text-yellow-900 dark:text-yellow-400 mb-2 flex items-center gap-2">
+              <Package className="w-5 h-5" />
+              Bulk QR Code Generation
+            </h3>
+            <p className="text-sm text-yellow-800 dark:text-yellow-300">
+              Need to generate QR codes for multiple assets at once? Contact your administrator
+              to enable bulk generation or use the API endpoint for batch operations.
+            </p>
+          </div>
         </div>
       </div>
     </div>
