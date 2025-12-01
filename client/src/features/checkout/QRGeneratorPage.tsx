@@ -335,6 +335,26 @@ export default function QRGeneratorPage() {
           </div>
         </div>
 
+        {/* Test QR Code Link */}
+        <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-400 mb-2 flex items-center gap-2">
+            <QrCode className="w-5 h-5" />
+            Test QR Code Scanner
+          </h3>
+          <p className="text-sm text-blue-800 dark:text-blue-300 mb-3">
+            Want to see how QR codes automatically open the web app? Try our test page!
+          </p>
+          <a
+            href="/qr-test.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+          >
+            <QrCode className="w-4 h-4" />
+            Open Test Page
+          </a>
+        </div>
+
         {/* Batch Generation Info */}
         <div className="mt-6 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-6">
           <h3 className="text-lg font-semibold text-yellow-900 dark:text-yellow-400 mb-2 flex items-center gap-2">

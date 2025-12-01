@@ -2,6 +2,7 @@ import React, { lazy, Suspense } from 'react';
 import { createHashRouter, Navigate } from 'react-router-dom';
 import AppLayout from '@/app/layout/AppLayout';
 import { LoadingOverlay } from '@/components/LoadingSpinner';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 // Modern loading fallback component - circular spinner overlay
 const PageLoader = () => <LoadingOverlay message="Loading page" />;
@@ -119,7 +120,11 @@ export const router = createHashRouter([
       { path: 'maintenance/:id/edit', element: <LazyPage><MaintenanceFormPage /></LazyPage> },
       { path: 'checkout', element: <LazyPage><CheckoutPage /></LazyPage> },
       { path: 'checkout/new', element: <LazyPage><CheckoutFormPage /></LazyPage> },
-      { path: 'checkout/scan', element: <LazyPage><QRScannerPage /></LazyPage> },
+      { 
+        path: 'checkout/scan', 
+        element: <LazyPage><QRScannerPage /></LazyPage>,
+        errorElement: <ErrorBoundary />
+      },
       { path: 'checkout/qr/generate', element: <LazyPage><QRGeneratorPage /></LazyPage> },
       { path: 'checkout/:id', element: <LazyPage><CheckoutDetailPage /></LazyPage> },
       { path: 'checkout/:id/edit', element: <LazyPage><CheckoutFormPage /></LazyPage> },

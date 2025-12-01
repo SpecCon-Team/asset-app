@@ -10,6 +10,11 @@
   width: 100% !important;
   position: relative !important;
   min-height: 400px !important;
+  display: block !important;
+  background: #000 !important; /* Black background so video is visible */
+  overflow: hidden !important;
+  z-index: 1 !important;
+  border-radius: 8px !important;
 }
 
 #qr-reader__dashboard {
@@ -22,16 +27,52 @@
 
 #qr-reader video {
   width: 100% !important;
-  height: auto !important;
+  height: 100% !important;
+  min-height: 400px !important;
+  max-height: 600px !important;
   object-fit: cover !important;
   display: block !important;
-  background: #000 !important;
+  background: #000 !important; /* Black background for video */
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  z-index: 10 !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+/* Force video to be on top of everything */
+#qr-reader video[autoplay],
+#qr-reader video[playsinline] {
+  z-index: 100 !important;
+}
+
+/* Ensure video is visible when playing */
+#qr-reader video:not([paused]) {
+  display: block !important;
+  visibility: visible !important;
 }
 
 #qr-reader__scan_region {
   border: 2px solid rgba(139, 92, 246, 0.5) !important; /* Purple border for scan region */
   border-radius: 8px !important;
   box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.3) !important; /* Dark overlay outside scan region */
+  position: absolute !important;
+  z-index: 2 !important;
+  pointer-events: none !important;
+  animation: scanPulse 2s ease-in-out infinite !important;
+}
+
+@keyframes scanPulse {
+  0%, 100% {
+    border-color: rgba(139, 92, 246, 0.5);
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.3), 0 0 0 0 rgba(139, 92, 246, 0.4);
+  }
+  50% {
+    border-color: rgba(139, 92, 246, 0.8);
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.3), 0 0 10px 2px rgba(139, 92, 246, 0.6);
+  }
 }
 
 #qr-reader__scan_region__scan_region {
@@ -43,6 +84,71 @@
 #qr-reader > div {
   width: 100% !important;
   height: 100% !important;
+  min-height: 400px !important;
+  position: relative !important;
+  display: block !important;
+}
+
+/* Target all nested divs that might contain the video */
+#qr-reader > div > div {
+  width: 100% !important;
+  height: 100% !important;
+  position: relative !important;
+  display: block !important;
+}
+
+/* Ensure the viewfinder container is visible */
+#qr-reader__camera_permission_button,
+#qr-reader__dashboard_section_camera,
+#qr-reader__camera_selection {
+  display: none !important;
+}
+
+/* Make sure the video container is visible */
+#qr-reader__camera,
+#qr-reader__camera > div,
+#qr-reader__camera > div > div {
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+  position: relative !important;
+}
+
+/* Ensure the scanner's internal structure is visible */
+#qr-reader__camera_permission_button {
+  display: none !important;
+}
+
+#qr-reader__dashboard_section {
+  display: none !important;
+}
+
+/* Hide "Scanner paused" and other status messages from html5-qrcode */
+#qr-reader__status,
+#qr-reader__status_span,
+#qr-reader__status_span > span,
+[class*="qr-reader__status"],
+[class*="qr-reader__status"] > *,
+[class*="qr-reader__status"] span {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
+/* Hide any divs or spans that might contain status text (but not our custom scan-status) */
+#qr-reader div[class*="status"]:not(.scan-status),
+#qr-reader span[class*="status"]:not(.scan-status) {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
+/* Hide any pause/resume buttons */
+#qr-reader__dashboard_section_swaplink,
+#qr-reader__camera_permission_button,
+button[class*="pause"],
+button[class*="resume"] {
+  display: none !important;
 }
 
 /* ================================================

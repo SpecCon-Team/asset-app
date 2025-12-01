@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, QrCode, Camera, Package, CheckCircle, AlertCircle, X, Maximize2 } from 'lucide-react';
+import { ArrowLeft, QrCode, Package, CheckCircle, AlertCircle, Smartphone } from 'lucide-react';
 import { getApiClient } from '../assets/lib/apiClient';
 import { showSuccess, showError } from '@/lib/sweetalert';
-import { Html5Qrcode } from 'html5-qrcode';
+import { QRCodeSVG } from 'qrcode.react';
 
 interface ScannedAsset {
   id: string;
@@ -21,16 +21,12 @@ export default function QRScannerPage() {
   const [qrInput, setQrInput] = useState('');
   const [scanning, setScanning] = useState(false);
   const [scannedAsset, setScannedAsset] = useState<ScannedAsset | null>(null);
-  const [cameraActive, setCameraActive] = useState(false);
-  const [cameraError, setCameraError] = useState<string | null>(null);
-  const [scanStatus, setScanStatus] = useState<string>('Ready');
-  const scannerRef = useRef<Html5Qrcode | null>(null);
-  const scannerContainerRef = useRef<HTMLDivElement>(null);
 
   // Auto-fill QR code from URL parameter if present (when scanned from phone)
   useEffect(() => {
     const qrParam = searchParams.get('qr');
     if (qrParam) {
+      console.log('📱 QR code detected from URL:', qrParam);
       setQrInput(qrParam);
       handleAutoScan(qrParam);
     }
@@ -68,169 +64,6 @@ export default function QRScannerPage() {
     await handleAutoScan(qrInput.trim());
   };
 
-  // Initialize scanner when camera becomes active and element is available
-  useEffect(() => {
-    if (!cameraActive) return;
-
-    const initScanner = async () => {
-      try {
-        // Wait for DOM element to be available
-        let element = document.getElementById('qr-reader');
-        let attempts = 0;
-        while (!element && attempts < 10) {
-          await new Promise(resolve => setTimeout(resolve, 100));
-          element = document.getElementById('qr-reader');
-          attempts++;
-        }
-
-        if (!element) {
-          throw new Error('Scanner container not found. Please try again.');
-        }
-
-        const scanner = new Html5Qrcode('qr-reader', {
-          verbose: true // Enable verbose logging for debugging
-        });
-
-        scannerRef.current = scanner;
-
-        await scanner.start(
-          { facingMode: 'environment' }, // Use back camera on mobile
-          {
-            fps: 30, // Increased to 30 for better real-time detection
-            qrbox: function(viewfinderWidth, viewfinderHeight) {
-              // Use 60% of the smaller dimension for better detection (not too large, not too small)
-              const minEdgePercentage = 0.6;
-              const minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
-              const qrboxSize = Math.floor(minEdgeSize * minEdgePercentage);
-              // Ensure minimum size of 200px and maximum of 300px for optimal detection
-              const finalSize = Math.max(200, Math.min(300, qrboxSize));
-              console.log('📐 QR Box size:', finalSize, 'from viewfinder:', viewfinderWidth, 'x', viewfinderHeight);
-              return {
-                width: finalSize,
-                height: finalSize
-              };
-            },
-            aspectRatio: 1.0,
-            disableFlip: false,
-            videoConstraints: {
-              facingMode: 'environment',
-              width: { ideal: 1280 },
-              height: { ideal: 720 }
-            }
-          },
-          (decodedText, decodedResult) => {
-            // Successfully scanned
-            console.log('✅ QR Code detected:', decodedText);
-            console.log('📊 Decoded result:', decodedResult);
-            setScanStatus('QR Code Detected!');
-            
-            // Stop camera immediately after successful scan
-            stopCameraScanner();
-            
-            // Extract QR data if it's a URL (works for both localhost and production)
-            let qrData = decodedText;
-            
-            // Check if it's a URL with QR parameter (works for both http://localhost and https://production)
-            if (decodedText.includes('/checkout/scan?qr=') || decodedText.includes('?qr=')) {
-              try {
-                // Handle both absolute URLs and relative URLs
-                let url: URL;
-                if (decodedText.startsWith('http://') || decodedText.startsWith('https://')) {
-                  url = new URL(decodedText);
-                } else {
-                  // Relative URL - construct full URL
-                  url = new URL(decodedText, window.location.origin);
-                }
-                const qrParam = url.searchParams.get('qr');
-                if (qrParam) {
-                  qrData = qrParam;
-                }
-              } catch (error) {
-                // If URL parsing fails, try manual extraction
-                const match = decodedText.match(/[?&]qr=([^&]+)/);
-                if (match && match[1]) {
-                  qrData = decodeURIComponent(match[1]);
-                }
-              }
-            } else if (decodedText.startsWith('ASSET:')) {
-              // Direct QR data format
-              qrData = decodedText;
-            } else {
-              // If it doesn't match expected formats, try using it as-is
-              // Maybe it's a different QR code format or direct asset data
-              qrData = decodedText;
-              console.log('⚠️ QR code format not recognized, using as-is:', decodedText);
-            }
-
-            console.log('📦 Processing QR data:', qrData);
-            setQrInput(qrData);
-            handleAutoScan(qrData);
-          },
-          (errorMessage) => {
-            // Log scanning errors for debugging (but don't show to user)
-            // These are normal while scanning - only log occasionally to avoid spam
-            if (Math.random() < 0.01) { // Log 1% of errors to avoid console spam
-              console.debug('🔍 Scanning (this is normal):', errorMessage.substring(0, 50));
-            }
-          }
-        );
-        
-        console.log('✅ Camera scanner started successfully');
-        setScanStatus('Scanning... Point camera at QR code');
-      } catch (error: any) {
-        console.error('Camera error:', error);
-        setCameraError(error.message || 'Failed to access camera');
-        setCameraActive(false);
-        
-        if (error.message?.includes('Permission denied') || error.message?.includes('NotAllowedError')) {
-          showError('Camera Permission', 'Please allow camera access to scan QR codes');
-        } else if (error.message?.includes('NotFoundError') || error.message?.includes('No camera')) {
-          showError('No Camera', 'No camera found on this device');
-        } else {
-          showError('Camera Error', 'Failed to start camera. Please try again or use manual entry.');
-        }
-      }
-    };
-
-    initScanner();
-
-    // Cleanup on unmount or when cameraActive changes
-    return () => {
-      if (scannerRef.current) {
-        scannerRef.current.stop().catch(() => {});
-        scannerRef.current.clear();
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cameraActive]);
-
-  const startCameraScanner = () => {
-    setCameraError(null);
-    setScanStatus('Initializing camera...');
-    setCameraActive(true);
-  };
-
-  const stopCameraScanner = async () => {
-    if (scannerRef.current) {
-      try {
-        await scannerRef.current.stop();
-        scannerRef.current.clear();
-      } catch (error) {
-        console.error('Error stopping scanner:', error);
-      }
-      scannerRef.current = null;
-    }
-    setCameraActive(false);
-    setCameraError(null);
-  };
-
-  // Cleanup camera on unmount
-  useEffect(() => {
-    return () => {
-      stopCameraScanner();
-    };
-  }, []);
-
   const handleCheckout = () => {
     if (scannedAsset) {
       navigate('/checkout/new', { state: { assetId: scannedAsset.id } });
@@ -246,7 +79,6 @@ export default function QRScannerPage() {
   const handleReset = () => {
     setQrInput('');
     setScannedAsset(null);
-    stopCameraScanner();
   };
 
   return (
@@ -265,83 +97,108 @@ export default function QRScannerPage() {
           QR Code Scanner
         </h1>
         <p className="text-gray-600 dark:text-gray-300 mt-2">
-          Scan asset QR codes with your camera or enter manually
+          Scan QR codes with your phone camera or enter manually
         </p>
       </div>
 
       <div className="max-w-2xl mx-auto w-full">
-        {/* Camera Scanner Section */}
+        {/* Phone Scanner Instructions */}
         {!scannedAsset && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                <Camera className="w-5 h-5" />
-                Camera Scanner
-              </h2>
-              {cameraActive && (
-                <button
-                  onClick={stopCameraScanner}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
-                >
-                  <X className="w-4 h-4" />
-                  Stop Camera
-                </button>
-              )}
-            </div>
-
-            {!cameraActive ? (
-              <div className="text-center py-8">
-                <div className="w-48 h-48 bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-900/30 dark:to-blue-900/30 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                  <Camera className="w-32 h-32 text-purple-600 dark:text-purple-400" />
+          <div className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-lg shadow p-8 mb-6 border border-purple-200 dark:border-purple-800">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0">
+                <div className="w-16 h-16 bg-purple-600 dark:bg-purple-500 rounded-full flex items-center justify-center">
+                  <Smartphone className="w-8 h-8 text-white" />
                 </div>
-                <button
-                  onClick={startCameraScanner}
-                  className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center gap-2 text-lg mx-auto"
-                >
-                  <Camera className="w-5 h-5" />
-                  Start Camera Scanner
-                </button>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
-                  Point your camera at a QR code to scan automatically
+              </div>
+              <div className="flex-1">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
+                  Scan QR Code with Your Phone
+                </h2>
+                <p className="text-gray-700 dark:text-gray-300 mb-4">
+                  The easiest way to scan QR codes is using your phone's camera. When you scan an asset QR code, 
+                  it will automatically open this web app and process the scan!
                 </p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="relative w-full bg-black rounded-lg overflow-hidden" style={{ minHeight: '400px' }}>
-                  <div
-                    ref={scannerContainerRef}
-                    id="qr-reader"
-                    className="w-full h-full"
-                  />
-                </div>
-                {cameraError && (
-                  <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                    <p className="text-sm text-red-800 dark:text-red-400">{cameraError}</p>
-                  </div>
-                )}
-                {!cameraError && (
-                  <div className="text-center space-y-2">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      Position the QR code within the frame to scan automatically
+                
+                {/* QR Code Display Box */}
+                <div className="mt-6 p-6 bg-white dark:bg-gray-800 rounded-lg border-2 border-purple-300 dark:border-purple-700 shadow-lg">
+                  <div className="text-center mb-4">
+                    <p className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
+                      Test QR Code
                     </p>
-                    <div className="flex items-center justify-center gap-2 text-xs text-purple-600 dark:text-purple-400">
-                      <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
-                      <span>{scanStatus}</span>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                      Scan this QR code with your phone camera to test
+                    </p>
+                  </div>
+                  <div className="flex justify-center p-4 bg-white dark:bg-gray-900 rounded-lg">
+                    <div className="bg-white p-6 rounded-lg border-2 border-gray-200 dark:border-gray-700 shadow-inner">
+                      <QRCodeSVG
+                        value={`${window.location.origin}${window.location.pathname}#/checkout/scan?qr=ASSET:TEST001:test-asset-id`}
+                        size={200}
+                        level="H"
+                        includeMargin={true}
+                        fgColor="#000000"
+                        bgColor="#FFFFFF"
+                      />
                     </div>
-                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
-                      Make sure the QR code is well-lit and fully visible in the frame
+                  </div>
+                  <div className="mt-4 text-center">
+                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                      This test QR code will open this page automatically when scanned!
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                      Generate real asset QR codes at <span className="font-mono text-purple-600 dark:text-purple-400">/checkout/qr/generate</span>
                     </p>
                   </div>
-                )}
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-sm font-semibold">
+                      1
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">Open your phone's camera app</p>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">Use the built-in camera app (not a third-party scanner)</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-sm font-semibold">
+                      2
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">Point at the QR code</p>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">Position the QR code in the camera viewfinder</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-sm font-semibold">
+                      3
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">Tap the notification</p>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">When your phone detects the QR code, tap the notification to open the web app</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-sm font-semibold">
+                      4
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">Automatic processing</p>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">The web app will automatically detect and process the QR code!</p>
+                    </div>
+                  </div>
+                </div>
               </div>
-            )}
+            </div>
           </div>
         )}
 
         {/* Manual Entry Section */}
         {!scannedAsset && (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 mb-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <QrCode className="w-5 h-5" />
               Or Enter QR Code Manually
             </h2>
             <form onSubmit={handleScan} className="space-y-4">
@@ -467,29 +324,29 @@ export default function QRScannerPage() {
         {/* Instructions */}
         <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-6 mt-6">
           <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-400 mb-3 flex items-center gap-2">
-            <Camera className="w-5 h-5" />
-            How to Use QR Scanner
+            <Smartphone className="w-5 h-5" />
+            How QR Codes Work
           </h3>
           <ul className="space-y-2 text-sm text-blue-800 dark:text-blue-300">
             <li className="flex items-start gap-2">
               <span className="font-semibold">1.</span>
-              <span>Click "Start Camera Scanner" to activate your device camera</span>
+              <span>QR codes contain a URL that points to this scanner page</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="font-semibold">2.</span>
-              <span>Point your camera at the QR code on the asset</span>
+              <span>When you scan with your phone camera, it detects the URL</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="font-semibold">3.</span>
-              <span>The QR code will be scanned automatically when detected</span>
+              <span>Your phone opens the web app automatically</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="font-semibold">4.</span>
-              <span>Or manually enter/paste the QR code data in the input field</span>
+              <span>The QR code data is extracted and processed automatically</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="font-semibold">5.</span>
-              <span>Proceed to checkout if the asset is available</span>
+              <span>Or manually enter/paste the QR code data in the input field above</span>
             </li>
           </ul>
         </div>

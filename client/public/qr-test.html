@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Test - Asset App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        .qr-container {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            display: inline-block;
+            margin: 20px 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .qr-code {
+            width: 300px;
+            height: 300px;
+            margin: 0 auto;
+        }
+        .instructions {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 30px;
+            text-align: left;
+        }
+        .instructions h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+        .instructions ol {
+            margin-left: 20px;
+            color: #555;
+            line-height: 1.8;
+        }
+        .instructions li {
+            margin-bottom: 10px;
+        }
+        .test-url {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            word-break: break-all;
+            color: #495057;
+        }
+        .success-badge {
+            display: inline-block;
+            background: #28a745;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="success-badge">✅ Working Example</div>
+        <h1>QR Code Scanner Test</h1>
+        <p class="subtitle">Scan this QR code with your phone camera to automatically open the Asset App</p>
+        
+        <div class="qr-container">
+            <div id="qrcode" class="qr-code"></div>
+        </div>
+
+        <div class="instructions">
+            <h2>How to Test:</h2>
+            <ol>
+                <li><strong>On your phone:</strong> Open your phone's camera app</li>
+                <li><strong>Point at QR code:</strong> Point your camera at the QR code above (on this screen or printed)</li>
+                <li><strong>Tap notification:</strong> When your phone detects the QR code, tap the notification/link that appears</li>
+                <li><strong>Auto-open:</strong> Your phone's browser will automatically open the Asset App scanner page</li>
+                <li><strong>Auto-scan:</strong> The QR code data will be automatically filled and scanned!</li>
+            </ol>
+            
+            <div class="test-url">
+                <strong>QR Code contains:</strong><br>
+                <span id="url-text"></span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Generate QR code with URL that opens the scanner page
+        const baseUrl = window.location.origin.includes('localhost') 
+            ? 'http://localhost:5173/asset-app' 
+            : 'https://speccon-team.github.io/asset-app';
+        
+        // Example asset data (you can change this)
+        const qrData = 'ASSET:TEST001:test-asset-id-123';
+        const qrCodeUrl = `${baseUrl}/#/checkout/scan?qr=${encodeURIComponent(qrData)}`;
+        
+        // Display the URL
+        document.getElementById('url-text').textContent = qrCodeUrl;
+        
+        // Generate QR code
+        QRCode.toCanvas(document.getElementById('qrcode'), qrCodeUrl, {
+            width: 300,
+            margin: 2,
+            color: {
+                dark: '#000000',
+                light: '#FFFFFF'
+            },
+            errorCorrectionLevel: 'H'
+        }, function (error) {
+            if (error) {
+                console.error('QR Code generation error:', error);
+                document.getElementById('qrcode').innerHTML = 
+                    '<p style="color: red;">Error generating QR code. Please refresh the page.</p>';
+            } else {
+                console.log('✅ QR Code generated successfully!');
+            }
+        });
+    </script>
+</body>
+</html>
+
