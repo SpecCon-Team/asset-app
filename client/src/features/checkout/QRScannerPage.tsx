@@ -142,8 +142,14 @@ export default function QRScannerPage() {
             } else if (decodedText.startsWith('ASSET:')) {
               // Direct QR data format
               qrData = decodedText;
+            } else {
+              // If it doesn't match expected formats, try using it as-is
+              // Maybe it's a different QR code format or direct asset data
+              qrData = decodedText;
+              console.log('⚠️ QR code format not recognized, using as-is:', decodedText);
             }
 
+            console.log('📦 Processing QR data:', qrData);
             setQrInput(qrData);
             handleAutoScan(qrData);
           },
@@ -151,8 +157,10 @@ export default function QRScannerPage() {
             // Scanning error (ignore - it's normal while scanning)
             // Only log if it's not a common scanning error
             if (!errorMessage.includes('NotFoundException') && 
-                !errorMessage.includes('No QR code found')) {
-              console.debug('Scanning:', errorMessage);
+                !errorMessage.includes('No QR code found') &&
+                !errorMessage.includes('QR code parse error')) {
+              // Only log non-common errors to avoid console spam
+              // console.debug('Scanning:', errorMessage);
             }
           }
         );
