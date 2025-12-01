@@ -38,16 +38,45 @@ export default function QRScannerPage() {
 
     try {
       setScanning(true);
+      console.log('🔍 Attempting to scan QR code:', qrData.trim());
+      
       const apiClient = getApiClient();
       const response = await apiClient.post('/checkout/qr/scan', {
         qrCode: qrData.trim()
       });
 
+      console.log('✅ QR code scanned successfully:', response.data);
       setScannedAsset(response.data.asset);
       await showSuccess('Success!', 'QR code scanned successfully', 1500);
     } catch (error: any) {
-      console.error('Failed to scan QR code:', error);
-      await showError('Error', error.response?.data?.message || 'Failed to scan QR code');
+      console.error('❌ Failed to scan QR code:', error);
+      console.error('Error details:', {
+        status: error.response?.status,
+        message: error.response?.data?.message,
+        error: error.response?.data?.error
+      });
+      
+      // Check if it's an authentication error
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        await showError(
+          'Authentication Required', 
+          'Please log in to scan QR codes. The QR code data has been saved - log in and try again.',
+          3000
+        );
+        // Keep the QR code in the input field so user can try again after logging in
+      } else if (error.response?.status === 404) {
+        await showError(
+          'QR Code Not Found', 
+          'This QR code is not registered in the system. Please generate a valid QR code for an asset.',
+          3000
+        );
+      } else {
+        await showError(
+          'Error', 
+          error.response?.data?.message || error.response?.data?.error || 'Failed to scan QR code. Please try again.',
+          3000
+        );
+      }
       setScannedAsset(null);
     } finally {
       setScanning(false);
@@ -142,12 +171,13 @@ export default function QRScannerPage() {
                       />
                     </div>
                   </div>
-                  <div className="mt-4 text-center">
-                    <p className="text-xs text-gray-600 dark:text-gray-400">
-                      This test QR code will open this page automatically when scanned!
+                  <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                    <p className="text-xs text-yellow-800 dark:text-yellow-300 font-semibold mb-1">
+                      ⚠️ Test QR Code
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                      Generate real asset QR codes at <span className="font-mono text-purple-600 dark:text-purple-400">/checkout/qr/generate</span>
+                    <p className="text-xs text-yellow-700 dark:text-yellow-400">
+                      This is a test QR code. It will open this page, but you need to generate a real asset QR code 
+                      at <span className="font-mono text-yellow-900 dark:text-yellow-200">/checkout/qr/generate</span> for it to work with actual assets.
                     </p>
                   </div>
                 </div>
