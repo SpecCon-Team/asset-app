@@ -23,6 +23,7 @@ export default function QRScannerPage() {
   const [scannedAsset, setScannedAsset] = useState<ScannedAsset | null>(null);
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const [scanStatus, setScanStatus] = useState<string>('Ready');
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const scannerContainerRef = useRef<HTMLDivElement>(null);
 
@@ -87,7 +88,7 @@ export default function QRScannerPage() {
         }
 
         const scanner = new Html5Qrcode('qr-reader', {
-          verbose: false
+          verbose: true // Enable verbose logging for debugging
         });
 
         scannerRef.current = scanner;
@@ -95,23 +96,35 @@ export default function QRScannerPage() {
         await scanner.start(
           { facingMode: 'environment' }, // Use back camera on mobile
           {
-            fps: 20, // Increased from 10 to 20 for better detection
+            fps: 30, // Increased to 30 for better real-time detection
             qrbox: function(viewfinderWidth, viewfinderHeight) {
-              // Make QR box responsive - 80% of the smaller dimension for better detection
-              const minEdgePercentage = 0.8;
+              // Use 60% of the smaller dimension for better detection (not too large, not too small)
+              const minEdgePercentage = 0.6;
               const minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
               const qrboxSize = Math.floor(minEdgeSize * minEdgePercentage);
+              // Ensure minimum size of 200px and maximum of 300px for optimal detection
+              const finalSize = Math.max(200, Math.min(300, qrboxSize));
+              console.log('📐 QR Box size:', finalSize, 'from viewfinder:', viewfinderWidth, 'x', viewfinderHeight);
               return {
-                width: qrboxSize,
-                height: qrboxSize
+                width: finalSize,
+                height: finalSize
               };
             },
             aspectRatio: 1.0,
-            disableFlip: false
+            disableFlip: false,
+            videoConstraints: {
+              facingMode: 'environment',
+              width: { ideal: 1280 },
+              height: { ideal: 720 }
+            }
           },
           (decodedText, decodedResult) => {
             // Successfully scanned
             console.log('✅ QR Code detected:', decodedText);
+            console.log('📊 Decoded result:', decodedResult);
+            setScanStatus('QR Code Detected!');
+            
+            // Stop camera immediately after successful scan
             stopCameraScanner();
             
             // Extract QR data if it's a URL (works for both localhost and production)
@@ -154,16 +167,16 @@ export default function QRScannerPage() {
             handleAutoScan(qrData);
           },
           (errorMessage) => {
-            // Scanning error (ignore - it's normal while scanning)
-            // Only log if it's not a common scanning error
-            if (!errorMessage.includes('NotFoundException') && 
-                !errorMessage.includes('No QR code found') &&
-                !errorMessage.includes('QR code parse error')) {
-              // Only log non-common errors to avoid console spam
-              // console.debug('Scanning:', errorMessage);
+            // Log scanning errors for debugging (but don't show to user)
+            // These are normal while scanning - only log occasionally to avoid spam
+            if (Math.random() < 0.01) { // Log 1% of errors to avoid console spam
+              console.debug('🔍 Scanning (this is normal):', errorMessage.substring(0, 50));
             }
           }
         );
+        
+        console.log('✅ Camera scanner started successfully');
+        setScanStatus('Scanning... Point camera at QR code');
       } catch (error: any) {
         console.error('Camera error:', error);
         setCameraError(error.message || 'Failed to access camera');
@@ -193,6 +206,7 @@ export default function QRScannerPage() {
 
   const startCameraScanner = () => {
     setCameraError(null);
+    setScanStatus('Initializing camera...');
     setCameraActive(true);
   };
 
@@ -299,16 +313,6 @@ export default function QRScannerPage() {
                     id="qr-reader"
                     className="w-full h-full"
                   />
-                  {!cameraError && (
-                    <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-10">
-                      <div className="border-2 border-purple-500 rounded-lg shadow-lg" style={{ width: '250px', height: '250px' }}>
-                        <div className="absolute -top-1 -left-1 w-6 h-6 border-t-2 border-l-2 border-purple-500 rounded-tl-lg"></div>
-                        <div className="absolute -top-1 -right-1 w-6 h-6 border-t-2 border-r-2 border-purple-500 rounded-tr-lg"></div>
-                        <div className="absolute -bottom-1 -left-1 w-6 h-6 border-b-2 border-l-2 border-purple-500 rounded-bl-lg"></div>
-                        <div className="absolute -bottom-1 -right-1 w-6 h-6 border-b-2 border-r-2 border-purple-500 rounded-br-lg"></div>
-                      </div>
-                    </div>
-                  )}
                 </div>
                 {cameraError && (
                   <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
@@ -322,8 +326,11 @@ export default function QRScannerPage() {
                     </p>
                     <div className="flex items-center justify-center gap-2 text-xs text-purple-600 dark:text-purple-400">
                       <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
-                      <span>Scanning...</span>
+                      <span>{scanStatus}</span>
                     </div>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+                      Make sure the QR code is well-lit and fully visible in the frame
+                    </p>
                   </div>
                 )}
               </div>

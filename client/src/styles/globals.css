@@ -8,6 +8,8 @@
 /* QR Scanner Styles */
 #qr-reader {
   width: 100% !important;
+  position: relative !important;
+  min-height: 400px !important;
 }
 
 #qr-reader__dashboard {
@@ -22,10 +24,25 @@
   width: 100% !important;
   height: auto !important;
   object-fit: cover !important;
+  display: block !important;
+  background: #000 !important;
 }
 
 #qr-reader__scan_region {
-  border: none !important;
+  border: 2px solid rgba(139, 92, 246, 0.5) !important; /* Purple border for scan region */
+  border-radius: 8px !important;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.3) !important; /* Dark overlay outside scan region */
+}
+
+#qr-reader__scan_region__scan_region {
+  border: 2px solid rgba(139, 92, 246, 0.8) !important;
+  border-radius: 8px !important;
+}
+
+/* Ensure scanner container is visible */
+#qr-reader > div {
+  width: 100% !important;
+  height: 100% !important;
 }
 
 /* ================================================
