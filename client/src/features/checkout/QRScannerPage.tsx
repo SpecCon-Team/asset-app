@@ -46,8 +46,17 @@ export default function QRScannerPage() {
       });
 
       console.log('✅ QR code scanned successfully:', response.data);
-      setScannedAsset(response.data.asset);
-      await showSuccess('Success!', 'QR code scanned successfully', 1500);
+      console.log('📦 Asset data:', response.data.asset);
+      
+      // Ensure we have the asset data
+      if (response.data && response.data.asset) {
+        setScannedAsset(response.data.asset);
+        await showSuccess('Success!', 'QR code scanned successfully', 1500);
+      } else {
+        console.error('❌ No asset data in response:', response.data);
+        await showError('Error', 'Asset data not found in response');
+        setScannedAsset(null);
+      }
     } catch (error: any) {
       console.error('❌ Failed to scan QR code:', error);
       console.error('Error details:', {
@@ -171,14 +180,26 @@ export default function QRScannerPage() {
                       />
                     </div>
                   </div>
-                  <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
-                    <p className="text-xs text-yellow-800 dark:text-yellow-300 font-semibold mb-1">
-                      ⚠️ Test QR Code
+                  <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border-2 border-red-200 dark:border-red-800">
+                    <p className="text-xs text-red-800 dark:text-red-300 font-semibold mb-2 flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4" />
+                      Test QR Code - For Demonstration Only
                     </p>
-                    <p className="text-xs text-yellow-700 dark:text-yellow-400">
-                      This is a test QR code. It will open this page, but you need to generate a real asset QR code 
-                      at <span className="font-mono text-yellow-900 dark:text-yellow-200">/checkout/qr/generate</span> for it to work with actual assets.
+                    <p className="text-xs text-red-700 dark:text-red-400 mb-3">
+                      This test QR code will open this page when scanned, but it will show an error because it's not a real asset in the database.
                     </p>
+                    <div className="bg-white dark:bg-gray-800 p-3 rounded border border-red-300 dark:border-red-700">
+                      <p className="text-xs font-semibold text-gray-900 dark:text-white mb-2">
+                        ✅ To test with a real asset:
+                      </p>
+                      <ol className="text-xs text-gray-700 dark:text-gray-300 space-y-1 list-decimal list-inside">
+                        <li>Go to <span className="font-mono text-purple-600 dark:text-purple-400">/checkout/qr/generate</span></li>
+                        <li>Select a real asset from your database</li>
+                        <li>Click "Generate QR Code"</li>
+                        <li>Scan that QR code with your phone</li>
+                        <li>It will automatically show the asset details!</li>
+                      </ol>
+                    </div>
                   </div>
                 </div>
                 <div className="space-y-3">
@@ -270,32 +291,46 @@ export default function QRScannerPage() {
           </div>
         )}
 
+        {/* Loading State */}
+        {scanning && !scannedAsset && (
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 mb-6">
+            <div className="flex flex-col items-center justify-center py-8">
+              <div className="w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+              <p className="text-gray-600 dark:text-gray-400">Scanning QR code...</p>
+            </div>
+          </div>
+        )}
+
         {/* Scanned Asset Details */}
         {scannedAsset && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 animate-fade-in">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 animate-fade-in mb-6 border-2 border-green-200 dark:border-green-800">
             <div className="flex items-center gap-2 mb-4">
               <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Asset Found!</h2>
             </div>
 
             <div className="flex gap-4 mb-6">
-              {scannedAsset.image_url && (
+              {scannedAsset.image_url ? (
                 <img
                   src={scannedAsset.image_url}
-                  alt={scannedAsset.name}
-                  className="w-24 h-24 object-cover rounded-lg"
+                  alt={scannedAsset.name || 'Asset'}
+                  className="w-24 h-24 object-cover rounded-lg border border-gray-200 dark:border-gray-700"
                 />
+              ) : (
+                <div className="w-24 h-24 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center border border-gray-200 dark:border-gray-600">
+                  <Package className="w-12 h-12 text-gray-400 dark:text-gray-500" />
+                </div>
               )}
               <div className="flex-1">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                  {scannedAsset.name}
+                  {scannedAsset.name || 'Unknown Asset'}
                 </h3>
                 <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
                   <p className="flex items-center gap-2">
                     <Package className="w-4 h-4" />
-                    <span>Code: {scannedAsset.asset_code}</span>
+                    <span>Code: {scannedAsset.asset_code || 'N/A'}</span>
                   </p>
-                  <p>Type: {scannedAsset.asset_type}</p>
+                  <p>Type: {scannedAsset.asset_type || 'N/A'}</p>
                   <div className="flex items-center gap-2 mt-2">
                     {scannedAsset.checkoutStatus === 'available' ? (
                       <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 flex items-center gap-1">
@@ -312,6 +347,14 @@ export default function QRScannerPage() {
                 </div>
               </div>
             </div>
+            
+            {/* Debug info in development */}
+            {process.env.NODE_ENV === 'development' && (
+              <div className="mt-4 p-3 bg-gray-100 dark:bg-gray-900 rounded text-xs font-mono text-gray-600 dark:text-gray-400">
+                <p>Asset ID: {scannedAsset.id}</p>
+                <p>Status: {scannedAsset.checkoutStatus}</p>
+              </div>
+            )}
 
             {/* Actions */}
             <div className="space-y-3">
