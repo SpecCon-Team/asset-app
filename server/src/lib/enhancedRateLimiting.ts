@@ -46,7 +46,7 @@ export const authRateLimiter = rateLimit({
  */
 export const apiRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: process.env.NODE_ENV === 'development' ? 1000 : 100,
+  max: process.env.NODE_ENV === 'development' ? 1000 : 500, // Increased from 100 to 500 for production
   message: 'Too many requests. Please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
