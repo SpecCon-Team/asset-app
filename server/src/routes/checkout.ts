@@ -861,34 +861,55 @@ router.post('/qr/generate', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), 
     if (clientUrl.includes('localhost') || clientUrl.includes('127.0.0.1')) {
       const networkInterfaces = os.networkInterfaces();
       let localIp = 'localhost';
+      const preferredIps: string[] = [];
+      const otherIps: string[] = [];
       
-      // Find the first non-internal IPv4 address
+      // Collect all non-internal IPv4 addresses, prioritizing common network ranges
       for (const interfaceName of Object.keys(networkInterfaces)) {
         const addresses = networkInterfaces[interfaceName];
         if (addresses) {
           for (const addr of addresses) {
             if (addr.family === 'IPv4' && !addr.internal) {
-              localIp = addr.address;
-              break;
+              const ip = addr.address;
+              // Prefer 192.168.x.x, 10.x.x.x, or 172.16-31.x.x (typical home/office networks)
+              if (ip.startsWith('192.168.') || ip.startsWith('10.') || 
+                  (ip.startsWith('172.') && parseInt(ip.split('.')[1]) >= 16 && parseInt(ip.split('.')[1]) <= 31)) {
+                preferredIps.push(ip);
+              } else {
+                otherIps.push(ip);
+              }
             }
           }
-          if (localIp !== 'localhost') break;
         }
       }
       
-      // Replace localhost with the local IP address
-      clientUrl = clientUrl.replace(/localhost|127\.0\.0\.1/, localIp);
-      
-      // Get the port from CLIENT_URL or default to 5173 (Vite default)
-      const portMatch = clientUrl.match(/:(\d+)/);
-      const port = portMatch ? portMatch[1] : '5173';
-      
-      // Ensure port is included
-      if (!clientUrl.includes(':' + port)) {
-        clientUrl = `http://${localIp}:${port}`;
+      // Use preferred IP if available, otherwise use first other IP
+      if (preferredIps.length > 0) {
+        localIp = preferredIps[0];
+      } else if (otherIps.length > 0) {
+        localIp = otherIps[0];
       }
       
-      console.log(`📱 QR Code will use local IP: ${clientUrl} (for phone access)`);
+      if (localIp === 'localhost') {
+        console.warn('⚠️  Could not detect local network IP. QR code will use localhost (phone may not be able to access).');
+        console.warn('   Make sure your phone and computer are on the same WiFi network.');
+      } else {
+        // Replace localhost with the local IP address
+        clientUrl = clientUrl.replace(/localhost|127\.0\.0\.1/, localIp);
+        
+        // Get the port from CLIENT_URL or default to 5173 (Vite default)
+        const portMatch = clientUrl.match(/:(\d+)/);
+        const port = portMatch ? portMatch[1] : '5173';
+        
+        // Ensure port is included
+        if (!clientUrl.includes(':' + port)) {
+          clientUrl = `http://${localIp}:${port}`;
+        }
+        
+        console.log(`📱 QR Code will use local IP: ${clientUrl} (for phone access)`);
+        console.log(`   Make sure your phone and computer are on the same WiFi network.`);
+        console.log(`   Test by opening ${clientUrl} in your phone's browser first.`);
+      }
     }
     
     // Remove trailing slash if present
