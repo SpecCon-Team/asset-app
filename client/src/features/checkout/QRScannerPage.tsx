@@ -89,12 +89,33 @@ export default function QRScannerPage() {
           // Successfully scanned
           stopCameraScanner();
           
-          // Extract QR data if it's a URL
+          // Extract QR data if it's a URL (works for both localhost and production)
           let qrData = decodedText;
-          if (decodedText.includes('/checkout/scan?qr=')) {
-            const url = new URL(decodedText);
-            qrData = url.searchParams.get('qr') || decodedText;
+          
+          // Check if it's a URL with QR parameter (works for both http://localhost and https://production)
+          if (decodedText.includes('/checkout/scan?qr=') || decodedText.includes('?qr=')) {
+            try {
+              // Handle both absolute URLs and relative URLs
+              let url: URL;
+              if (decodedText.startsWith('http://') || decodedText.startsWith('https://')) {
+                url = new URL(decodedText);
+              } else {
+                // Relative URL - construct full URL
+                url = new URL(decodedText, window.location.origin);
+              }
+              const qrParam = url.searchParams.get('qr');
+              if (qrParam) {
+                qrData = qrParam;
+              }
+            } catch (error) {
+              // If URL parsing fails, try manual extraction
+              const match = decodedText.match(/[?&]qr=([^&]+)/);
+              if (match && match[1]) {
+                qrData = decodeURIComponent(match[1]);
+              }
+            }
           } else if (decodedText.startsWith('ASSET:')) {
+            // Direct QR data format
             qrData = decodedText;
           }
 
