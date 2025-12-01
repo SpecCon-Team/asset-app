@@ -67,78 +67,109 @@ export default function QRScannerPage() {
     await handleAutoScan(qrInput.trim());
   };
 
-  const startCameraScanner = async () => {
-    try {
-      setCameraError(null);
-      setCameraActive(true);
+  // Initialize scanner when camera becomes active and element is available
+  useEffect(() => {
+    if (!cameraActive) return;
 
-      const scanner = new Html5Qrcode('qr-reader', {
-        verbose: false
-      });
-
-      scannerRef.current = scanner;
-
-      await scanner.start(
-        { facingMode: 'environment' }, // Use back camera on mobile
-        {
-          fps: 10,
-          qrbox: { width: 250, height: 250 },
-          aspectRatio: 1.0
-        },
-        (decodedText) => {
-          // Successfully scanned
-          stopCameraScanner();
-          
-          // Extract QR data if it's a URL (works for both localhost and production)
-          let qrData = decodedText;
-          
-          // Check if it's a URL with QR parameter (works for both http://localhost and https://production)
-          if (decodedText.includes('/checkout/scan?qr=') || decodedText.includes('?qr=')) {
-            try {
-              // Handle both absolute URLs and relative URLs
-              let url: URL;
-              if (decodedText.startsWith('http://') || decodedText.startsWith('https://')) {
-                url = new URL(decodedText);
-              } else {
-                // Relative URL - construct full URL
-                url = new URL(decodedText, window.location.origin);
-              }
-              const qrParam = url.searchParams.get('qr');
-              if (qrParam) {
-                qrData = qrParam;
-              }
-            } catch (error) {
-              // If URL parsing fails, try manual extraction
-              const match = decodedText.match(/[?&]qr=([^&]+)/);
-              if (match && match[1]) {
-                qrData = decodeURIComponent(match[1]);
-              }
-            }
-          } else if (decodedText.startsWith('ASSET:')) {
-            // Direct QR data format
-            qrData = decodedText;
-          }
-
-          setQrInput(qrData);
-          handleAutoScan(qrData);
-        },
-        (errorMessage) => {
-          // Scanning error (ignore - it's normal while scanning)
+    const initScanner = async () => {
+      try {
+        // Wait for DOM element to be available
+        let element = document.getElementById('qr-reader');
+        let attempts = 0;
+        while (!element && attempts < 10) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+          element = document.getElementById('qr-reader');
+          attempts++;
         }
-      );
-    } catch (error: any) {
-      console.error('Camera error:', error);
-      setCameraError(error.message || 'Failed to access camera');
-      setCameraActive(false);
-      
-      if (error.message?.includes('Permission denied') || error.message?.includes('NotAllowedError')) {
-        await showError('Camera Permission', 'Please allow camera access to scan QR codes');
-      } else if (error.message?.includes('NotFoundError') || error.message?.includes('No camera')) {
-        await showError('No Camera', 'No camera found on this device');
-      } else {
-        await showError('Camera Error', 'Failed to start camera. Please try again or use manual entry.');
+
+        if (!element) {
+          throw new Error('Scanner container not found. Please try again.');
+        }
+
+        const scanner = new Html5Qrcode('qr-reader', {
+          verbose: false
+        });
+
+        scannerRef.current = scanner;
+
+        await scanner.start(
+          { facingMode: 'environment' }, // Use back camera on mobile
+          {
+            fps: 10,
+            qrbox: { width: 250, height: 250 },
+            aspectRatio: 1.0
+          },
+          (decodedText) => {
+            // Successfully scanned
+            stopCameraScanner();
+            
+            // Extract QR data if it's a URL (works for both localhost and production)
+            let qrData = decodedText;
+            
+            // Check if it's a URL with QR parameter (works for both http://localhost and https://production)
+            if (decodedText.includes('/checkout/scan?qr=') || decodedText.includes('?qr=')) {
+              try {
+                // Handle both absolute URLs and relative URLs
+                let url: URL;
+                if (decodedText.startsWith('http://') || decodedText.startsWith('https://')) {
+                  url = new URL(decodedText);
+                } else {
+                  // Relative URL - construct full URL
+                  url = new URL(decodedText, window.location.origin);
+                }
+                const qrParam = url.searchParams.get('qr');
+                if (qrParam) {
+                  qrData = qrParam;
+                }
+              } catch (error) {
+                // If URL parsing fails, try manual extraction
+                const match = decodedText.match(/[?&]qr=([^&]+)/);
+                if (match && match[1]) {
+                  qrData = decodeURIComponent(match[1]);
+                }
+              }
+            } else if (decodedText.startsWith('ASSET:')) {
+              // Direct QR data format
+              qrData = decodedText;
+            }
+
+            setQrInput(qrData);
+            handleAutoScan(qrData);
+          },
+          (errorMessage) => {
+            // Scanning error (ignore - it's normal while scanning)
+          }
+        );
+      } catch (error: any) {
+        console.error('Camera error:', error);
+        setCameraError(error.message || 'Failed to access camera');
+        setCameraActive(false);
+        
+        if (error.message?.includes('Permission denied') || error.message?.includes('NotAllowedError')) {
+          showError('Camera Permission', 'Please allow camera access to scan QR codes');
+        } else if (error.message?.includes('NotFoundError') || error.message?.includes('No camera')) {
+          showError('No Camera', 'No camera found on this device');
+        } else {
+          showError('Camera Error', 'Failed to start camera. Please try again or use manual entry.');
+        }
       }
-    }
+    };
+
+    initScanner();
+
+    // Cleanup on unmount or when cameraActive changes
+    return () => {
+      if (scannerRef.current) {
+        scannerRef.current.stop().catch(() => {});
+        scannerRef.current.clear();
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cameraActive]);
+
+  const startCameraScanner = () => {
+    setCameraError(null);
+    setCameraActive(true);
   };
 
   const stopCameraScanner = async () => {
