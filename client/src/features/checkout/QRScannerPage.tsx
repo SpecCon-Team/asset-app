@@ -96,8 +96,18 @@ export default function QRScannerPage() {
           { facingMode: 'environment' }, // Use back camera on mobile
           {
             fps: 10,
-            qrbox: { width: 250, height: 250 },
-            aspectRatio: 1.0
+            qrbox: function(viewfinderWidth, viewfinderHeight) {
+              // Make QR box responsive - 60% of the smaller dimension
+              const minEdgePercentage = 0.6;
+              const minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
+              const qrboxSize = Math.floor(minEdgeSize * minEdgePercentage);
+              return {
+                width: qrboxSize,
+                height: qrboxSize
+              };
+            },
+            aspectRatio: 1.0,
+            disableFlip: false
           },
           (decodedText) => {
             // Successfully scanned
@@ -269,20 +279,39 @@ export default function QRScannerPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                <div
-                  ref={scannerContainerRef}
-                  id="qr-reader"
-                  className="w-full rounded-lg overflow-hidden bg-black"
-                  style={{ minHeight: '300px' }}
-                />
+                <div className="relative w-full bg-black rounded-lg overflow-hidden" style={{ minHeight: '400px' }}>
+                  <div
+                    ref={scannerContainerRef}
+                    id="qr-reader"
+                    className="w-full h-full"
+                  />
+                  {!cameraError && (
+                    <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-10">
+                      <div className="border-2 border-purple-500 rounded-lg shadow-lg" style={{ width: '250px', height: '250px' }}>
+                        <div className="absolute -top-1 -left-1 w-6 h-6 border-t-2 border-l-2 border-purple-500 rounded-tl-lg"></div>
+                        <div className="absolute -top-1 -right-1 w-6 h-6 border-t-2 border-r-2 border-purple-500 rounded-tr-lg"></div>
+                        <div className="absolute -bottom-1 -left-1 w-6 h-6 border-b-2 border-l-2 border-purple-500 rounded-bl-lg"></div>
+                        <div className="absolute -bottom-1 -right-1 w-6 h-6 border-b-2 border-r-2 border-purple-500 rounded-br-lg"></div>
+                      </div>
+                    </div>
+                  )}
+                </div>
                 {cameraError && (
                   <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
                     <p className="text-sm text-red-800 dark:text-red-400">{cameraError}</p>
                   </div>
                 )}
-                <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
-                  Position the QR code within the frame
-                </p>
+                {!cameraError && (
+                  <div className="text-center space-y-2">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Position the QR code within the frame to scan automatically
+                    </p>
+                    <div className="flex items-center justify-center gap-2 text-xs text-purple-600 dark:text-purple-400">
+                      <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
+                      <span>Scanning...</span>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
