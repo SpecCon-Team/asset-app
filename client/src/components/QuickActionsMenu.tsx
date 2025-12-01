@@ -67,7 +67,7 @@ export default function QuickActionsMenu({ userRole = 'USER' }: QuickActionsMenu
       label: 'Scan QR Code',
       icon: <Scan className="w-5 h-5" />,
       action: () => {
-        navigate('/qr-scanner');
+        navigate('/checkout/scan');
         setIsOpen(false);
       },
       color: 'bg-indigo-500 hover:bg-indigo-600',
