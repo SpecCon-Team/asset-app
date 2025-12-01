@@ -95,10 +95,10 @@ export default function QRScannerPage() {
         await scanner.start(
           { facingMode: 'environment' }, // Use back camera on mobile
           {
-            fps: 10,
+            fps: 20, // Increased from 10 to 20 for better detection
             qrbox: function(viewfinderWidth, viewfinderHeight) {
-              // Make QR box responsive - 60% of the smaller dimension
-              const minEdgePercentage = 0.6;
+              // Make QR box responsive - 80% of the smaller dimension for better detection
+              const minEdgePercentage = 0.8;
               const minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
               const qrboxSize = Math.floor(minEdgeSize * minEdgePercentage);
               return {
@@ -109,8 +109,9 @@ export default function QRScannerPage() {
             aspectRatio: 1.0,
             disableFlip: false
           },
-          (decodedText) => {
+          (decodedText, decodedResult) => {
             // Successfully scanned
+            console.log('✅ QR Code detected:', decodedText);
             stopCameraScanner();
             
             // Extract QR data if it's a URL (works for both localhost and production)
@@ -148,6 +149,11 @@ export default function QRScannerPage() {
           },
           (errorMessage) => {
             // Scanning error (ignore - it's normal while scanning)
+            // Only log if it's not a common scanning error
+            if (!errorMessage.includes('NotFoundException') && 
+                !errorMessage.includes('No QR code found')) {
+              console.debug('Scanning:', errorMessage);
+            }
           }
         );
       } catch (error: any) {
