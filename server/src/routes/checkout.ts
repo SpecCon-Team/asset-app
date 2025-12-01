@@ -3,6 +3,7 @@ import { prisma } from '../lib/prisma';
 import { authenticate, requireRole } from '../middleware/auth';
 import { logAudit } from '../lib/auditLog';
 import QRCode from 'qrcode';
+import os from 'os';
 
 interface CreateCheckoutBody {
   assetId: string;
@@ -854,6 +855,40 @@ router.post('/qr/generate', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), 
     // If CLIENT_URL points to assettrack-client.onrender.com, use GitHub Pages instead
     if (clientUrl.includes('assettrack-client.onrender.com')) {
       clientUrl = 'https://speccon-team.github.io/asset-app';
+    }
+    
+    // For localhost development, replace with local network IP so phone can access it
+    if (clientUrl.includes('localhost') || clientUrl.includes('127.0.0.1')) {
+      const networkInterfaces = os.networkInterfaces();
+      let localIp = 'localhost';
+      
+      // Find the first non-internal IPv4 address
+      for (const interfaceName of Object.keys(networkInterfaces)) {
+        const addresses = networkInterfaces[interfaceName];
+        if (addresses) {
+          for (const addr of addresses) {
+            if (addr.family === 'IPv4' && !addr.internal) {
+              localIp = addr.address;
+              break;
+            }
+          }
+          if (localIp !== 'localhost') break;
+        }
+      }
+      
+      // Replace localhost with the local IP address
+      clientUrl = clientUrl.replace(/localhost|127\.0\.0\.1/, localIp);
+      
+      // Get the port from CLIENT_URL or default to 5173 (Vite default)
+      const portMatch = clientUrl.match(/:(\d+)/);
+      const port = portMatch ? portMatch[1] : '5173';
+      
+      // Ensure port is included
+      if (!clientUrl.includes(':' + port)) {
+        clientUrl = `http://${localIp}:${port}`;
+      }
+      
+      console.log(`📱 QR Code will use local IP: ${clientUrl} (for phone access)`);
     }
     
     // Remove trailing slash if present
