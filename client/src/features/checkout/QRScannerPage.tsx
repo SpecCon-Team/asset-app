@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, QrCode, Camera, Package, CheckCircle, AlertCircle } from 'lucide-react';
+import { ArrowLeft, QrCode, Camera, Package, CheckCircle, AlertCircle, X, Maximize2 } from 'lucide-react';
 import { getApiClient } from '../assets/lib/apiClient';
 import { showSuccess, showError } from '@/lib/sweetalert';
+import { Html5Qrcode } from 'html5-qrcode';
 
 interface ScannedAsset {
   id: string;
@@ -20,51 +21,29 @@ export default function QRScannerPage() {
   const [qrInput, setQrInput] = useState('');
   const [scanning, setScanning] = useState(false);
   const [scannedAsset, setScannedAsset] = useState<ScannedAsset | null>(null);
+  const [cameraActive, setCameraActive] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const scannerRef = useRef<Html5Qrcode | null>(null);
+  const scannerContainerRef = useRef<HTMLDivElement>(null);
 
   // Auto-fill QR code from URL parameter if present (when scanned from phone)
   useEffect(() => {
     const qrParam = searchParams.get('qr');
     if (qrParam) {
       setQrInput(qrParam);
-      // Auto-scan if QR code is in URL
-      const handleAutoScan = async (qrData: string) => {
-        if (!qrData.trim()) return;
-
-        try {
-          setScanning(true);
-          const apiClient = getApiClient();
-          const response = await apiClient.post('/checkout/qr/scan', {
-            qrCode: qrData.trim()
-          });
-
-          setScannedAsset(response.data.asset);
-          await showSuccess('Success!', 'QR code scanned successfully', 1500);
-        } catch (error: any) {
-          console.error('Failed to scan QR code:', error);
-          await showError('Error', error.response?.data?.message || 'Failed to scan QR code');
-          setScannedAsset(null);
-        } finally {
-          setScanning(false);
-        }
-      };
-      
       handleAutoScan(qrParam);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
-  const handleScan = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!qrInput.trim()) {
-      await showError('Error', 'Please enter a QR code');
-      return;
-    }
+  const handleAutoScan = async (qrData: string) => {
+    if (!qrData.trim()) return;
 
     try {
       setScanning(true);
       const apiClient = getApiClient();
       const response = await apiClient.post('/checkout/qr/scan', {
-        qrCode: qrInput.trim()
+        qrCode: qrData.trim()
       });
 
       setScannedAsset(response.data.asset);
@@ -77,6 +56,90 @@ export default function QRScannerPage() {
       setScanning(false);
     }
   };
+
+  const handleScan = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!qrInput.trim()) {
+      await showError('Error', 'Please enter a QR code');
+      return;
+    }
+
+    await handleAutoScan(qrInput.trim());
+  };
+
+  const startCameraScanner = async () => {
+    try {
+      setCameraError(null);
+      setCameraActive(true);
+
+      const scanner = new Html5Qrcode('qr-reader', {
+        verbose: false
+      });
+
+      scannerRef.current = scanner;
+
+      await scanner.start(
+        { facingMode: 'environment' }, // Use back camera on mobile
+        {
+          fps: 10,
+          qrbox: { width: 250, height: 250 },
+          aspectRatio: 1.0
+        },
+        (decodedText) => {
+          // Successfully scanned
+          stopCameraScanner();
+          
+          // Extract QR data if it's a URL
+          let qrData = decodedText;
+          if (decodedText.includes('/checkout/scan?qr=')) {
+            const url = new URL(decodedText);
+            qrData = url.searchParams.get('qr') || decodedText;
+          } else if (decodedText.startsWith('ASSET:')) {
+            qrData = decodedText;
+          }
+
+          setQrInput(qrData);
+          handleAutoScan(qrData);
+        },
+        (errorMessage) => {
+          // Scanning error (ignore - it's normal while scanning)
+        }
+      );
+    } catch (error: any) {
+      console.error('Camera error:', error);
+      setCameraError(error.message || 'Failed to access camera');
+      setCameraActive(false);
+      
+      if (error.message?.includes('Permission denied') || error.message?.includes('NotAllowedError')) {
+        await showError('Camera Permission', 'Please allow camera access to scan QR codes');
+      } else if (error.message?.includes('NotFoundError') || error.message?.includes('No camera')) {
+        await showError('No Camera', 'No camera found on this device');
+      } else {
+        await showError('Camera Error', 'Failed to start camera. Please try again or use manual entry.');
+      }
+    }
+  };
+
+  const stopCameraScanner = async () => {
+    if (scannerRef.current) {
+      try {
+        await scannerRef.current.stop();
+        scannerRef.current.clear();
+      } catch (error) {
+        console.error('Error stopping scanner:', error);
+      }
+      scannerRef.current = null;
+    }
+    setCameraActive(false);
+    setCameraError(null);
+  };
+
+  // Cleanup camera on unmount
+  useEffect(() => {
+    return () => {
+      stopCameraScanner();
+    };
+  }, []);
 
   const handleCheckout = () => {
     if (scannedAsset) {
@@ -93,6 +156,7 @@ export default function QRScannerPage() {
   const handleReset = () => {
     setQrInput('');
     setScannedAsset(null);
+    stopCameraScanner();
   };
 
   return (
@@ -111,56 +175,111 @@ export default function QRScannerPage() {
           QR Code Scanner
         </h1>
         <p className="text-gray-600 dark:text-gray-300 mt-2">
-          Scan asset QR codes for quick checkout or information
+          Scan asset QR codes with your camera or enter manually
         </p>
       </div>
 
       <div className="max-w-2xl mx-auto w-full">
-        {/* Scanner Card */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 mb-6">
-          <div className="flex justify-center mb-6">
-            <div className="w-48 h-48 bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-900/30 dark:to-blue-900/30 rounded-2xl flex items-center justify-center">
-              <QrCode className="w-32 h-32 text-purple-600 dark:text-purple-400" />
-            </div>
-          </div>
-
-          <form onSubmit={handleScan} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Enter QR Code Data
-              </label>
-              <input
-                type="text"
-                value={qrInput}
-                onChange={(e) => setQrInput(e.target.value)}
-                placeholder="ASSET:CODE:ID or scan QR code..."
-                className="w-full px-4 py-3 border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 text-center text-lg font-mono"
-                autoFocus
-              />
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 text-center">
-                Format: ASSET:ASSET_CODE:ASSET_ID
-              </p>
-            </div>
-
-            <button
-              type="submit"
-              disabled={scanning || !qrInput.trim()}
-              className="w-full px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-400 transition-colors flex items-center justify-center gap-2 text-lg"
-            >
-              {scanning ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Scanning...
-                </>
-              ) : (
-                <>
-                  <Camera className="w-5 h-5" />
-                  Scan QR Code
-                </>
+        {/* Camera Scanner Section */}
+        {!scannedAsset && (
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <Camera className="w-5 h-5" />
+                Camera Scanner
+              </h2>
+              {cameraActive && (
+                <button
+                  onClick={stopCameraScanner}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
+                >
+                  <X className="w-4 h-4" />
+                  Stop Camera
+                </button>
               )}
-            </button>
-          </form>
-        </div>
+            </div>
+
+            {!cameraActive ? (
+              <div className="text-center py-8">
+                <div className="w-48 h-48 bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-900/30 dark:to-blue-900/30 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                  <Camera className="w-32 h-32 text-purple-600 dark:text-purple-400" />
+                </div>
+                <button
+                  onClick={startCameraScanner}
+                  className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center gap-2 text-lg mx-auto"
+                >
+                  <Camera className="w-5 h-5" />
+                  Start Camera Scanner
+                </button>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
+                  Point your camera at a QR code to scan automatically
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div
+                  ref={scannerContainerRef}
+                  id="qr-reader"
+                  className="w-full rounded-lg overflow-hidden bg-black"
+                  style={{ minHeight: '300px' }}
+                />
+                {cameraError && (
+                  <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                    <p className="text-sm text-red-800 dark:text-red-400">{cameraError}</p>
+                  </div>
+                )}
+                <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+                  Position the QR code within the frame
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Manual Entry Section */}
+        {!scannedAsset && (
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 mb-6">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              Or Enter QR Code Manually
+            </h2>
+            <form onSubmit={handleScan} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Enter QR Code Data
+                </label>
+                <input
+                  type="text"
+                  value={qrInput}
+                  onChange={(e) => setQrInput(e.target.value)}
+                  placeholder="ASSET:CODE:ID or paste QR code data..."
+                  className="w-full px-4 py-3 border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 text-center text-lg font-mono"
+                  autoFocus
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 text-center">
+                  Format: ASSET:ASSET_CODE:ASSET_ID
+                </p>
+              </div>
+
+              <button
+                type="submit"
+                disabled={scanning || !qrInput.trim()}
+                className="w-full px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-400 transition-colors flex items-center justify-center gap-2 text-lg"
+              >
+                {scanning ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Scanning...
+                  </>
+                ) : (
+                  <>
+                    <QrCode className="w-5 h-5" />
+                    Scan QR Code
+                  </>
+                )}
+              </button>
+            </form>
+          </div>
+        )}
 
         {/* Scanned Asset Details */}
         {scannedAsset && (
@@ -252,19 +371,19 @@ export default function QRScannerPage() {
           <ul className="space-y-2 text-sm text-blue-800 dark:text-blue-300">
             <li className="flex items-start gap-2">
               <span className="font-semibold">1.</span>
-              <span>Find the QR code sticker on the asset</span>
+              <span>Click "Start Camera Scanner" to activate your device camera</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="font-semibold">2.</span>
-              <span>Use a QR code scanner app to scan the code</span>
+              <span>Point your camera at the QR code on the asset</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="font-semibold">3.</span>
-              <span>Copy the QR code data and paste it in the input field above</span>
+              <span>The QR code will be scanned automatically when detected</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="font-semibold">4.</span>
-              <span>Click "Scan QR Code" to view asset details</span>
+              <span>Or manually enter/paste the QR code data in the input field</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="font-semibold">5.</span>
