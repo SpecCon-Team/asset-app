@@ -55,11 +55,13 @@ const AdvancedAnalyticsPage: React.FC = () => {
     }
   };
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: number | null | undefined) => {
+    // Handle null, undefined, or NaN values
+    const safeAmount = amount == null || isNaN(amount) ? 0 : amount;
     return new Intl.NumberFormat('en-ZA', {
       style: 'currency',
       currency: 'ZAR'
-    }).format(amount);
+    }).format(safeAmount);
   };
 
   const getStatusColor = (status: string) => {

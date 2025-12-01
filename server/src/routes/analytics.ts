@@ -205,11 +205,16 @@ router.get('/assets', authenticate, cacheMiddleware(60000), async (req: Request,
     ]);
 
     // Convert BigInt values to numbers for JSON serialization
+    // Ensure null/undefined values are converted to 0
+    const depreciationData = depreciation[0] || { total_value: null, total_depreciation: null };
     const response = {
       totalValue: Number(totalValue[0]?.total || 0),
       byStatus: convertBigIntsToNumbers(byStatus),
       byLocation: convertBigIntsToNumbers(byLocation),
-      depreciation: convertBigIntsToNumbers(depreciation[0] || { total_value: 0, total_depreciation: 0 }),
+      depreciation: {
+        total_value: Number(depreciationData.total_value || 0),
+        total_depreciation: Number(depreciationData.total_depreciation || 0)
+      },
       topAssets: convertBigIntsToNumbers(topAssets)
     };
 
