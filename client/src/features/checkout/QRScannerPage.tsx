@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, QrCode, Camera, Package, CheckCircle, AlertCircle } from 'lucide-react';
 import { getApiClient } from '../assets/lib/apiClient';
 import { showSuccess, showError } from '@/lib/sweetalert';
@@ -16,9 +16,42 @@ interface ScannedAsset {
 
 export default function QRScannerPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [qrInput, setQrInput] = useState('');
   const [scanning, setScanning] = useState(false);
   const [scannedAsset, setScannedAsset] = useState<ScannedAsset | null>(null);
+
+  // Auto-fill QR code from URL parameter if present (when scanned from phone)
+  useEffect(() => {
+    const qrParam = searchParams.get('qr');
+    if (qrParam) {
+      setQrInput(qrParam);
+      // Auto-scan if QR code is in URL
+      const handleAutoScan = async (qrData: string) => {
+        if (!qrData.trim()) return;
+
+        try {
+          setScanning(true);
+          const apiClient = getApiClient();
+          const response = await apiClient.post('/checkout/qr/scan', {
+            qrCode: qrData.trim()
+          });
+
+          setScannedAsset(response.data.asset);
+          await showSuccess('Success!', 'QR code scanned successfully', 1500);
+        } catch (error: any) {
+          console.error('Failed to scan QR code:', error);
+          await showError('Error', error.response?.data?.message || 'Failed to scan QR code');
+          setScannedAsset(null);
+        } finally {
+          setScanning(false);
+        }
+      };
+      
+      handleAutoScan(qrParam);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const handleScan = async (e: React.FormEvent) => {
     e.preventDefault();

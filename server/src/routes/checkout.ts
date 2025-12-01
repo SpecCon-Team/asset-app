@@ -847,9 +847,27 @@ router.post('/qr/generate', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), 
       });
     }
 
-    // Generate QR code data
+    // Generate QR code data as a URL that opens the scanner page
+    // This allows phone QR scanners to open the web app directly
+    let clientUrl = process.env.CLIENT_URL || 'https://speccon-team.github.io/asset-app';
+    
+    // If CLIENT_URL points to assettrack-client.onrender.com, use GitHub Pages instead
+    if (clientUrl.includes('assettrack-client.onrender.com')) {
+      clientUrl = 'https://speccon-team.github.io/asset-app';
+    }
+    
+    // Remove trailing slash if present
+    clientUrl = clientUrl.replace(/\/$/, '');
+    
+    // Only add /asset-app if it's GitHub Pages and not already in the URL
+    const isGitHubPages = clientUrl.includes('github.io') || clientUrl.includes('localhost');
+    const needsBasePath = isGitHubPages && !clientUrl.endsWith('/asset-app');
+    const basePath = needsBasePath ? '/asset-app' : '';
+    
     const qrData = `ASSET:${asset.asset_code}:${assetId}`;
-    const qrCodeUrl = await QRCode.toDataURL(qrData, {
+    const qrCodeUrlString = `${clientUrl}${basePath}/#/checkout/scan?qr=${encodeURIComponent(qrData)}`;
+    
+    const qrCodeUrl = await QRCode.toDataURL(qrCodeUrlString, {
       errorCorrectionLevel: 'H',
       type: 'image/png',
       margin: 1,
