@@ -223,17 +223,19 @@ router.get('/webhook', (req: Request, res: Response) => {
 
     console.log('Webhook verification request:', { mode, token: token ? '***' : undefined });
 
-    // Get verify token from environment
-    const verifyToken = process.env.WHATSAPP_VERIFY_TOKEN || 'my_secure_verify_token_12345';
+    const verifyToken = process.env.WHATSAPP_VERIFY_TOKEN;
+    
+    if (!verifyToken) {
+      console.error('❌ WHATSAPP_VERIFY_TOKEN not configured');
+      return res.sendStatus(500);
+    }
 
-    // Check if mode and token are correct
     if (mode === 'subscribe' && token === verifyToken) {
       console.log('✅ Webhook verified successfully!');
-      // Respond with challenge to verify
-      res.status(200).send(challenge);
+      return res.status(200).send(challenge);
     } else {
-      console.log('❌ Webhook verification failed');
-      res.sendStatus(403);
+      console.log('❌ Webhook verification failed - invalid token');
+      return res.sendStatus(403);
     }
   } catch (error: any) {
     console.error('Error in webhook verification:', error);

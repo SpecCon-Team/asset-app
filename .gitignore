@@ -17,3 +17,7 @@ npm-debug.log*
 .DS_Store
 Thumbs.db
 server/.env
+
+# Environment variable backups (contains secrets!)
+*.env.backup*
+**/.env.backup*

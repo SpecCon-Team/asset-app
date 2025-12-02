@@ -336,7 +336,7 @@ router.post('/login', loginLimiter, async (req, res) => {
       status: 'success'
     });
 
-    const token = jwt.sign({ sub: user.id, role: user.role }, process.env.JWT_SECRET || 'dev', { expiresIn: '7d' });
+    const token = jwt.sign({ sub: user.id, role: user.role }, process.env.JWT_SECRET!, { expiresIn: '7d' });
     res.json({
       token,
       user: {
@@ -395,7 +395,7 @@ router.post('/verify-2fa-login', loginLimiter, async (req, res) => {
     });
 
     // Issue JWT token
-    const token = jwt.sign({ sub: user.id, role: user.role }, process.env.JWT_SECRET || 'dev', { expiresIn: '7d' });
+    const token = jwt.sign({ sub: user.id, role: user.role }, process.env.JWT_SECRET!, { expiresIn: '7d' });
     res.json({
       token,
       user: {
@@ -454,7 +454,7 @@ router.post('/verify-otp', otpVerifyLimiter, async (req, res) => {
     });
 
     // Generate login token
-    const token = jwt.sign({ sub: user.id, role: user.role }, process.env.JWT_SECRET || 'dev', { expiresIn: '7d' });
+    const token = jwt.sign({ sub: user.id, role: user.role }, process.env.JWT_SECRET!, { expiresIn: '7d' });
 
     res.json({
       message: 'Email verified successfully',
