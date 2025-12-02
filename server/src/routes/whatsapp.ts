@@ -690,16 +690,24 @@ async function createTicketFromMessage(
       },
     });
 
+    console.log(`Found ${adminsAndTechs.length} admins/techs to notify`);
+
     for (const adminOrTech of adminsAndTechs) {
-      await prisma.notification.create({
-        data: {
-          userId: adminOrTech.id,
-          type: 'TICKET_CREATED',
-          title: `New Ticket: ${ticket.number}`,
-          message: `New ticket ${ticket.number} created via WhatsApp by ${user.name}`,
-          ticketId: ticket.id,  // Fixed: Use ticket.id instead of ticket.number
-        },
-      });
+      try {
+        await prisma.notification.create({
+          data: {
+            userId: adminOrTech.id,
+            type: 'ticket_status',
+            title: 'New ticket created',
+            message: `${user.name || 'WhatsApp User'} created a new ticket: "${ticket.title}"`,
+            ticketId: ticket.id,
+            senderId: user.id,
+          },
+        });
+        console.log(`✅ Notification created for ${adminOrTech.email}`);
+      } catch (err) {
+        console.error(`❌ Failed to create notification for ${adminOrTech.email}:`, err);
+      }
     }
 
     console.log(`✅ Created ${adminsAndTechs.length} notifications`);
