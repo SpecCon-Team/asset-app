@@ -324,6 +324,8 @@ This document provides a comprehensive overview of all security and compliance f
 - Parameter Pollution ✅ (Middleware)
 - Rate Limiting ✅ (express-rate-limit)
 
+cross scrpit protection
+also make sure to add http headers security
 ---
 
 ## Database Security
