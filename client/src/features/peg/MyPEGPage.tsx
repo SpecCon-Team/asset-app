@@ -530,7 +530,7 @@ export default function MyPEGPage() {
             {/* Image Map with Clickable Overlays */}
             <div className="relative w-full bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 rounded-xl shadow-xl p-3 sm:p-4 md:p-6 overflow-hidden border-2 border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-2xl">
               <img
-                src="/south-africa-provinces-map2.png"
+                src={`${import.meta.env.BASE_URL}south-africa-provinces-map2.png`}
                 alt="South Africa Provinces Map"
                 className="w-full h-auto rounded-lg shadow-md"
               />
