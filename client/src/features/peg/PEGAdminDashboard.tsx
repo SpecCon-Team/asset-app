@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BarChart3, Users, TrendingUp, MapPin } from 'lucide-react';
-import { getApiClient } from '../../lib/api';
-import LoadingScreen from '../../components/LoadingScreen';
+import api from '../../lib/api';
+import { LoadingOverlay } from '../../components/LoadingSpinner';
 
 interface DashboardStats {
   totalClients: number;
@@ -33,7 +33,6 @@ export default function PEGAdminDashboard() {
 
   const loadDashboardStats = async () => {
     try {
-      const api = getApiClient();
       const response = await api.get('/peg-admin/dashboard');
       setStats(response.data);
     } catch (error) {
@@ -44,7 +43,7 @@ export default function PEGAdminDashboard() {
   };
 
   if (loading) {
-    return <LoadingScreen />;
+    return <LoadingOverlay message="Loading dashboard..." />;
   }
 
   return (
