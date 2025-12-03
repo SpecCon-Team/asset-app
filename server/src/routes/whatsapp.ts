@@ -547,6 +547,9 @@ You can include:
 • What's the problem?
 • When did it start?
 • Any error messages?
+• Your AnyDesk ID (for remote support)
+
+_Example: "My computer won't start. AnyDesk ID: 987-654-321"_
 
 Type your message below:`
         });
