@@ -47,6 +47,7 @@ export default function ProvinceDetailsPage() {
     contactPerson: '',
     phone: '',
     email: '',
+    clientCode: '',
   });
 
   const province = provinces.find(p => p.id === provinceId);
@@ -79,6 +80,7 @@ export default function ProvinceDetailsPage() {
       contactPerson: '',
       phone: '',
       email: '',
+      clientCode: '',
     });
   };
 
@@ -90,6 +92,7 @@ export default function ProvinceDetailsPage() {
       contactPerson: client.contactPerson || '',
       phone: client.phone || '',
       email: client.email || '',
+      clientCode: client.clientCode || '',
     });
     setShowAddModal(true);
   };
@@ -371,20 +374,19 @@ export default function ProvinceDetailsPage() {
                   />
                 </div>
 
-                {/* Client Serial Number - Auto-generated */}
+                {/* Client Serial Number - Input field with auto-generated default */}
                 {!editingClient && (
-                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-3">
-                    <label className="block text-sm font-medium text-blue-800 dark:text-blue-200 mb-1">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Client Serial Number
                     </label>
-                    <div className="flex items-center gap-2">
-                      <span className="px-3 py-1.5 bg-white dark:bg-gray-800 border border-blue-300 dark:border-blue-600 rounded font-mono text-blue-900 dark:text-blue-100 font-semibold">
-                        CLT-{String(clients.length + 1).padStart(3, '0')}
-                      </span>
-                      <span className="text-sm text-blue-600 dark:text-blue-300">
-                        (auto-generated)
-                      </span>
-                    </div>
+                    <input
+                      type="text"
+                      value={formData.clientCode || ''}
+                      onChange={(e) => setFormData({ ...formData, clientCode: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white font-mono"
+                      placeholder="e.g., 2295PPB0001"
+                    />
                   </div>
                 )}
 

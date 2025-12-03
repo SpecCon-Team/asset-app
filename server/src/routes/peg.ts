@@ -14,6 +14,7 @@ const pegClientSchema = z.object({
   phone: z.string().optional(),
   email: z.union([z.string().email(), z.literal('')]).optional(),
   provinceId: z.string().min(1, 'Province is required'),
+  clientCode: z.string().optional(), // Accept client code from frontend
 });
 
 // Get all PEG clients for the authenticated user
@@ -90,9 +91,12 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
     const userId = req.user!.id;
     const validatedData = pegClientSchema.parse(req.body);
 
-    // Auto-generate client code (CLT-001, CLT-002, etc.)
-    const clientCount = await prisma.pEGClient.count();
-    const clientCode = `CLT-${String(clientCount + 1).padStart(3, '0')}`;
+    // Use provided clientCode, or auto-generate if not provided
+    let clientCode = validatedData.clientCode;
+    if (!clientCode) {
+      const clientCount = await prisma.pEGClient.count();
+      clientCode = `CLT-${String(clientCount + 1).padStart(3, '0')}`;
+    }
 
     const client = await prisma.pEGClient.create({
       data: {
