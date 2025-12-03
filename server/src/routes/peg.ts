@@ -18,7 +18,7 @@ const pegClientSchema = z.object({
 });
 
 // Get all PEG clients for the authenticated user
-// For ADMIN and TECHNICIAN roles, show merged data from all admins and technicians
+// For ADMIN, TECHNICIAN, and PEG_ADMIN roles, show merged data from all admins and technicians
 router.get('/', authenticate, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
@@ -26,13 +26,13 @@ router.get('/', authenticate, async (req: Request, res: Response) => {
 
     let clients;
 
-    // If user is ADMIN or TECHNICIAN, show all clients from admins and technicians
-    if (userRole === 'ADMIN' || userRole === 'TECHNICIAN') {
-      // First, get all users who are admins or technicians
+    // If user is ADMIN, TECHNICIAN, or PEG_ADMIN, show all clients from admins and technicians
+    if (userRole === 'ADMIN' || userRole === 'TECHNICIAN' || userRole === 'PEG_ADMIN') {
+      // First, get all users who are admins, technicians, or pegadmins
       const adminTechUsers = await prisma.user.findMany({
         where: {
           role: {
-            in: ['ADMIN', 'TECHNICIAN']
+            in: ['ADMIN', 'TECHNICIAN', 'PEG_ADMIN']
           }
         },
         select: { id: true }
@@ -40,7 +40,7 @@ router.get('/', authenticate, async (req: Request, res: Response) => {
 
       const userIds = adminTechUsers.map(u => u.id);
 
-      // Get all PEG clients created by any admin or technician
+      // Get all PEG clients created by any admin, technician, or peg admin
       clients = await prisma.pEGClient.findMany({
         where: {
           userId: {

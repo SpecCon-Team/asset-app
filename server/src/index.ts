@@ -32,6 +32,7 @@ import inventoryRouter from './routes/inventory';
 import depreciationRouter from './routes/depreciation';
 import documentsRouter from './routes/documents';
 import analyticsRouter from './routes/analytics';
+import pegAdminDashboardRouter from './routes/pegAdminDashboard';
 import path from 'path';
 import {
   securityLogger,
@@ -324,6 +325,7 @@ app.use('/api/inventory', inventoryRouter);
 app.use('/api/depreciation', depreciationRouter);
 app.use('/api/documents', documentsRouter);
 app.use('/api/analytics', analyticsRouter);
+app.use('/api/peg-admin', pegAdminDashboardRouter);
 app.use('/api', wooalertsRouter); // WooAlerts webhook at /api/wooalerts-webhook
 
 app.get('/api', (_req, res) => {
