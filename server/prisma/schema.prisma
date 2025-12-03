@@ -8,141 +8,122 @@ datasource db {
 }
 
 model User {
-  id                  String         @id @default(cuid())
-  email               String         @unique
-  name                String?
-  password            String
-  role                Role           @default(USER)
-  isAvailable         Boolean        @default(true)
-  phone               String?
-  department          String?
-  location            String?
-  bio                 String?
-  profilePicture      String?        @db.Text
-  resetPasswordToken  String?
-  resetPasswordExpiry DateTime?
-  emailVerified       Boolean        @default(false)
-  verificationOTP     String?
-  verificationExpiry  DateTime?
-  loginAttempts       Int            @default(0)
-  lockoutUntil        DateTime?
-
-  // Two-Factor Authentication
-  twoFactorEnabled    Boolean        @default(false)
-  twoFactorSecret     String?        // TOTP secret
-  backupCodes         String?        @db.Text // JSON array of backup codes
-
-  // WhatsApp Integration
-  isWhatsAppUser      Boolean        @default(false) // Identifies users created via WhatsApp
-  whatsAppNotifications Boolean      @default(true)  // Enable/disable WhatsApp notifications
-
-  // Password Security
-  passwordHistory     String?        @db.Text // JSON array of last 5 password hashes
-
-  tickets             Ticket[]       @relation("UserTickets")
-  assigned            Ticket[]       @relation("AssignedTickets")
-  assets              Asset[]
-  currentAssets       Asset[]        @relation("AssetCurrentHolder")
-  comments            Comment[]
-  notifications       Notification[] @relation("NotificationRecipient")
-  sentNotifications   Notification[] @relation("NotificationSender")
-  pegClients          PEGClient[]    @relation("PEGClients")
-  trips               Trip[]         @relation("UserTrips")
-  refreshTokens       RefreshToken[]
-  sessions            UserSession[]
-  createdTemplates    TicketTemplate[] @relation("TemplateCreator")
-  assignedTemplates   TicketTemplate[] @relation("TemplateAssignee")
-  replyTemplates      ReplyTemplate[] @relation("ReplyTemplateCreator")
-  checkouts           AssetCheckout[] @relation("CheckoutUser")
-  checkedOutBy        AssetCheckout[] @relation("CheckedOutBy")
-  checkedInBy         AssetCheckout[] @relation("CheckedInBy")
-  qrCodesGenerated    AssetQRCode[]
-  locationMoves       AssetLocationHistory[]
-  inventoryItemsCreated InventoryItem[]
-  stockTransactions   StockTransaction[] @relation("TransactionPerformedBy")
-  stockIssues         StockTransaction[] @relation("TransactionIssuedTo")
-  suppliersCreated    Supplier[]
-  purchaseOrdersCreated PurchaseOrder[] @relation("POCreatedBy")
-  purchaseOrdersApproved PurchaseOrder[] @relation("POApprovedBy")
-  purchaseOrdersReceived PurchaseOrder[] @relation("POReceivedBy")
-  alertsAcknowledged  StockAlert[]
-  depreciationsCreated AssetDepreciation[]
-  depreciationSchedules DepreciationSchedule[]
-  valuationsPerformed AssetValuation[]
-  disposalsCreated    AssetDisposal[] @relation("DisposalCreatedBy")
-  disposalsApproved   AssetDisposal[] @relation("DisposalApprovedBy")
-
-  // Document Management
-  documentsUploaded   Document[]
-  documentAccessLogs  DocumentAccessLog[]
-  documentSharedBy    DocumentShare[] @relation("SharedBy")
-  documentSharedWith  DocumentShare[] @relation("SharedWith")
-  documentComments    DocumentComment[]
-  documentAssociations DocumentAssociation[]
-
-  // Asset Reservations
-  reservations        AssetReservation[] @relation("UserReservations")
-  approvedReservations AssetReservation[] @relation("ReservationApprovals")
-
-  createdAt           DateTime       @default(now())
-  updatedAt           DateTime       @updatedAt
+  id                     String                 @id @default(cuid())
+  email                  String                 @unique
+  name                   String?
+  password               String
+  role                   Role                   @default(USER)
+  isAvailable            Boolean                @default(true)
+  phone                  String?
+  department             String?
+  location               String?
+  bio                    String?
+  profilePicture         String?
+  resetPasswordToken     String?
+  resetPasswordExpiry    DateTime?
+  emailVerified          Boolean                @default(false)
+  verificationOTP        String?
+  verificationExpiry     DateTime?
+  loginAttempts          Int                    @default(0)
+  lockoutUntil           DateTime?
+  twoFactorEnabled       Boolean                @default(false)
+  twoFactorSecret        String?
+  backupCodes            String?
+  isWhatsAppUser         Boolean                @default(false)
+  whatsAppNotifications  Boolean                @default(true)
+  passwordHistory        String?
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
+  currentAssets          Asset[]                @relation("AssetCurrentHolder")
+  assets                 Asset[]
+  checkedInBy            AssetCheckout[]        @relation("CheckedInBy")
+  checkedOutBy           AssetCheckout[]        @relation("CheckedOutBy")
+  checkouts              AssetCheckout[]        @relation("CheckoutUser")
+  depreciationsCreated   AssetDepreciation[]
+  disposalsApproved      AssetDisposal[]        @relation("DisposalApprovedBy")
+  disposalsCreated       AssetDisposal[]        @relation("DisposalCreatedBy")
+  locationMoves          AssetLocationHistory[]
+  qrCodesGenerated       AssetQRCode[]
+  approvedReservations   AssetReservation[]     @relation("ReservationApprovals")
+  reservations           AssetReservation[]     @relation("UserReservations")
+  valuationsPerformed    AssetValuation[]
+  comments               Comment[]
+  depreciationSchedules  DepreciationSchedule[]
+  documentsUploaded      Document[]
+  documentAccessLogs     DocumentAccessLog[]
+  documentAssociations   DocumentAssociation[]
+  documentComments       DocumentComment[]
+  documentSharedBy       DocumentShare[]        @relation("SharedBy")
+  documentSharedWith     DocumentShare[]        @relation("SharedWith")
+  inventoryItemsCreated  InventoryItem[]
+  sentNotifications      Notification[]         @relation("NotificationSender")
+  notifications          Notification[]         @relation("NotificationRecipient")
+  pegClients             PEGClient[]            @relation("PEGClients")
+  purchaseOrdersApproved PurchaseOrder[]        @relation("POApprovedBy")
+  purchaseOrdersCreated  PurchaseOrder[]        @relation("POCreatedBy")
+  purchaseOrdersReceived PurchaseOrder[]        @relation("POReceivedBy")
+  refreshTokens          RefreshToken[]
+  replyTemplates         ReplyTemplate[]        @relation("ReplyTemplateCreator")
+  alertsAcknowledged     StockAlert[]
+  stockIssues            StockTransaction[]     @relation("TransactionIssuedTo")
+  stockTransactions      StockTransaction[]     @relation("TransactionPerformedBy")
+  suppliersCreated       Supplier[]
+  assigned               Ticket[]               @relation("AssignedTickets")
+  tickets                Ticket[]               @relation("UserTickets")
+  assignedTemplates      TicketTemplate[]       @relation("TemplateAssignee")
+  createdTemplates       TicketTemplate[]       @relation("TemplateCreator")
+  trips                  Trip[]                 @relation("UserTrips")
+  sessions               UserSession[]
 }
 
 model Asset {
-  id              String         @id @default(cuid())
-  asset_code      String         @unique
-  name            String
-  serial_number   String?
-  remote_id       String?
-  asset_type      String?
-  condition       String?
-  status          String         @default("available")
-  assigned_to     String?
-  scanned_by      String?
-  scan_datetime   String?
-  description     String?
-  ownership       String?
-  office_location String?
-  extension       String?
-  deskphones      String?
-  mouse           String?
-  keyboard        String?
-  department      String?
-  notes           String?
-  image_url       String?
-
-  // Check-in/Check-out fields
-  checkoutStatus  String?        @default("available")
-  currentHolderId String?
-  currentLocation String?
-  lastCheckoutDate DateTime?
-  checkoutCount   Int            @default(0)
-
-  // Depreciation fields
-  purchasePrice   Decimal?       @db.Decimal(12,2)
-  purchaseDate    DateTime?
-  currentBookValue Decimal?      @db.Decimal(12,2)
-  depreciationStatus String?     @default("not_started")
-  isDepreciable   Boolean        @default(false)
-
-  // Relations
-  owner           User?          @relation(fields: [ownerId], references: [id], onDelete: SetNull)
-  ownerId         String?
-  currentHolder   User?          @relation("AssetCurrentHolder", fields: [currentHolderId], references: [id], onDelete: SetNull)
-  tickets         Ticket[]
-  history         AssetHistory[]
-  maintenance     MaintenanceSchedule[]
-  checkouts       AssetCheckout[]
-  qrCodes         AssetQRCode[]
-  locationHistory AssetLocationHistory[]
-  stockTransactions StockTransaction[]
-  depreciation    AssetDepreciation[]
-  valuations      AssetValuation[]
-  disposals       AssetDisposal[]
-  reservations    AssetReservation[]
-
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  id                 String                 @id @default(cuid())
+  asset_code         String                 @unique
+  name               String
+  serial_number      String?
+  remote_id          String?
+  asset_type         String?
+  condition          String?
+  status             String                 @default("available")
+  assigned_to        String?
+  scanned_by         String?
+  scan_datetime      String?
+  description        String?
+  ownership          String?
+  office_location    String?
+  extension          String?
+  deskphones         String?
+  mouse              String?
+  keyboard           String?
+  department         String?
+  notes              String?
+  image_url          String?
+  checkoutStatus     String?                @default("available")
+  currentHolderId    String?
+  currentLocation    String?
+  lastCheckoutDate   DateTime?
+  checkoutCount      Int                    @default(0)
+  purchasePrice      Decimal?               @db.Decimal(12, 2)
+  purchaseDate       DateTime?
+  currentBookValue   Decimal?               @db.Decimal(12, 2)
+  depreciationStatus String?                @default("not_started")
+  isDepreciable      Boolean                @default(false)
+  ownerId            String?
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+  currentHolder      User?                  @relation("AssetCurrentHolder", fields: [currentHolderId], references: [id])
+  owner              User?                  @relation(fields: [ownerId], references: [id])
+  checkouts          AssetCheckout[]
+  depreciation       AssetDepreciation[]
+  disposals          AssetDisposal[]
+  history            AssetHistory[]
+  locationHistory    AssetLocationHistory[]
+  qrCodes            AssetQRCode[]
+  reservations       AssetReservation[]
+  valuations         AssetValuation[]
+  maintenance        MaintenanceSchedule[]
+  stockTransactions  StockTransaction[]
+  tickets            Ticket[]
 
   @@index([status])
   @@index([ownerId])
@@ -160,18 +141,18 @@ model Ticket {
   description  String
   status       String       @default("open")
   priority     String       @default("medium")
-  dueDate      DateTime?    // SLA deadline
-  createdBy    User         @relation("UserTickets", fields: [createdById], references: [id], onDelete: Cascade)
+  dueDate      DateTime?
   createdById  String
-  assignedTo   User?        @relation("AssignedTickets", fields: [assignedToId], references: [id], onDelete: SetNull)
   assignedToId String?
-  asset        Asset?       @relation(fields: [assetId], references: [id])
   assetId      String?
   resolution   String?
-  comments     Comment[]
-  attachments  Attachment[]
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
+  attachments  Attachment[]
+  comments     Comment[]
+  asset        Asset?       @relation(fields: [assetId], references: [id])
+  assignedTo   User?        @relation("AssignedTickets", fields: [assignedToId], references: [id])
+  createdBy    User         @relation("UserTickets", fields: [createdById], references: [id], onDelete: Cascade)
 
   @@index([status])
   @@index([priority])
@@ -183,31 +164,31 @@ model Ticket {
 model Comment {
   id          String   @id @default(cuid())
   content     String
-  contentHash String?  @db.VarChar(32) // MD5 hash for duplicate detection
-  ticket      Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  contentHash String?  @db.VarChar(32)
   ticketId    String
-  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
   authorId    String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  ticket      Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
 
   @@index([contentHash, createdAt(sort: Desc)])
 }
 
 model Notification {
   id        String   @id @default(cuid())
-  type      String   // 'comment', 'ticket_status', 'ticket_assigned', 'asset_assigned'
+  type      String
   title     String
   message   String
   read      Boolean  @default(false)
   userId    String
-  user      User     @relation("NotificationRecipient", fields: [userId], references: [id], onDelete: Cascade)
-  senderId  String?  // User who triggered this notification
-  sender    User?    @relation("NotificationSender", fields: [senderId], references: [id], onDelete: SetNull)
-  ticketId  String?  // Optional link to related ticket
-  assetId   String?  // Optional link to related asset
+  senderId  String?
+  ticketId  String?
+  assetId   String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  sender    User?    @relation("NotificationSender", fields: [senderId], references: [id])
+  user      User     @relation("NotificationRecipient", fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([read])
@@ -215,19 +196,19 @@ model Notification {
 }
 
 model AuditLog {
-  id          String   @id @default(cuid())
-  action      String   // 'CREATE', 'UPDATE', 'DELETE', 'LOGIN', 'LOGOUT', 'EXPORT', etc.
-  entityType  String   // 'User', 'Asset', 'Ticket', 'Comment', etc.
-  entityId    String?  // ID of the affected entity
-  userId      String?  // User who performed the action
-  userEmail   String?  // Email of user (in case user is deleted)
-  userName    String?  // Name of user (in case user is deleted)
-  ipAddress   String?  // IP address of request
-  userAgent   String?  // Browser/device info
-  changes     String?  @db.Text // JSON string of what changed (before/after)
-  metadata    String?  @db.Text // Additional context (JSON)
-  status      String   @default("success") // 'success', 'failure', 'warning'
-  createdAt   DateTime @default(now())
+  id         String   @id @default(cuid())
+  action     String
+  entityType String
+  entityId   String?
+  userId     String?
+  userEmail  String?
+  userName   String?
+  ipAddress  String?
+  userAgent  String?
+  changes    String?
+  metadata   String?
+  status     String   @default("success")
+  createdAt  DateTime @default(now())
 
   @@index([userId])
   @@index([action])
@@ -236,20 +217,22 @@ model AuditLog {
 }
 
 model PEGClient {
-  id             String   @id @default(cuid())
-  name           String
-  location       String
-  contactPerson  String?
-  phone          String?
-  email          String?
-  provinceId     String   // 'WC', 'EC', 'NC', 'FS', 'KZN', 'NW', 'GP', 'MP', 'LP'
-  userId         String   // Owner of this client entry
-  user           User     @relation("PEGClients", fields: [userId], references: [id], onDelete: Cascade)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id            String   @id @default(cuid())
+  name          String
+  location      String
+  contactPerson String?
+  phone         String?
+  email         String?
+  provinceId    String
+  userId        String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  clientCode    String?  @unique
+  user          User     @relation("PEGClients", fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([provinceId])
+  @@index([clientCode])
 }
 
 model Attachment {
@@ -257,12 +240,12 @@ model Attachment {
   filename     String
   originalName String
   mimetype     String
-  size         Int      // File size in bytes
-  url          String   // Storage URL or path
+  size         Int
+  url          String
   ticketId     String
-  ticket       Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  uploadedBy   String   // User ID who uploaded
+  uploadedBy   String
   createdAt    DateTime @default(now())
+  ticket       Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
 
   @@index([ticketId])
 }
@@ -270,34 +253,34 @@ model Attachment {
 model AssetHistory {
   id          String   @id @default(cuid())
   assetId     String
-  asset       Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
-  action      String   // 'STATUS_CHANGE', 'ASSIGNMENT', 'UPDATE', 'MAINTENANCE'
-  field       String?  // Field that changed
-  oldValue    String?  @db.Text
-  newValue    String?  @db.Text
-  userId      String?  // User who made the change
-  userName    String?  // Cached name
-  description String?  // Human-readable description
+  action      String
+  field       String?
+  oldValue    String?
+  newValue    String?
+  userId      String?
+  userName    String?
+  description String?
   createdAt   DateTime @default(now())
+  asset       Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
 
   @@index([assetId])
   @@index([createdAt])
 }
 
 model MaintenanceSchedule {
-  id               String    @id @default(cuid())
-  assetId          String
-  asset            Asset     @relation(fields: [assetId], references: [id], onDelete: Cascade)
-  title            String
-  description      String?
-  frequency        String    // 'once', 'daily', 'weekly', 'monthly', 'quarterly', 'yearly'
-  nextDueDate      DateTime
-  lastCompletedAt  DateTime?
-  assignedToId     String?   // Technician assigned
-  status           String    @default("scheduled") // 'scheduled', 'completed', 'overdue', 'cancelled'
-  notes            String?   @db.Text
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  id              String    @id @default(cuid())
+  assetId         String
+  title           String
+  description     String?
+  frequency       String
+  nextDueDate     DateTime
+  lastCompletedAt DateTime?
+  assignedToId    String?
+  status          String    @default("scheduled")
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  asset           Asset     @relation(fields: [assetId], references: [id], onDelete: Cascade)
 
   @@index([assetId])
   @@index([nextDueDate])
@@ -305,46 +288,46 @@ model MaintenanceSchedule {
 }
 
 model SavedFilter {
-  id          String   @id @default(cuid())
-  userId      String
-  name        String
-  entityType  String   // 'tickets', 'assets', 'users'
-  filters     String   @db.Text // JSON string of filter configuration
-  isDefault   Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(cuid())
+  userId     String
+  name       String
+  entityType String
+  filters    String
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@index([userId])
   @@index([entityType])
 }
 
 model DashboardWidget {
-  id          String   @id @default(cuid())
-  userId      String
-  widgetType  String   // 'ticket_stats', 'asset_chart', 'recent_activity', etc.
-  position    Int      // Order position
-  size        String   @default("medium") // 'small', 'medium', 'large'
-  settings    String?  @db.Text // JSON configuration
-  visible     Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(cuid())
+  userId     String
+  widgetType String
+  position   Int
+  size       String   @default("medium")
+  settings   String?
+  visible    Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@index([userId])
   @@index([position])
 }
 
 model LoginHistory {
-  id          String   @id @default(cuid())
-  userId      String
-  userEmail   String
-  ipAddress   String?
-  userAgent   String?  @db.Text
-  location    String?  // Geolocation info
-  device      String?  // Device type
-  browser     String?  // Browser info
-  success     Boolean  @default(true)
+  id            String   @id @default(cuid())
+  userId        String
+  userEmail     String
+  ipAddress     String?
+  userAgent     String?
+  location      String?
+  device        String?
+  browser       String?
+  success       Boolean  @default(true)
   failureReason String?
-  createdAt   DateTime @default(now())
+  createdAt     DateTime @default(now())
 
   @@index([userId])
   @@index([createdAt])
@@ -356,16 +339,16 @@ model Trip {
   country     String?
   startDate   DateTime
   endDate     DateTime
-  category    String   // business, personal, family, adventure, honeymoon, medical
-  status      String   // upcoming, ongoing, completed, cancelled
+  category    String
+  status      String
   budget      Float    @default(0)
   spent       Float    @default(0)
-  notes       String?  @db.Text
-  itinerary   Json?    // Store itinerary items as JSON array
+  notes       String?
+  itinerary   Json?
   userId      String
-  user        User     @relation("UserTrips", fields: [userId], references: [id], onDelete: Cascade)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  user        User     @relation("UserTrips", fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([status])
@@ -374,19 +357,18 @@ model Trip {
 }
 
 model WorkflowTemplate {
-  id          String   @id @default(cuid())
+  id          String              @id @default(cuid())
   name        String
   description String?
-  entityType  String   // 'ticket', 'asset'
-  trigger     String   // 'created', 'status_changed', 'assigned', 'priority_changed'
-  conditions  Json?    // Array of conditions to evaluate
-  actions     Json     // Array of actions to execute
-  isActive    Boolean  @default(true)
-  priority    Int      @default(0) // Higher priority workflows run first
+  entityType  String
+  trigger     String
+  conditions  Json?
+  actions     Json
+  isActive    Boolean             @default(true)
+  priority    Int                 @default(0)
   createdBy   String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
   executions  WorkflowExecution[]
 
   @@index([entityType])
@@ -395,16 +377,16 @@ model WorkflowTemplate {
 }
 
 model WorkflowExecution {
-  id          String   @id @default(cuid())
+  id          String           @id @default(cuid())
   workflowId  String
-  workflow    WorkflowTemplate @relation(fields: [workflowId], references: [id], onDelete: Cascade)
   entityType  String
   entityId    String
-  status      String   // 'pending', 'running', 'completed', 'failed'
-  result      Json?    // Result of execution
-  error       String?  @db.Text
-  executedAt  DateTime @default(now())
+  status      String
+  result      Json?
+  error       String?
+  executedAt  DateTime         @default(now())
   completedAt DateTime?
+  workflow    WorkflowTemplate @relation(fields: [workflowId], references: [id], onDelete: Cascade)
 
   @@index([workflowId])
   @@index([entityId])
@@ -413,57 +395,57 @@ model WorkflowExecution {
 }
 
 model AutoAssignmentRule {
-  id              String   @id @default(cuid())
-  name            String
-  description     String?
-  isActive        Boolean  @default(true)
-  priority        Int      @default(0)
-  conditions      Json     // Conditions to match (priority, asset type, keywords, etc.)
-  assignmentType  String   // 'round_robin', 'least_busy', 'skill_based', 'location_based', 'specific_user'
-  targetUserId    String?  // For specific_user assignment
-  targetUserIds   Json?    // Array of user IDs for round robin
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id             String   @id @default(cuid())
+  name           String
+  description    String?
+  isActive       Boolean  @default(true)
+  priority       Int      @default(0)
+  conditions     Json
+  assignmentType String
+  targetUserId   String?
+  targetUserIds  Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   @@index([isActive])
   @@index([priority])
 }
 
 model SLAPolicy {
-  id                   String   @id @default(cuid())
-  name                 String
-  description          String?
-  priority             String   // 'critical', 'high', 'medium', 'low'
-  responseTimeMinutes  Int      // Minutes to first response
-  resolutionTimeMinutes Int     // Minutes to resolution
-  businessHoursOnly    Boolean  @default(true)
-  escalationEnabled    Boolean  @default(true)
-  escalationUserId     String?  // User to escalate to
-  notifyBeforeMinutes  Int      @default(30) // Warn before SLA breach
-  isActive             Boolean  @default(true)
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  id                    String   @id @default(cuid())
+  name                  String
+  description           String?
+  priority              String
+  responseTimeMinutes   Int
+  resolutionTimeMinutes Int
+  businessHoursOnly     Boolean  @default(true)
+  escalationEnabled     Boolean  @default(true)
+  escalationUserId      String?
+  notifyBeforeMinutes   Int      @default(30)
+  isActive              Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
   @@index([priority])
   @@index([isActive])
 }
 
 model TicketSLA {
-  id                    String    @id @default(cuid())
-  ticketId              String    @unique
-  policyId              String
-  responseDeadline      DateTime
-  resolutionDeadline    DateTime
-  firstResponseAt       DateTime?
-  resolvedAt            DateTime?
-  status                String    // 'on_track', 'at_risk', 'breached'
-  responseBreached      Boolean   @default(false)
-  resolutionBreached    Boolean   @default(false)
-  warningsSent          Int       @default(0)
-  escalated             Boolean   @default(false)
-  escalatedAt           DateTime?
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
+  id                 String    @id @default(cuid())
+  ticketId           String    @unique
+  policyId           String
+  responseDeadline   DateTime
+  resolutionDeadline DateTime
+  firstResponseAt    DateTime?
+  resolvedAt         DateTime?
+  status             String
+  responseBreached   Boolean   @default(false)
+  resolutionBreached Boolean   @default(false)
+  warningsSent       Int       @default(0)
+  escalated          Boolean   @default(false)
+  escalatedAt        DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   @@index([ticketId])
   @@index([status])
@@ -472,16 +454,16 @@ model TicketSLA {
 }
 
 model RefreshToken {
-  id          String   @id @default(cuid())
-  token       String   @unique
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  expiresAt   DateTime
-  isRevoked   Boolean  @default(false)
-  ipAddress   String?
-  userAgent   String?  @db.Text
-  createdAt   DateTime @default(now())
-  revokedAt   DateTime?
+  id        String    @id @default(cuid())
+  token     String    @unique
+  userId    String
+  expiresAt DateTime
+  isRevoked Boolean   @default(false)
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime  @default(now())
+  revokedAt DateTime?
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([token])
@@ -489,20 +471,20 @@ model RefreshToken {
 }
 
 model UserSession {
-  id              String   @id @default(cuid())
-  userId          String
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  sessionToken    String   @unique
-  ipAddress       String?
-  userAgent       String?  @db.Text
-  device          String?  // Device type
-  browser         String?  // Browser info
-  location        String?  // Geolocation
-  fingerprint     String?  // Browser fingerprint
-  isActive        Boolean  @default(true)
-  lastActivityAt  DateTime @default(now())
-  expiresAt       DateTime
-  createdAt       DateTime @default(now())
+  id             String   @id @default(cuid())
+  userId         String
+  sessionToken   String   @unique
+  ipAddress      String?
+  userAgent      String?
+  device         String?
+  browser        String?
+  location       String?
+  fingerprint    String?
+  isActive       Boolean  @default(true)
+  lastActivityAt DateTime @default(now())
+  expiresAt      DateTime
+  createdAt      DateTime @default(now())
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([sessionToken])
@@ -511,15 +493,15 @@ model UserSession {
 }
 
 model WebhookLog {
-  id          String   @id @default(cuid())
-  source      String   // 'whatsapp', 'wooalerts'
-  event       String   // Event type
-  payload     String   @db.Text // Full webhook payload
-  signature   String?  // Webhook signature
-  verified    Boolean  @default(false)
-  processed   Boolean  @default(false)
-  error       String?  @db.Text
-  createdAt   DateTime @default(now())
+  id        String   @id @default(cuid())
+  source    String
+  event     String
+  payload   String
+  signature String?
+  verified  Boolean  @default(false)
+  processed Boolean  @default(false)
+  error     String?
+  createdAt DateTime @default(now())
 
   @@index([source])
   @@index([processed])
@@ -527,18 +509,18 @@ model WebhookLog {
 }
 
 model SecurityEvent {
-  id          String   @id @default(cuid())
-  eventType   String   // 'failed_login', 'suspicious_activity', 'account_lockout', etc.
-  severity    String   // 'low', 'medium', 'high', 'critical'
-  userId      String?
-  userEmail   String?
-  ipAddress   String?
-  userAgent   String?  @db.Text
-  details     String?  @db.Text // JSON details
-  resolved    Boolean  @default(false)
-  resolvedBy  String?
-  resolvedAt  DateTime?
-  createdAt   DateTime @default(now())
+  id         String    @id @default(cuid())
+  eventType  String
+  severity   String
+  userId     String?
+  userEmail  String?
+  ipAddress  String?
+  userAgent  String?
+  details    String?
+  resolved   Boolean   @default(false)
+  resolvedBy String?
+  resolvedAt DateTime?
+  createdAt  DateTime  @default(now())
 
   @@index([eventType])
   @@index([severity])
@@ -548,23 +530,21 @@ model SecurityEvent {
 }
 
 model TicketTemplate {
-  id                  String   @id @default(cuid())
-  name                String   // Template name (e.g., "Password Reset Request")
-  description         String?  // Description of when to use this template
-  title               String   // Pre-filled ticket title
-  ticketDescription   String   @db.Text // Pre-filled ticket description
-  priority            String   @default("medium") // Default priority
-  category            String?  // Category for organization
-  tags                String[] // Tags for filtering
-  assignedToId        String?  // Default assignee (optional)
-  isActive            Boolean  @default(true) // Can be archived
-
-  createdBy           User     @relation("TemplateCreator", fields: [createdById], references: [id], onDelete: Cascade)
-  createdById         String
-  assignedTo          User?    @relation("TemplateAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
-
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  id                String   @id @default(cuid())
+  name              String
+  description       String?
+  title             String
+  ticketDescription String
+  priority          String   @default("medium")
+  category          String?
+  tags              String[]
+  assignedToId      String?
+  isActive          Boolean  @default(true)
+  createdById       String
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  assignedTo        User?    @relation("TemplateAssignee", fields: [assignedToId], references: [id])
+  createdBy         User     @relation("TemplateCreator", fields: [createdById], references: [id], onDelete: Cascade)
 
   @@index([createdById])
   @@index([assignedToId])
@@ -574,17 +554,15 @@ model TicketTemplate {
 
 model ReplyTemplate {
   id          String   @id @default(cuid())
-  name        String   // Template name (e.g., "Password Reset Steps")
-  content     String   @db.Text // Reply content with variables
-  category    String?  // Category for organization
-  isActive    Boolean  @default(true) // Can be archived
-  usageCount  Int      @default(0) // Track usage
-
-  createdBy   User     @relation("ReplyTemplateCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  name        String
+  content     String
+  category    String?
+  isActive    Boolean  @default(true)
+  usageCount  Int      @default(0)
   createdById String
-
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  createdBy   User     @relation("ReplyTemplateCreator", fields: [createdById], references: [id], onDelete: Cascade)
 
   @@index([createdById])
   @@index([category])
@@ -592,33 +570,31 @@ model ReplyTemplate {
 }
 
 model AssetCheckout {
-  id                  String                    @id @default(cuid())
-  assetId             String
-  userId              String
-  checkedOutById      String
-  checkoutDate        DateTime                  @default(now())
-  expectedReturnDate  DateTime?
-  actualReturnDate    DateTime?
-  checkedInById       String?
-  checkinDate         DateTime?
-  status              String                    @default("checked_out")
-  location            String?
-  purpose             String?
-  notes               String?
-  condition           String?
-  returnCondition     String?
-  returnNotes         String?
-  overdueNotificationSent Boolean               @default(false)
-
-  asset               Asset                     @relation(fields: [assetId], references: [id], onDelete: Cascade)
-  user                User                      @relation("CheckoutUser", fields: [userId], references: [id], onDelete: Restrict)
-  checkedOutBy        User                      @relation("CheckedOutBy", fields: [checkedOutById], references: [id], onDelete: Restrict)
-  checkedInBy         User?                     @relation("CheckedInBy", fields: [checkedInById], references: [id], onDelete: SetNull)
-  reminders           CheckoutReminder[]
-  locationHistory     AssetLocationHistory[]
-
-  createdAt           DateTime                  @default(now())
-  updatedAt           DateTime                  @updatedAt
+  id                      String                 @id @default(cuid())
+  assetId                 String
+  userId                  String
+  checkedOutById          String
+  checkoutDate            DateTime               @default(now())
+  expectedReturnDate      DateTime?
+  actualReturnDate        DateTime?
+  checkedInById           String?
+  checkinDate             DateTime?
+  status                  String                 @default("checked_out")
+  location                String?
+  purpose                 String?
+  notes                   String?
+  condition               String?
+  returnCondition         String?
+  returnNotes             String?
+  overdueNotificationSent Boolean                @default(false)
+  createdAt               DateTime               @default(now())
+  updatedAt               DateTime               @updatedAt
+  asset                   Asset                  @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  checkedInBy             User?                  @relation("CheckedInBy", fields: [checkedInById], references: [id])
+  checkedOutBy            User                   @relation("CheckedOutBy", fields: [checkedOutById], references: [id])
+  user                    User                   @relation("CheckoutUser", fields: [userId], references: [id])
+  locationHistory         AssetLocationHistory[]
+  reminders               CheckoutReminder[]
 
   @@index([assetId])
   @@index([userId])
@@ -629,21 +605,19 @@ model AssetCheckout {
 }
 
 model AssetQRCode {
-  id              String    @id @default(cuid())
-  assetId         String
-  qrCode          String    @unique
-  qrCodeUrl       String?
-  generatedAt     DateTime  @default(now())
-  generatedById   String
-  lastScannedAt   DateTime?
-  scanCount       Int       @default(0)
-  isActive        Boolean   @default(true)
-
-  asset           Asset     @relation(fields: [assetId], references: [id], onDelete: Cascade)
-  generatedBy     User      @relation(fields: [generatedById], references: [id], onDelete: Restrict)
-
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id            String    @id @default(cuid())
+  assetId       String
+  qrCode        String    @unique
+  qrCodeUrl     String?
+  generatedAt   DateTime  @default(now())
+  generatedById String
+  lastScannedAt DateTime?
+  scanCount     Int       @default(0)
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  asset         Asset     @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  generatedBy   User      @relation(fields: [generatedById], references: [id])
 
   @@index([assetId])
   @@index([qrCode])
@@ -651,21 +625,19 @@ model AssetQRCode {
 }
 
 model AssetLocationHistory {
-  id                String          @id @default(cuid())
-  assetId           String
-  checkoutId        String?
-  location          String
-  previousLocation  String?
-  movedById         String
-  movedAt           DateTime        @default(now())
-  reason            String?
-  notes             String?
-
-  asset             Asset           @relation(fields: [assetId], references: [id], onDelete: Cascade)
-  checkout          AssetCheckout?  @relation(fields: [checkoutId], references: [id], onDelete: SetNull)
-  movedBy           User            @relation(fields: [movedById], references: [id], onDelete: Restrict)
-
-  createdAt         DateTime        @default(now())
+  id               String         @id @default(cuid())
+  assetId          String
+  checkoutId       String?
+  location         String
+  previousLocation String?
+  movedById        String
+  movedAt          DateTime       @default(now())
+  reason           String?
+  notes            String?
+  createdAt        DateTime       @default(now())
+  asset            Asset          @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  checkout         AssetCheckout? @relation(fields: [checkoutId], references: [id])
+  movedBy          User           @relation(fields: [movedById], references: [id])
 
   @@index([assetId])
   @@index([checkoutId])
@@ -673,19 +645,17 @@ model AssetLocationHistory {
 }
 
 model CheckoutReminder {
-  id            String          @id @default(cuid())
-  checkoutId    String
-  reminderDate  DateTime
-  reminderType  String
-  sent          Boolean         @default(false)
-  sentAt        DateTime?
-  emailSent     Boolean         @default(false)
-  whatsappSent  Boolean         @default(false)
-
-  checkout      AssetCheckout   @relation(fields: [checkoutId], references: [id], onDelete: Cascade)
-
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  id           String        @id @default(cuid())
+  checkoutId   String
+  reminderDate DateTime
+  reminderType String
+  sent         Boolean       @default(false)
+  sentAt       DateTime?
+  emailSent    Boolean       @default(false)
+  whatsappSent Boolean       @default(false)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  checkout     AssetCheckout @relation(fields: [checkoutId], references: [id], onDelete: Cascade)
 
   @@index([checkoutId])
   @@index([reminderDate])
@@ -693,42 +663,40 @@ model CheckoutReminder {
 }
 
 model InventoryItem {
-  id              String              @id @default(cuid())
-  itemCode        String              @unique
-  name            String
-  description     String?
-  category        String
-  subcategory     String?
-  unit            String
-  unitPrice       Decimal?            @db.Decimal(10,2)
-  currency        String              @default("USD")
-  currentStock    Int                 @default(0)
-  minimumStock    Int                 @default(0)
-  maximumStock    Int?
-  reorderPoint    Int                 @default(0)
-  reorderQuantity Int                 @default(0)
-  location        String?
-  binLocation     String?
-  barcode         String?             @unique
-  sku             String?
-  manufacturer    String?
-  model           String?
-  tags            String[]
-  imageUrl        String?
-  isActive        Boolean             @default(true)
-  trackSerial     Boolean             @default(false)
-  notes           String?
-  createdById     String
-  lastStockedAt   DateTime?
-  lastOrderedAt   DateTime?
-
-  createdBy       User                @relation(fields: [createdById], references: [id], onDelete: Restrict)
-  transactions    StockTransaction[]
-  alerts          StockAlert[]
+  id                 String              @id @default(cuid())
+  itemCode           String              @unique
+  name               String
+  description        String?
+  category           String
+  subcategory        String?
+  unit               String
+  unitPrice          Decimal?            @db.Decimal(10, 2)
+  currency           String              @default("USD")
+  currentStock       Int                 @default(0)
+  minimumStock       Int                 @default(0)
+  maximumStock       Int?
+  reorderPoint       Int                 @default(0)
+  reorderQuantity    Int                 @default(0)
+  location           String?
+  binLocation        String?
+  barcode            String?             @unique
+  sku                String?
+  manufacturer       String?
+  model              String?
+  tags               String[]
+  imageUrl           String?
+  isActive           Boolean             @default(true)
+  trackSerial        Boolean             @default(false)
+  notes              String?
+  createdById        String
+  lastStockedAt      DateTime?
+  lastOrderedAt      DateTime?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  createdBy          User                @relation(fields: [createdById], references: [id])
   purchaseOrderItems PurchaseOrderItem[]
-
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
+  alerts             StockAlert[]
+  transactions       StockTransaction[]
 
   @@index([itemCode])
   @@index([category])
@@ -739,32 +707,30 @@ model InventoryItem {
 }
 
 model StockTransaction {
-  id                String      @id @default(cuid())
-  itemId            String
-  transactionType   String
-  quantity          Int
-  unitPrice         Decimal?    @db.Decimal(10,2)
-  totalCost         Decimal?    @db.Decimal(10,2)
-  balanceBefore     Int
-  balanceAfter      Int
-  reference         String?
-  notes             String?
-  location          String?
-  supplierId        String?
-  purchaseOrderId   String?
-  issuedToId        String?
-  issuedToAssetId   String?
-  performedById     String
-  transactionDate   DateTime    @default(now())
-
-  item              InventoryItem     @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  supplier          Supplier?         @relation(fields: [supplierId], references: [id], onDelete: SetNull)
-  purchaseOrder     PurchaseOrder?    @relation(fields: [purchaseOrderId], references: [id], onDelete: SetNull)
-  issuedTo          User?             @relation("TransactionIssuedTo", fields: [issuedToId], references: [id], onDelete: SetNull)
-  issuedToAsset     Asset?            @relation(fields: [issuedToAssetId], references: [id], onDelete: SetNull)
-  performedBy       User              @relation("TransactionPerformedBy", fields: [performedById], references: [id], onDelete: Restrict)
-
-  createdAt         DateTime    @default(now())
+  id              String         @id @default(cuid())
+  itemId          String
+  transactionType String
+  quantity        Int
+  unitPrice       Decimal?       @db.Decimal(10, 2)
+  totalCost       Decimal?       @db.Decimal(10, 2)
+  balanceBefore   Int
+  balanceAfter    Int
+  reference       String?
+  notes           String?
+  location        String?
+  supplierId      String?
+  purchaseOrderId String?
+  issuedToId      String?
+  issuedToAssetId String?
+  performedById   String
+  transactionDate DateTime       @default(now())
+  createdAt       DateTime       @default(now())
+  issuedToAsset   Asset?         @relation(fields: [issuedToAssetId], references: [id])
+  issuedTo        User?          @relation("TransactionIssuedTo", fields: [issuedToId], references: [id])
+  item            InventoryItem  @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  performedBy     User           @relation("TransactionPerformedBy", fields: [performedById], references: [id])
+  purchaseOrder   PurchaseOrder? @relation(fields: [purchaseOrderId], references: [id])
+  supplier        Supplier?      @relation(fields: [supplierId], references: [id])
 
   @@index([itemId])
   @@index([transactionType])
@@ -774,32 +740,30 @@ model StockTransaction {
 }
 
 model Supplier {
-  id              String          @id @default(cuid())
-  supplierCode    String          @unique
-  name            String
-  contactPerson   String?
-  email           String?
-  phone           String?
-  website         String?
-  address         String?
-  city            String?
-  state           String?
-  postalCode      String?
-  country         String?
-  taxId           String?
-  paymentTerms    String?
-  creditLimit     Decimal?        @db.Decimal(10,2)
-  rating          Int?
-  notes           String?
-  isActive        Boolean         @default(true)
-  createdById     String
-
-  createdBy       User            @relation(fields: [createdById], references: [id], onDelete: Restrict)
-  purchaseOrders  PurchaseOrder[]
+  id                String             @id @default(cuid())
+  supplierCode      String             @unique
+  name              String
+  contactPerson     String?
+  email             String?
+  phone             String?
+  website           String?
+  address           String?
+  city              String?
+  state             String?
+  postalCode        String?
+  country           String?
+  taxId             String?
+  paymentTerms      String?
+  creditLimit       Decimal?           @db.Decimal(10, 2)
+  rating            Int?
+  notes             String?
+  isActive          Boolean            @default(true)
+  createdById       String
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  purchaseOrders    PurchaseOrder[]
   stockTransactions StockTransaction[]
-
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  createdBy         User               @relation(fields: [createdById], references: [id])
 
   @@index([supplierCode])
   @@index([isActive])
@@ -807,38 +771,36 @@ model Supplier {
 }
 
 model PurchaseOrder {
-  id                    String              @id @default(cuid())
-  orderNumber           String              @unique
-  supplierId            String
-  status                String              @default("draft")
-  orderDate             DateTime            @default(now())
-  expectedDeliveryDate  DateTime?
-  actualDeliveryDate    DateTime?
-  subtotal              Decimal             @default(0) @db.Decimal(10,2)
-  taxAmount             Decimal             @default(0) @db.Decimal(10,2)
-  shippingCost          Decimal             @default(0) @db.Decimal(10,2)
-  totalAmount           Decimal             @default(0) @db.Decimal(10,2)
-  currency              String              @default("USD")
-  paymentStatus         String              @default("pending")
-  paymentMethod         String?
-  notes                 String?
-  shippingAddress       String?
-  billingAddress        String?
-  createdById           String
-  approvedById          String?
-  approvedAt            DateTime?
-  receivedById          String?
-  receivedAt            DateTime?
-
-  supplier              Supplier            @relation(fields: [supplierId], references: [id], onDelete: Restrict)
-  createdBy             User                @relation("POCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
-  approvedBy            User?               @relation("POApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
-  receivedBy            User?               @relation("POReceivedBy", fields: [receivedById], references: [id], onDelete: SetNull)
-  items                 PurchaseOrderItem[]
-  stockTransactions     StockTransaction[]
-
-  createdAt             DateTime            @default(now())
-  updatedAt             DateTime            @updatedAt
+  id                   String              @id @default(cuid())
+  orderNumber          String              @unique
+  supplierId           String
+  status               String              @default("draft")
+  orderDate            DateTime            @default(now())
+  expectedDeliveryDate DateTime?
+  actualDeliveryDate   DateTime?
+  subtotal             Decimal             @default(0) @db.Decimal(10, 2)
+  taxAmount            Decimal             @default(0) @db.Decimal(10, 2)
+  shippingCost         Decimal             @default(0) @db.Decimal(10, 2)
+  totalAmount          Decimal             @default(0) @db.Decimal(10, 2)
+  currency             String              @default("USD")
+  paymentStatus        String              @default("pending")
+  paymentMethod        String?
+  notes                String?
+  shippingAddress      String?
+  billingAddress       String?
+  createdById          String
+  approvedById         String?
+  approvedAt           DateTime?
+  receivedById         String?
+  receivedAt           DateTime?
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+  approvedBy           User?               @relation("POApprovedBy", fields: [approvedById], references: [id])
+  createdBy            User                @relation("POCreatedBy", fields: [createdById], references: [id])
+  receivedBy           User?               @relation("POReceivedBy", fields: [receivedById], references: [id])
+  supplier             Supplier            @relation(fields: [supplierId], references: [id])
+  items                PurchaseOrderItem[]
+  stockTransactions    StockTransaction[]
 
   @@index([orderNumber])
   @@index([supplierId])
@@ -848,42 +810,38 @@ model PurchaseOrder {
 }
 
 model PurchaseOrderItem {
-  id                String          @id @default(cuid())
-  purchaseOrderId   String
-  itemId            String
-  quantity          Int
-  unitPrice         Decimal         @db.Decimal(10,2)
-  totalPrice        Decimal         @db.Decimal(10,2)
-  receivedQuantity  Int             @default(0)
-  notes             String?
-
-  purchaseOrder     PurchaseOrder   @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
-  item              InventoryItem   @relation(fields: [itemId], references: [id], onDelete: Restrict)
-
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
+  id               String        @id @default(cuid())
+  purchaseOrderId  String
+  itemId           String
+  quantity         Int
+  unitPrice        Decimal       @db.Decimal(10, 2)
+  totalPrice       Decimal       @db.Decimal(10, 2)
+  receivedQuantity Int           @default(0)
+  notes            String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  item             InventoryItem @relation(fields: [itemId], references: [id])
+  purchaseOrder    PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
 
   @@index([purchaseOrderId])
   @@index([itemId])
 }
 
 model StockAlert {
-  id              String      @id @default(cuid())
-  itemId          String
-  alertType       String
-  severity        String      @default("medium")
-  message         String
-  triggeredAt     DateTime    @default(now())
-  acknowledged    Boolean     @default(false)
+  id               String        @id @default(cuid())
+  itemId           String
+  alertType        String
+  severity         String        @default("medium")
+  message          String
+  triggeredAt      DateTime      @default(now())
+  acknowledged     Boolean       @default(false)
   acknowledgedById String?
-  acknowledgedAt  DateTime?
-  resolved        Boolean     @default(false)
-  resolvedAt      DateTime?
-
-  item            InventoryItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  acknowledgedBy  User?         @relation(fields: [acknowledgedById], references: [id], onDelete: SetNull)
-
-  createdAt       DateTime    @default(now())
+  acknowledgedAt   DateTime?
+  resolved         Boolean       @default(false)
+  resolvedAt       DateTime?
+  createdAt        DateTime      @default(now())
+  acknowledgedBy   User?         @relation(fields: [acknowledgedById], references: [id])
+  item             InventoryItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
 
   @@index([itemId])
   @@index([alertType])
@@ -892,30 +850,28 @@ model StockAlert {
 }
 
 model AssetDepreciation {
-  id                    String                  @id @default(cuid())
-  assetId               String
-  depreciationMethod    String
-  purchasePrice         Decimal                 @db.Decimal(12,2)
-  salvageValue          Decimal                 @default(0) @db.Decimal(12,2)
-  usefulLifeYears       Int
-  usefulLifeMonths      Int                     @default(0)
-  purchaseDate          DateTime
-  depreciationStartDate DateTime
-  currentBookValue      Decimal                 @db.Decimal(12,2)
-  accumulatedDepreciation Decimal               @default(0) @db.Decimal(12,2)
-  annualDepreciationRate Decimal?              @db.Decimal(5,2)
-  monthlyDepreciationAmount Decimal?            @db.Decimal(12,2)
-  isActive              Boolean                 @default(true)
-  notes                 String?
-  lastCalculatedAt      DateTime?
-  createdById           String
-
-  asset                 Asset                   @relation(fields: [assetId], references: [id], onDelete: Cascade)
-  createdBy             User                    @relation(fields: [createdById], references: [id], onDelete: Restrict)
-  schedule              DepreciationSchedule[]
-
-  createdAt             DateTime                @default(now())
-  updatedAt             DateTime                @updatedAt
+  id                        String                 @id @default(cuid())
+  assetId                   String
+  depreciationMethod        String
+  purchasePrice             Decimal                @db.Decimal(12, 2)
+  salvageValue              Decimal                @default(0) @db.Decimal(12, 2)
+  usefulLifeYears           Int
+  usefulLifeMonths          Int                    @default(0)
+  purchaseDate              DateTime
+  depreciationStartDate     DateTime
+  currentBookValue          Decimal                @db.Decimal(12, 2)
+  accumulatedDepreciation   Decimal                @default(0) @db.Decimal(12, 2)
+  annualDepreciationRate    Decimal?               @db.Decimal(5, 2)
+  monthlyDepreciationAmount Decimal?               @db.Decimal(12, 2)
+  isActive                  Boolean                @default(true)
+  notes                     String?
+  lastCalculatedAt          DateTime?
+  createdById               String
+  createdAt                 DateTime               @default(now())
+  updatedAt                 DateTime               @updatedAt
+  asset                     Asset                  @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  createdBy                 User                   @relation(fields: [createdById], references: [id])
+  schedule                  DepreciationSchedule[]
 
   @@index([assetId])
   @@index([depreciationMethod])
@@ -924,26 +880,24 @@ model AssetDepreciation {
 }
 
 model DepreciationSchedule {
-  id                    String              @id @default(cuid())
-  depreciationId        String
-  periodNumber          Int
-  periodStartDate       DateTime
-  periodEndDate         DateTime
-  openingBookValue      Decimal             @db.Decimal(12,2)
-  depreciationAmount    Decimal             @db.Decimal(12,2)
-  accumulatedDepreciation Decimal           @db.Decimal(12,2)
-  closingBookValue      Decimal             @db.Decimal(12,2)
-  isPosted              Boolean             @default(false)
-  postedAt              DateTime?
-  postedById            String?
-  fiscalYear            Int
-  fiscalMonth           Int
-  notes                 String?
-
-  depreciation          AssetDepreciation   @relation(fields: [depreciationId], references: [id], onDelete: Cascade)
-  postedBy              User?               @relation(fields: [postedById], references: [id], onDelete: SetNull)
-
-  createdAt             DateTime            @default(now())
+  id                      String            @id @default(cuid())
+  depreciationId          String
+  periodNumber            Int
+  periodStartDate         DateTime
+  periodEndDate           DateTime
+  openingBookValue        Decimal           @db.Decimal(12, 2)
+  depreciationAmount      Decimal           @db.Decimal(12, 2)
+  accumulatedDepreciation Decimal           @db.Decimal(12, 2)
+  closingBookValue        Decimal           @db.Decimal(12, 2)
+  isPosted                Boolean           @default(false)
+  postedAt                DateTime?
+  postedById              String?
+  fiscalYear              Int
+  fiscalMonth             Int
+  notes                   String?
+  createdAt               DateTime          @default(now())
+  depreciation            AssetDepreciation @relation(fields: [depreciationId], references: [id], onDelete: Cascade)
+  postedBy                User?             @relation(fields: [postedById], references: [id])
 
   @@index([depreciationId])
   @@index([fiscalYear])
@@ -953,23 +907,21 @@ model DepreciationSchedule {
 }
 
 model AssetValuation {
-  id                String      @id @default(cuid())
+  id                String   @id @default(cuid())
   assetId           String
   valuationDate     DateTime
   valuationType     String
-  bookValue         Decimal     @db.Decimal(12,2)
-  marketValue       Decimal?    @db.Decimal(12,2)
-  replacementValue  Decimal?    @db.Decimal(12,2)
+  bookValue         Decimal  @db.Decimal(12, 2)
+  marketValue       Decimal? @db.Decimal(12, 2)
+  replacementValue  Decimal? @db.Decimal(12, 2)
   condition         String?
   valuedById        String
   appraisedBy       String?
   appraisalDocument String?
   notes             String?
-
-  asset             Asset       @relation(fields: [assetId], references: [id], onDelete: Cascade)
-  valuedBy          User        @relation(fields: [valuedById], references: [id], onDelete: Restrict)
-
-  createdAt         DateTime    @default(now())
+  createdAt         DateTime @default(now())
+  asset             Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  valuedBy          User     @relation(fields: [valuedById], references: [id])
 
   @@index([assetId])
   @@index([valuationDate])
@@ -977,87 +929,77 @@ model AssetValuation {
 }
 
 model AssetDisposal {
-  id                    String      @id @default(cuid())
+  id                    String    @id @default(cuid())
   assetId               String
   disposalDate          DateTime
   disposalMethod        String
   reason                String
-  bookValueAtDisposal   Decimal     @db.Decimal(12,2)
-  disposalProceeds      Decimal     @default(0) @db.Decimal(12,2)
-  gainLoss              Decimal     @default(0) @db.Decimal(12,2)
+  bookValueAtDisposal   Decimal   @db.Decimal(12, 2)
+  disposalProceeds      Decimal   @default(0) @db.Decimal(12, 2)
+  gainLoss              Decimal   @default(0) @db.Decimal(12, 2)
   disposedToParty       String?
   authorizationDocument String?
   approvedById          String?
   approvedAt            DateTime?
   notes                 String?
   createdById           String
-
-  asset                 Asset       @relation(fields: [assetId], references: [id], onDelete: Cascade)
-  approvedBy            User?       @relation("DisposalApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
-  createdBy             User        @relation("DisposalCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
-
-  createdAt             DateTime    @default(now())
+  createdAt             DateTime  @default(now())
+  approvedBy            User?     @relation("DisposalApprovedBy", fields: [approvedById], references: [id])
+  asset                 Asset     @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  createdBy             User      @relation("DisposalCreatedBy", fields: [createdById], references: [id])
 
   @@index([assetId])
   @@index([disposalDate])
   @@index([disposalMethod])
 }
 
-// =====================================================
-// DOCUMENT MANAGEMENT MODELS
-// =====================================================
-
 model DocumentCategory {
-  id                String     @id @default(cuid())
-  name              String
-  description       String?
-  icon              String?
-  color             String?
-  parentCategoryId  String?
-  isActive          Boolean    @default(true)
-  sortOrder         Int        @default(0)
-
-  parentCategory    DocumentCategory?  @relation("CategoryHierarchy", fields: [parentCategoryId], references: [id], onDelete: SetNull)
-  subCategories     DocumentCategory[] @relation("CategoryHierarchy")
-  documents         Document[]
-
-  createdAt         DateTime   @default(now())
-  updatedAt         DateTime   @updatedAt
+  id               String             @id @default(cuid())
+  name             String
+  description      String?
+  icon             String?
+  color            String?
+  parentCategoryId String?
+  isActive         Boolean            @default(true)
+  sortOrder        Int                @default(0)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  documents        Document[]
+  parentCategory   DocumentCategory?  @relation("CategoryHierarchy", fields: [parentCategoryId], references: [id])
+  subCategories    DocumentCategory[] @relation("CategoryHierarchy")
 
   @@index([parentCategoryId])
   @@index([isActive])
 }
 
 model Document {
-  id                String     @id @default(cuid())
-  title             String
-  description       String?
-  categoryId        String?
-  fileName          String
-  originalFileName  String
-  filePath          String
-  fileSize          BigInt
-  mimeType          String
-  version           Int        @default(1)
-  versionLabel      String?
-  isLatestVersion   Boolean    @default(true)
-  parentDocumentId  String?
-  status            String     @default("active")
-  tags              String[]
-  metadata          Json?
-  uploadedById      String
-
-  category          DocumentCategory?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  parentDocument    Document?          @relation("DocumentVersions", fields: [parentDocumentId], references: [id], onDelete: Cascade)
-  versions          Document[]         @relation("DocumentVersions")
-  uploadedBy        User               @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
-  associations      DocumentAssociation[]
-  accessLogs        DocumentAccessLog[]
-  shares            DocumentShare[]
-  comments          DocumentComment[]
-
-  createdAt         DateTime   @default(now())
-  updatedAt         DateTime   @updatedAt
+  id               String                @id @default(cuid())
+  title            String
+  description      String?
+  categoryId       String?
+  fileName         String
+  originalFileName String
+  filePath         String
+  fileSize         BigInt
+  mimeType         String
+  version          Int                   @default(1)
+  versionLabel     String?
+  isLatestVersion  Boolean               @default(true)
+  parentDocumentId String?
+  status           String                @default("active")
+  tags             String[]
+  metadata         Json?
+  uploadedById     String
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  category         DocumentCategory?     @relation(fields: [categoryId], references: [id])
+  parentDocument   Document?             @relation("DocumentVersions", fields: [parentDocumentId], references: [id], onDelete: Cascade)
+  versions         Document[]            @relation("DocumentVersions")
+  uploadedBy       User                  @relation(fields: [uploadedById], references: [id])
+  accessLogs       DocumentAccessLog[]
+  associations     DocumentAssociation[]
+  comments         DocumentComment[]
+  shares           DocumentShare[]
 
   @@index([categoryId])
   @@index([uploadedById])
@@ -1068,18 +1010,16 @@ model Document {
 }
 
 model DocumentAssociation {
-  id               String     @id @default(cuid())
+  id               String   @id @default(cuid())
   documentId       String
   entityType       String
   entityId         String
   relationshipType String?
   notes            String?
   createdById      String
-
-  document         Document   @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  createdBy        User       @relation(fields: [createdById], references: [id], onDelete: Restrict)
-
-  createdAt        DateTime   @default(now())
+  createdAt        DateTime @default(now())
+  createdBy        User     @relation(fields: [createdById], references: [id])
+  document         Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
 
   @@index([documentId])
   @@index([entityType, entityId])
@@ -1087,18 +1027,16 @@ model DocumentAssociation {
 }
 
 model DocumentAccessLog {
-  id          String     @id @default(cuid())
-  documentId  String
-  userId      String
-  action      String
-  ipAddress   String?
-  userAgent   String?
-  metadata    Json?
-
-  document    Document   @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  createdAt   DateTime   @default(now())
+  id         String   @id @default(cuid())
+  documentId String
+  userId     String
+  action     String
+  ipAddress  String?
+  userAgent  String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([documentId])
   @@index([userId])
@@ -1107,21 +1045,19 @@ model DocumentAccessLog {
 }
 
 model DocumentShare {
-  id                String     @id @default(cuid())
-  documentId        String
-  sharedWithUserId  String?
-  sharedWithRole    String?
-  permissions       String[]   @default(["view"])
-  expiresAt         DateTime?
-  sharedById        String
-  message           String?
-  isActive          Boolean    @default(true)
-
-  document          Document   @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  sharedWithUser    User?      @relation("SharedWith", fields: [sharedWithUserId], references: [id], onDelete: Cascade)
-  sharedBy          User       @relation("SharedBy", fields: [sharedById], references: [id], onDelete: Cascade)
-
-  createdAt         DateTime   @default(now())
+  id               String    @id @default(cuid())
+  documentId       String
+  sharedWithUserId String?
+  sharedWithRole   String?
+  permissions      String[]  @default(["view"])
+  expiresAt        DateTime?
+  sharedById       String
+  message          String?
+  isActive         Boolean   @default(true)
+  createdAt        DateTime  @default(now())
+  document         Document  @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  sharedBy         User      @relation("SharedBy", fields: [sharedById], references: [id], onDelete: Cascade)
+  sharedWithUser   User?     @relation("SharedWith", fields: [sharedWithUserId], references: [id], onDelete: Cascade)
 
   @@index([documentId])
   @@index([sharedWithUserId])
@@ -1131,48 +1067,40 @@ model DocumentShare {
 }
 
 model DocumentComment {
-  id              String     @id @default(cuid())
+  id              String            @id @default(cuid())
   documentId      String
   userId          String
   comment         String
   parentCommentId String?
-
-  document        Document   @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  parentComment   DocumentComment? @relation("CommentReplies", fields: [parentCommentId], references: [id], onDelete: Cascade)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  document        Document          @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  parentComment   DocumentComment?  @relation("CommentReplies", fields: [parentCommentId], references: [id], onDelete: Cascade)
   replies         DocumentComment[] @relation("CommentReplies")
-
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([documentId])
   @@index([userId])
   @@index([parentCommentId])
 }
 
-// =====================================================
-// ASSET RESERVATION MODEL
-// =====================================================
-
 model AssetReservation {
-  id                String    @id @default(cuid())
-  assetId           String
-  userId            String
-  reservationStart  DateTime
-  reservationEnd    DateTime
-  status            String    @default("pending") // pending, approved, rejected, cancelled, completed
-  purpose           String?
-  notes             String?
-  approvedById      String?
-  approvedAt        DateTime?
-  rejectedReason    String?
-
-  asset             Asset     @relation(fields: [assetId], references: [id], onDelete: Cascade)
-  user              User      @relation("UserReservations", fields: [userId], references: [id], onDelete: Cascade)
-  approvedBy        User?     @relation("ReservationApprovals", fields: [approvedById], references: [id], onDelete: SetNull)
-
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  id               String    @id @default(cuid())
+  assetId          String
+  userId           String
+  reservationStart DateTime
+  reservationEnd   DateTime
+  status           String    @default("pending")
+  purpose          String?
+  notes            String?
+  approvedById     String?
+  approvedAt       DateTime?
+  rejectedReason   String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  approvedBy       User?     @relation("ReservationApprovals", fields: [approvedById], references: [id])
+  asset            Asset     @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  user             User      @relation("UserReservations", fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([assetId])
   @@index([userId])
@@ -1181,21 +1109,17 @@ model AssetReservation {
   @@index([reservationEnd])
 }
 
-// =====================================================
-// EMAIL NOTIFICATION LOG
-// =====================================================
-
 model EmailNotificationLog {
-  id          String    @id @default(cuid())
-  recipient   String
-  subject     String
-  body        String    @db.Text
-  type        String    // 'maintenance_due', 'low_stock', 'overdue_return', 'depreciation_milestone'
-  entityType  String?   // 'asset', 'ticket', 'inventory'
-  entityId    String?
-  status      String    @default("sent") // sent, failed, pending
-  error       String?   @db.Text
-  sentAt      DateTime  @default(now())
+  id         String   @id @default(cuid())
+  recipient  String
+  subject    String
+  body       String
+  type       String
+  entityType String?
+  entityId   String?
+  status     String   @default("sent")
+  error      String?
+  sentAt     DateTime @default(now())
 
   @@index([recipient])
   @@index([type])
@@ -1203,24 +1127,19 @@ model EmailNotificationLog {
   @@index([sentAt])
 }
 
-// =====================================================
-// EXPORT/IMPORT HISTORY
-// =====================================================
-
 model ExportImportHistory {
-  id            String    @id @default(cuid())
-  operation     String    // 'export', 'import'
-  entityType    String    // 'assets', 'inventory', 'tickets'
-  format        String    // 'csv', 'xlsx', 'pdf'
-  recordCount   Int       @default(0)
-  fileName      String
-  filePath      String?
-  userId        String
-  status        String    @default("completed") // completed, failed, processing
-  error         String?   @db.Text
-  metadata      Json?
-
-  createdAt     DateTime  @default(now())
+  id          String   @id @default(cuid())
+  operation   String
+  entityType  String
+  format      String
+  recordCount Int      @default(0)
+  fileName    String
+  filePath    String?
+  userId      String
+  status      String   @default("completed")
+  error       String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
 
   @@index([userId])
   @@index([operation])
@@ -1228,37 +1147,28 @@ model ExportImportHistory {
   @@index([createdAt])
 }
 
-// =====================================================
-// API RATE LIMIT TRACKING
-// =====================================================
-
 model ApiRateLimit {
-  id            String    @id @default(cuid())
-  userId        String
-  endpoint      String
-  requestCount  Int       @default(0)
-  windowStart   DateTime  @default(now())
-  windowEnd     DateTime
-  isBlocked     Boolean   @default(false)
+  id           String   @id @default(cuid())
+  userId       String
+  endpoint     String
+  requestCount Int      @default(0)
+  windowStart  DateTime @default(now())
+  windowEnd    DateTime
+  isBlocked    Boolean  @default(false)
 
   @@unique([userId, endpoint, windowStart])
   @@index([userId])
   @@index([windowStart])
 }
 
-// =====================================================
-// KEYBOARD SHORTCUTS CONFIG
-// =====================================================
-
 model KeyboardShortcut {
-  id          String    @id @default(cuid())
-  userId      String
-  action      String    // 'global_search', 'new_asset', 'new_ticket', etc.
-  keys        String    // 'Ctrl+K', 'Ctrl+N', etc.
-  isActive    Boolean   @default(true)
-
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id        String   @id @default(cuid())
+  userId    String
+  action    String
+  keys      String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([userId, action])
   @@index([userId])
