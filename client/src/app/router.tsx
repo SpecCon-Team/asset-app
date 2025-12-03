@@ -20,6 +20,7 @@ const MyTasksPage = lazy(() => import('@/features/tickets/pages/MyTasksPage'));
 const MyClientsPage = lazy(() => import('@/features/users/pages/MyClientsPage'));
 const MyPEGPage = lazy(() => import('@/features/peg/MyPEGPage'));
 const ProvinceDetailsPage = lazy(() => import('@/features/peg/ProvinceDetailsPage'));
+const PEGAdminDashboard = lazy(() => import('@/features/peg/PEGAdminDashboard'));
 const TravelPlanPage = lazy(() => import('@/features/travel/TravelPlanPage'));
 const MyProfilePage = lazy(() => import('@/features/users/pages/MyProfilePage'));
 const GeneralSettingsPage = lazy(() => import('@/features/users/pages/GeneralSettingsPage'));
@@ -101,6 +102,7 @@ export const router = createHashRouter([
       { path: 'my-assets', element: <LazyPage><MyAssetsPage /></LazyPage> },
       { path: 'my-tickets', element: <LazyPage><MyTicketsPage /></LazyPage> },
       { path: 'my-peg', element: <LazyPage><MyPEGPage /></LazyPage> },
+      { path: 'peg-admin-dashboard', element: <LazyPage><PEGAdminDashboard /></LazyPage> },
       { path: 'my-peg/:provinceId', element: <LazyPage><ProvinceDetailsPage /></LazyPage> },
       { path: 'travel-plan', element: <LazyPage><TravelPlanPage /></LazyPage> },
       { path: 'my-profile', element: <LazyPage><MyProfilePage /></LazyPage> },

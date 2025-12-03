@@ -106,6 +106,7 @@ export default function AppLayout() {
       label: 'Main',
       links: [
         { to: '/', label: 'Dashboard', icon: Home, exact: true, roles: ['ADMIN', 'TECHNICIAN', 'USER'] },
+        { to: '/peg-admin-dashboard', label: 'Dashboard', icon: Home, exact: true, roles: ['PEG_ADMIN'] },
       ]
     },
     {
@@ -132,8 +133,8 @@ export default function AppLayout() {
       label: 'My Work',
       links: [
         { to: '/my-tasks', label: 'My Tasks', icon: CheckSquare, roles: ['TECHNICIAN', 'ADMIN'] },
-        { to: '/my-tickets', label: 'My Tickets', icon: ClipboardList, roles: ['USER', 'ADMIN', 'TECHNICIAN'] },
-        { to: '/my-assets', label: 'My Assets', icon: FolderOpen, roles: ['USER', 'ADMIN', 'TECHNICIAN'] },
+        { to: '/my-tickets', label: 'My Tickets', icon: ClipboardList, roles: ['USER', 'ADMIN', 'TECHNICIAN', 'PEG_ADMIN'] },
+        { to: '/my-assets', label: 'My Assets', icon: FolderOpen, roles: ['USER', 'ADMIN', 'TECHNICIAN', 'PEG_ADMIN'] },
         { to: '/my-peg', label: 'My PEG', icon: FileText, roles: ['ADMIN', 'TECHNICIAN'] },
         { to: '/travel-plan', label: 'Travel Plan', icon: Plane, roles: ['ADMIN', 'TECHNICIAN'] },
       ]
@@ -143,7 +144,7 @@ export default function AppLayout() {
       links: [
         { to: '/audit-logs', label: 'Audit Logs', icon: Shield, roles: ['ADMIN'] },
         { to: '/2fa-management', label: '2FA Management', icon: ShieldCheck, roles: ['ADMIN'] },
-        { to: '/privacy', label: 'Privacy & Data', icon: UserCog, roles: ['USER', 'ADMIN', 'TECHNICIAN'] },
+        { to: '/privacy', label: 'Privacy & Data', icon: UserCog, roles: ['USER', 'ADMIN', 'TECHNICIAN', 'PEG_ADMIN'] },
       ]
     },
     {
@@ -164,8 +165,8 @@ export default function AppLayout() {
     {
       label: 'Resources',
       links: [
-        { to: '/help', label: 'Help & Resources', icon: HelpCircle, roles: ['USER', 'ADMIN', 'TECHNICIAN'] },
-        { to: '/download-mobile-app', label: 'Mobile App', icon: Download, roles: ['USER', 'ADMIN', 'TECHNICIAN'] },
+        { to: '/help', label: 'Help & Resources', icon: HelpCircle, roles: ['USER', 'ADMIN', 'TECHNICIAN', 'PEG_ADMIN'] },
+        { to: '/download-mobile-app', label: 'Mobile App', icon: Download, roles: ['USER', 'ADMIN', 'TECHNICIAN', 'PEG_ADMIN'] },
       ]
     }
   ];
