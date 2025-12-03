@@ -90,8 +90,13 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
     const userId = req.user!.id;
     const validatedData = pegClientSchema.parse(req.body);
 
+    // Auto-generate client code (CLT-001, CLT-002, etc.)
+    const clientCount = await prisma.pEGClient.count();
+    const clientCode = `CLT-${String(clientCount + 1).padStart(3, '0')}`;
+
     const client = await prisma.pEGClient.create({
       data: {
+        clientCode,
         name: validatedData.name,
         location: validatedData.location,
         contactPerson: validatedData.contactPerson || null,

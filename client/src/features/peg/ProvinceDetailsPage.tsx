@@ -21,6 +21,7 @@ const provinces = [
 
 interface Client {
   id: string;
+  clientCode?: string; // Auto-generated client serial number (e.g., CLT-001)
   name: string;
   location: string;
   contactPerson: string | null;
@@ -268,7 +269,14 @@ export default function ProvinceDetailsPage() {
                     {client.name.charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900 dark:text-white">{client.name}</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-gray-900 dark:text-white">{client.name}</h3>
+                      {client.clientCode && (
+                        <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded text-xs font-mono">
+                          {client.clientCode}
+                        </span>
+                      )}
+                    </div>
                     <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400 mt-1">
                       <MapPin className="w-4 h-4" />
                       {client.location}
