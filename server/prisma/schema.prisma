@@ -237,6 +237,7 @@ model AuditLog {
 
 model PEGClient {
   id             String   @id @default(cuid())
+  clientCode     String?  @unique
   name           String
   location       String
   contactPerson  String?
@@ -249,6 +250,7 @@ model PEGClient {
   updatedAt      DateTime @updatedAt
 
   @@index([userId])
+  @@index([clientCode])
   @@index([provinceId])
 }
 
