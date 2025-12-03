@@ -135,8 +135,8 @@ export default function AppLayout() {
         { to: '/my-tasks', label: 'My Tasks', icon: CheckSquare, roles: ['TECHNICIAN', 'ADMIN'] },
         { to: '/my-tickets', label: 'My Tickets', icon: ClipboardList, roles: ['USER', 'ADMIN', 'TECHNICIAN', 'PEG_ADMIN'] },
         { to: '/my-assets', label: 'My Assets', icon: FolderOpen, roles: ['USER', 'ADMIN', 'TECHNICIAN', 'PEG_ADMIN'] },
-        { to: '/my-peg', label: 'My PEG', icon: FileText, roles: ['ADMIN', 'TECHNICIAN'] },
-        { to: '/travel-plan', label: 'Travel Plan', icon: Plane, roles: ['ADMIN', 'TECHNICIAN'] },
+        { to: '/my-peg', label: 'My PEG', icon: FileText, roles: ['ADMIN', 'TECHNICIAN', 'PEG_ADMIN'] },
+        { to: '/travel-plan', label: 'Travel Plan', icon: Plane, roles: ['ADMIN', 'TECHNICIAN', 'PEG_ADMIN'] },
       ]
     },
     {
