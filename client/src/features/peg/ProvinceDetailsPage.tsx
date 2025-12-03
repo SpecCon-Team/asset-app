@@ -371,6 +371,23 @@ export default function ProvinceDetailsPage() {
                   />
                 </div>
 
+                {/* Client Serial Number - Auto-generated */}
+                {!editingClient && (
+                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-3">
+                    <label className="block text-sm font-medium text-blue-800 dark:text-blue-200 mb-1">
+                      Client Serial Number
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <span className="px-3 py-1.5 bg-white dark:bg-gray-800 border border-blue-300 dark:border-blue-600 rounded font-mono text-blue-900 dark:text-blue-100 font-semibold">
+                        CLT-{String(clients.length + 1).padStart(3, '0')}
+                      </span>
+                      <span className="text-sm text-blue-600 dark:text-blue-300">
+                        (auto-generated)
+                      </span>
+                    </div>
+                  </div>
+                )}
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Location <span className="text-red-500">*</span>
