@@ -11,11 +11,21 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
+    dedupe: ['react', 'react-dom'], // Ensure single React instance
+  },
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'react-router-dom'],
   },
   build: {
     rollupOptions: {
       output: {
-        manualChunks: undefined, // Disable manual chunking to keep React in main bundle
+        manualChunks: {
+          // Group React and related libraries together
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          // Group other large dependencies
+          'vendor-ui': ['lucide-react', 'react-hot-toast', 'sweetalert2'],
+          'vendor-charts': ['chart.js', 'react-chartjs-2', 'recharts'],
+        },
       },
     },
     chunkSizeWarningLimit: 1000, // Increase limit to 1MB for large apps
