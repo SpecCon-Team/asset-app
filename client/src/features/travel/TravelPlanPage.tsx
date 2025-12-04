@@ -9,6 +9,7 @@ import {
 import { showSuccess, showError, showConfirm, showInfo } from '@/lib/sweetalert';
 import { getApiClient } from '@/features/assets/lib/apiClient';
 import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
+import { getCurrentUserRole } from '@/features/auth/hooks';
 
 interface Trip {
   id: string;
@@ -22,6 +23,7 @@ interface Trip {
   spent: number;
   notes: string | null;
   itinerary: ItineraryItem[] | null;
+  isPegRoute?: boolean;
 }
 
 interface ItineraryItem {
@@ -144,6 +146,8 @@ export default function TravelPlanPage() {
   const [showStats, setShowStats] = useState(true);
   const [loading, setLoading] = useState(true);
   const showLoading = useMinLoadingTime(loading, 2000);
+  const userRole = getCurrentUserRole();
+  const isPegUser = userRole === 'PEG';
 
   const [formData, setFormData] = useState({
     destination: '',
@@ -168,11 +172,18 @@ export default function TravelPlanPage() {
       const api = getApiClient();
       const response = await api.get('/travel');
       // Normalize null values to empty arrays/strings
-      const normalizedTrips = (response.data || []).map((trip: any) => ({
+      let normalizedTrips = (response.data || []).map((trip: any) => ({
         ...trip,
         itinerary: trip.itinerary || [],
         notes: trip.notes || '',
+        isPegRoute: trip.isPegRoute || false,
       }));
+      
+      // For PEG users, only show PEG routes
+      if (isPegUser) {
+        normalizedTrips = normalizedTrips.filter((trip: Trip) => trip.isPegRoute === true);
+      }
+      
       setTrips(normalizedTrips);
     } catch (error) {
       console.error('Error loading trips:', error);
@@ -337,20 +348,32 @@ export default function TravelPlanPage() {
               <TrendingUp className="w-4 h-4" />
               Stats
             </button>
-            <button
-              onClick={() => navigate('/travel-plan/peg-route-creator')}
-              className="px-3 sm:px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xs sm:text-sm font-medium flex items-center gap-2"
-            >
-              <Route className="w-4 h-4" />
-              PEG Route
-            </button>
-            <button
-              onClick={handleAddTrip}
-              className="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs sm:text-sm font-medium flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              Add Trip
-            </button>
+            {isPegUser ? (
+              <button
+                onClick={() => navigate('/travel-plan/peg-route-creator')}
+                className="px-3 sm:px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xs sm:text-sm font-medium flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Create PEG Route
+              </button>
+            ) : (
+              <>
+                <button
+                  onClick={() => navigate('/travel-plan/peg-route-creator')}
+                  className="px-3 sm:px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xs sm:text-sm font-medium flex items-center gap-2"
+                >
+                  <Route className="w-4 h-4" />
+                  PEG Route
+                </button>
+                <button
+                  onClick={handleAddTrip}
+                  className="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs sm:text-sm font-medium flex items-center gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Trip
+                </button>
+              </>
+            )}
           </div>
         </div>
 
@@ -585,29 +608,45 @@ export default function TravelPlanPage() {
 
                   {/* Actions */}
                   <div className="flex gap-2">
-                    <button
-                      onClick={() => {
-                        setSelectedTrip(trip);
-                        setShowDetailsModal(true);
-                      }}
-                      className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-                    >
-                      View Details
-                    </button>
-                    <button
-                      onClick={() => handleEditTrip(trip)}
-                      className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
-                      title="Edit"
-                    >
-                      <Edit2 className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteTrip(trip.id)}
-                      className="p-2 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
-                      title="Delete"
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </button>
+                    {trip.isPegRoute ? (
+                      <button
+                        onClick={() => navigate(`/travel-plan/peg-route-editor/${trip.id}`)}
+                        className="flex-1 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                      >
+                        <Route className="w-4 h-4" />
+                        View Travel Plan
+                      </button>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => {
+                            setSelectedTrip(trip);
+                            setShowDetailsModal(true);
+                          }}
+                          className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                        >
+                          View Details
+                        </button>
+                        {!isPegUser && (
+                          <>
+                            <button
+                              onClick={() => handleEditTrip(trip)}
+                              className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
+                              title="Edit"
+                            >
+                              <Edit2 className="w-5 h-5" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteTrip(trip.id)}
+                              className="p-2 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+                              title="Delete"
+                            >
+                              <Trash2 className="w-5 h-5" />
+                            </button>
+                          </>
+                        )}
+                      </>
+                    )}
                   </div>
                 </div>
               </div>

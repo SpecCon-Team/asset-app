@@ -8,10 +8,20 @@ const prisma = new PrismaClient();
 // Get all trips for current user
 router.get('/', authenticate, async (req: Request, res) => {
   try {
+    const userRole = req.user!.role;
+    
+    // Build where clause
+    const whereClause: any = {
+      userId: req.user!.id,
+    };
+    
+    // PEG users can only see PEG routes
+    if (userRole === 'PEG') {
+      whereClause.isPegRoute = true;
+    }
+    
     const trips = await prisma.trip.findMany({
-      where: {
-        userId: req.user!.id,
-      },
+      where: whereClause,
       orderBy: {
         startDate: 'desc',
       },
