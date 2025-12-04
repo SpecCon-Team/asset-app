@@ -4,7 +4,9 @@ import path from 'path';
 
 export default defineConfig({
   base: '/asset-app/',
-  plugins: [react()],
+  plugins: [react({
+    jsxRuntime: 'automatic',
+  })],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -68,6 +70,13 @@ export default defineConfig({
           if (id.includes('node_modules')) {
             return 'vendor';
           }
+        },
+        // Ensure react-vendor chunk loads first
+        chunkFileNames: (chunkInfo) => {
+          if (chunkInfo.name === 'react-vendor') {
+            return 'assets/react-vendor-[hash].js';
+          }
+          return 'assets/[name]-[hash].js';
         },
       },
     },
