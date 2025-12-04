@@ -446,4 +446,42 @@ router.post('/bulk', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (re
   }
 });
 
+// GET /api/assets/available - Get available assets for assignment
+router.get('/available', authenticate, async (req: Request, res: Response) => {
+  try {
+    const assetType = req.query.type as string | undefined;
+    
+    const whereClause: any = {
+      status: 'available',
+      pegClientId: null, // Not assigned to any PEG client
+    };
+
+    if (assetType) {
+      whereClause.asset_type = assetType;
+    }
+
+    const assets = await prisma.asset.findMany({
+      where: whereClause,
+      orderBy: {
+        name: 'asc',
+      },
+      select: {
+        id: true,
+        asset_code: true,
+        name: true,
+        serial_number: true,
+        asset_type: true,
+        condition: true,
+        status: true,
+        description: true,
+      },
+    });
+
+    res.json(assets);
+  } catch (error) {
+    console.error('Error fetching available assets:', error);
+    res.status(500).json({ error: 'Failed to fetch available assets' });
+  }
+});
+
 export default router;

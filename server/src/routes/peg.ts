@@ -297,4 +297,158 @@ router.delete('/', authenticate, async (req: Request, res: Response) => {
   }
 });
 
+// Get all assets assigned to a PEG client
+router.get('/:clientId/assets', authenticate, async (req: Request, res: Response) => {
+  try {
+    const { clientId } = req.params;
+
+    // Verify client exists
+    const client = await prisma.pEGClient.findUnique({
+      where: { id: clientId },
+    });
+
+    if (!client) {
+      return res.status(404).json({ error: 'Client not found' });
+    }
+
+    // Get all assets assigned to this client
+    const assets = await prisma.asset.findMany({
+      where: {
+        pegClientId: clientId,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    res.json(assets);
+  } catch (error) {
+    console.error('Error fetching client assets:', error);
+    res.status(500).json({ error: 'Failed to fetch client assets' });
+  }
+});
+
+// Assign asset to PEG client
+router.post('/:clientId/assets', authenticate, async (req: Request, res: Response) => {
+  try {
+    const { clientId } = req.params;
+    const { assetId } = req.body;
+
+    if (!assetId) {
+      return res.status(400).json({ error: 'Asset ID is required' });
+    }
+
+    // Verify client exists
+    const client = await prisma.pEGClient.findUnique({
+      where: { id: clientId },
+    });
+
+    if (!client) {
+      return res.status(404).json({ error: 'Client not found' });
+    }
+
+    // Verify asset exists and is available
+    const asset = await prisma.asset.findUnique({
+      where: { id: assetId },
+    });
+
+    if (!asset) {
+      return res.status(404).json({ error: 'Asset not found' });
+    }
+
+    // Check if asset is already assigned to another client
+    if (asset.pegClientId && asset.pegClientId !== clientId) {
+      return res.status(400).json({ error: 'Asset is already assigned to another client' });
+    }
+
+    // Check if asset status is available
+    if (asset.status !== 'available') {
+      return res.status(400).json({ error: 'Asset is not available for assignment' });
+    }
+
+    // Assign asset to client
+    const updatedAsset = await prisma.asset.update({
+      where: { id: assetId },
+      data: {
+        pegClientId: clientId,
+        status: 'assigned',
+      },
+    });
+
+    await logAudit(
+      req,
+      'UPDATE',
+      'Asset',
+      assetId,
+      { 
+        action: 'ASSIGN_TO_PEG_CLIENT',
+        clientId,
+        old: { pegClientId: asset.pegClientId, status: asset.status },
+        new: { pegClientId: updatedAsset.pegClientId, status: updatedAsset.status }
+      }
+    );
+
+    res.json(updatedAsset);
+  } catch (error) {
+    console.error('Error assigning asset to client:', error);
+    res.status(500).json({ error: 'Failed to assign asset to client' });
+  }
+});
+
+// Unassign asset from PEG client
+router.delete('/:clientId/assets/:assetId', authenticate, async (req: Request, res: Response) => {
+  try {
+    const { clientId, assetId } = req.params;
+
+    // Verify client exists
+    const client = await prisma.pEGClient.findUnique({
+      where: { id: clientId },
+    });
+
+    if (!client) {
+      return res.status(404).json({ error: 'Client not found' });
+    }
+
+    // Verify asset exists and is assigned to this client
+    const asset = await prisma.asset.findUnique({
+      where: { id: assetId },
+    });
+
+    if (!asset) {
+      return res.status(404).json({ error: 'Asset not found' });
+    }
+
+    if (asset.pegClientId !== clientId) {
+      return res.status(400).json({ error: 'Asset is not assigned to this client' });
+    }
+
+    // Unassign asset from client
+    const updatedAsset = await prisma.asset.update({
+      where: { id: assetId },
+      data: {
+        pegClientId: null,
+        status: 'available',
+      },
+    });
+
+    await logAudit(
+      req,
+      'UPDATE',
+      'Asset',
+      assetId,
+      { 
+        action: 'UNASSIGN_FROM_PEG_CLIENT',
+        clientId,
+        old: { pegClientId: asset.pegClientId, status: asset.status },
+        new: { pegClientId: updatedAsset.pegClientId, status: updatedAsset.status }
+      }
+    );
+
+    res.json({ message: 'Asset unassigned successfully', asset: updatedAsset });
+  } catch (error) {
+    console.error('Error unassigning asset from client:', error);
+    res.status(500).json({ error: 'Failed to unassign asset from client' });
+  }
+});
+
 export default router;

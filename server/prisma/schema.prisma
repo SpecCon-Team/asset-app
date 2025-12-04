@@ -129,6 +129,8 @@ model Asset {
   owner           User?          @relation(fields: [ownerId], references: [id], onDelete: SetNull)
   ownerId         String?
   currentHolder   User?          @relation("AssetCurrentHolder", fields: [currentHolderId], references: [id], onDelete: SetNull)
+  pegClient       PEGClient?     @relation(fields: [pegClientId], references: [id], onDelete: SetNull)
+  pegClientId     String?
   tickets         Ticket[]
   history         AssetHistory[]
   maintenance     MaintenanceSchedule[]
@@ -151,6 +153,7 @@ model Asset {
   @@index([purchaseDate])
   @@index([depreciationStatus])
   @@index([isDepreciable])
+  @@index([pegClientId])
 }
 
 model Ticket {
@@ -247,6 +250,7 @@ model PEGClient {
   userId         String   // Owner of this client entry
   user           User     @relation("PEGClients", fields: [userId], references: [id], onDelete: Cascade)
   routeStops     TripRouteStop[] // Trips that visit this client
+  assets         Asset[]  // Assets assigned to this client
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 

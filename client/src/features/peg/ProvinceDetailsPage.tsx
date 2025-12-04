@@ -5,6 +5,8 @@ import { showSuccess, showError, showConfirm } from '@/lib/sweetalert';
 import { getApiClient } from '@/features/assets/lib/apiClient';
 import { formatDate } from '@/lib/dateFormatter';
 import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
+import { useClientAssets } from './hooks/useClientAssets';
+import ClientAssetsSection from './components/ClientAssetsSection';
 
 // South African Provinces
 const provinces = [
@@ -31,6 +33,30 @@ interface Client {
   userId?: string;
   createdAt?: string;
   updatedAt?: string;
+}
+
+// Wrapper component for client assets section
+function ClientAssetsWrapper({ clientId, clientName }: { clientId: string; clientName: string }) {
+  const { assets, loading, assignAssets, unassignAsset } = useClientAssets(clientId);
+
+  const handleAssign = async (assetIds: string[]) => {
+    return await assignAssets(assetIds);
+  };
+
+  const handleUnassign = async (assetId: string) => {
+    return await unassignAsset(assetId);
+  };
+
+  return (
+    <ClientAssetsSection
+      clientId={clientId}
+      clientName={clientName}
+      assets={assets}
+      loading={loading}
+      onAssign={handleAssign}
+      onUnassign={handleUnassign}
+    />
+  );
 }
 
 export default function ProvinceDetailsPage() {
@@ -653,6 +679,11 @@ export default function ProvinceDetailsPage() {
                     )}
                   </div>
                 </div>
+
+                {/* Assigned Assets */}
+                {viewingClient && (
+                  <ClientAssetsWrapper clientId={viewingClient.id} clientName={viewingClient.name} />
+                )}
               </div>
 
               {/* Action Buttons */}
