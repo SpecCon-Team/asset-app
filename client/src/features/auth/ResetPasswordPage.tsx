@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { Eye, EyeOff, CheckCircle, Lock } from 'lucide-react';
 import { getApiClient } from '@/features/assets/lib/apiClient';
 import { ButtonLoader } from '@/components/LoadingSpinner';
+import AnimatedBackground from '@/components/AnimatedBackground';
 
 export default function ResetPasswordPage() {
   const { token } = useParams<{ token: string }>();
@@ -50,9 +51,10 @@ export default function ResetPasswordPage() {
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
-        <div className="max-w-md w-full">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 text-center">
+      <div className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden">
+        <AnimatedBackground />
+        <div className="max-w-md w-full relative z-10">
+          <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-lg shadow-xl p-8 text-center border border-white/20">
             <div className="inline-flex w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full items-center justify-center mb-6">
               <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
             </div>
@@ -78,8 +80,9 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
-      <div className="max-w-md w-full">
+    <div className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden">
+      <AnimatedBackground />
+      <div className="max-w-md w-full relative z-10">
         {/* Logo/Brand */}
         <div className="text-center mb-8">
           <div className="inline-flex w-16 h-16 rounded-full items-center justify-center mb-4" style={{ backgroundColor: 'var(--color-primary)' }}>
@@ -92,7 +95,7 @@ export default function ResetPasswordPage() {
         </div>
 
         {/* Reset Password Form */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
+        <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-lg shadow-xl p-8 border border-white/20">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">

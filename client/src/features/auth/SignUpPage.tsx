@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { Eye, EyeOff, Info } from 'lucide-react';
 import { ButtonLoader } from '@/components/LoadingSpinner';
 import { getApiBaseUrl } from '@/lib/apiConfig';
+import AnimatedBackground from '@/components/AnimatedBackground';
 
 export default function SignUpPage() {
   const navigate = useNavigate();
@@ -124,8 +125,9 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="h-screen bg-gray-50 dark:bg-gray-900 overflow-y-auto">
-      <div className="min-h-full flex items-center justify-center p-4 py-12">
+    <div className="h-screen relative overflow-y-auto">
+      <AnimatedBackground />
+      <div className="min-h-full flex items-center justify-center p-4 py-12 relative z-10">
         <div className="max-w-md w-full">
         {/* Logo/Brand */}
         <div className="text-center mb-8">
@@ -140,7 +142,7 @@ export default function SignUpPage() {
         </div>
 
         {/* Sign Up Form */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
+        <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-lg shadow-xl p-8 border border-white/20">
           {error && (
             <div className={`mb-4 p-4 rounded-lg text-sm ${
               emailExists
