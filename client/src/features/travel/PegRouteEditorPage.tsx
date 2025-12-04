@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
-import { Calendar, Clock, MapPin, Save, ArrowLeft, Plus, Trash2, GripVertical } from 'lucide-react';
+import { Calendar, Clock, MapPin, Save, ArrowLeft, Plus, Trash2, GripVertical, Check, CheckCircle2 } from 'lucide-react';
 import { showSuccess, showError } from '@/lib/sweetalert';
 import { getApiClient } from '@/features/assets/lib/apiClient';
 import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
@@ -38,6 +38,7 @@ interface RouteStop {
   duration: number; // minutes
   notes: string;
   order: number;
+  status?: string; // 'planned', 'visited', 'cancelled'
 }
 
 export default function PegRouteEditorPage() {
@@ -89,6 +90,7 @@ export default function PegRouteEditorPage() {
         duration: stop.duration || 60,
         notes: stop.notes || '',
         order: stop.order,
+        status: stop.status || 'planned',
       }));
 
       setRouteStops(routeStopsData);
@@ -131,6 +133,7 @@ export default function PegRouteEditorPage() {
           duration: 60, // 1 hour default
           notes: '',
           order: index + 1,
+          status: 'planned',
         };
       });
 
@@ -147,6 +150,30 @@ export default function PegRouteEditorPage() {
     setRouteStops(prev => prev.map((stop, i) => 
       i === index ? { ...stop, [field]: value } : stop
     ));
+  };
+
+  const toggleCompletion = async (index: number) => {
+    const stop = routeStops[index];
+    const newStatus = stop.status === 'visited' ? 'planned' : 'visited';
+    
+    // Update local state immediately for better UX
+    updateStop(index, 'status', newStatus);
+    
+    // Auto-save if we have a tripId (existing route)
+    if (tripId && stop.id) {
+      try {
+        const api = getApiClient();
+        await api.put(`/travel/route-stops/${stop.id}`, {
+          status: newStatus,
+        });
+        showSuccess('Updated!', `Delivery marked as ${newStatus === 'visited' ? 'completed' : 'pending'}`, 1500);
+      } catch (error: any) {
+        // Revert on error
+        updateStop(index, 'status', stop.status);
+        console.error('Error updating status:', error);
+        showError('Error', 'Failed to update delivery status');
+      }
+    }
   };
 
   const removeStop = (index: number) => {
@@ -200,16 +227,17 @@ export default function PegRouteEditorPage() {
       if (tripId) {
         // Update existing route stops
         for (const stop of routeStops) {
-          if (stop.id) {
-            // Update existing route stop
-            await api.put(`/travel/route-stops/${stop.id}`, {
-              visitDate: new Date(`${stop.visitDate}T${stop.visitTime}`).toISOString(),
-              visitTime: stop.visitTime,
-              duration: stop.duration,
-              notes: stop.notes,
-              order: stop.order,
-            });
-          }
+        if (stop.id) {
+          // Update existing route stop
+          await api.put(`/travel/route-stops/${stop.id}`, {
+            visitDate: new Date(`${stop.visitDate}T${stop.visitTime}`).toISOString(),
+            visitTime: stop.visitTime,
+            duration: stop.duration,
+            notes: stop.notes,
+            order: stop.order,
+            status: stop.status || 'planned',
+          });
+        }
         }
         
         // Update trip dates
@@ -239,6 +267,7 @@ export default function PegRouteEditorPage() {
             duration: stop.duration,
             notes: stop.notes,
             order: stop.order,
+            status: stop.status || 'planned',
           })),
         };
 
@@ -279,6 +308,72 @@ export default function PegRouteEditorPage() {
           Set dates and times for each client visit
         </p>
       </div>
+
+      {/* Completion Statistics */}
+      {routeStops.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Total Stops</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                  {routeStops.length}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                <MapPin className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Completed</p>
+                <p className="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">
+                  {routeStops.filter(s => s.status === 'visited').length}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+                <CheckCircle2 className="w-6 h-6 text-green-600 dark:text-green-400" />
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Pending</p>
+                <p className="text-2xl font-bold text-orange-600 dark:text-orange-400 mt-1">
+                  {routeStops.filter(s => s.status !== 'visited').length}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center">
+                <Clock className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Progress</p>
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 mb-1">
+                  <div
+                    className="bg-green-600 h-3 rounded-full transition-all duration-300"
+                    style={{
+                      width: `${(routeStops.filter(s => s.status === 'visited').length / routeStops.length) * 100}%`,
+                    }}
+                  />
+                </div>
+                <p className="text-xs text-gray-600 dark:text-gray-400">
+                  {Math.round((routeStops.filter(s => s.status === 'visited').length / routeStops.length) * 100)}% Complete
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Route Summary */}
       <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
@@ -329,7 +424,10 @@ export default function PegRouteEditorPage() {
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Notes
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-24">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-32">
                   Actions
                 </th>
               </tr>
@@ -337,8 +435,14 @@ export default function PegRouteEditorPage() {
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
               {routeStops.map((stop, index) => {
                 const province = provinces.find(p => p.id === stop.client.provinceId);
+                const isCompleted = stop.status === 'visited';
                 return (
-                  <tr key={stop.clientId} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                  <tr 
+                    key={stop.clientId} 
+                    className={`hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors ${
+                      isCompleted ? 'bg-green-50/50 dark:bg-green-900/10' : ''
+                    }`}
+                  >
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <GripVertical className="w-4 h-4 text-gray-400 cursor-move" />
@@ -413,7 +517,40 @@ export default function PegRouteEditorPage() {
                       />
                     </td>
                     <td className="px-4 py-3">
+                      <span
+                        className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full ${
+                          isCompleted
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                            : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                        }`}
+                      >
+                        {isCompleted ? (
+                          <>
+                            <CheckCircle2 className="w-3 h-3" />
+                            Completed
+                          </>
+                        ) : (
+                          'Pending'
+                        )}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => toggleCompletion(index)}
+                          className={`p-2 rounded-lg transition-all ${
+                            isCompleted
+                              ? 'bg-green-100 text-green-600 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50'
+                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600'
+                          }`}
+                          title={isCompleted ? 'Mark as pending' : 'Mark as completed'}
+                        >
+                          {isCompleted ? (
+                            <CheckCircle2 className="w-5 h-5" />
+                          ) : (
+                            <Check className="w-5 h-5" />
+                          )}
+                        </button>
                         <button
                           onClick={() => moveStop(index, 'up')}
                           disabled={index === 0}
