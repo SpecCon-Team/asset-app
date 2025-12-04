@@ -115,6 +115,45 @@ const createSchema = z.object({
 
 const updateSchema = createSchema.partial();
 
+// GET /api/assets/available - Get available assets for assignment
+// NOTE: This must be defined BEFORE /:id route to avoid route conflicts
+router.get('/available', authenticate, async (req: Request, res: Response) => {
+  try {
+    const assetType = req.query.type as string | undefined;
+    
+    const whereClause: any = {
+      status: 'available',
+      pegClientId: null, // Not assigned to any PEG client
+    };
+
+    if (assetType) {
+      whereClause.asset_type = assetType;
+    }
+
+    const assets = await prisma.asset.findMany({
+      where: whereClause,
+      orderBy: {
+        name: 'asc',
+      },
+      select: {
+        id: true,
+        asset_code: true,
+        name: true,
+        serial_number: true,
+        asset_type: true,
+        condition: true,
+        status: true,
+        description: true,
+      },
+    });
+
+    res.json(assets);
+  } catch (error) {
+    console.error('Error fetching available assets:', error);
+    res.status(500).json({ error: 'Failed to fetch available assets' });
+  }
+});
+
 // GET /api/assets - List all assets
 router.get('/', authenticate, cacheMiddleware(30000), applyFieldVisibility('asset'), async (req: Request, res: Response) => {
   try {
@@ -443,44 +482,6 @@ router.post('/bulk', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (re
     }
 
     res.status(500).json({ message: 'Failed to bulk create assets', error: String(error) });
-  }
-});
-
-// GET /api/assets/available - Get available assets for assignment
-router.get('/available', authenticate, async (req: Request, res: Response) => {
-  try {
-    const assetType = req.query.type as string | undefined;
-    
-    const whereClause: any = {
-      status: 'available',
-      pegClientId: null, // Not assigned to any PEG client
-    };
-
-    if (assetType) {
-      whereClause.asset_type = assetType;
-    }
-
-    const assets = await prisma.asset.findMany({
-      where: whereClause,
-      orderBy: {
-        name: 'asc',
-      },
-      select: {
-        id: true,
-        asset_code: true,
-        name: true,
-        serial_number: true,
-        asset_type: true,
-        condition: true,
-        status: true,
-        description: true,
-      },
-    });
-
-    res.json(assets);
-  } catch (error) {
-    console.error('Error fetching available assets:', error);
-    res.status(500).json({ error: 'Failed to fetch available assets' });
   }
 });
 
