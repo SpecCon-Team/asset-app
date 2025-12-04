@@ -38,7 +38,7 @@ router.get('/', authenticate, async (req: Request, res: Response) => {
           adminTechUsers = await prisma.user.findMany({
             where: {
               role: {
-                in: [Role.ADMIN, Role.TECHNICIAN, Role.PEG]
+                in: ['ADMIN', 'TECHNICIAN', 'PEG']
               }
             },
             select: { id: true }
@@ -50,7 +50,7 @@ router.get('/', authenticate, async (req: Request, res: Response) => {
             adminTechUsers = await prisma.user.findMany({
               where: {
                 role: {
-                  in: [Role.ADMIN, Role.TECHNICIAN]
+                  in: ['ADMIN', 'TECHNICIAN']
                 }
               },
               select: { id: true }

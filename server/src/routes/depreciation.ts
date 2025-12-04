@@ -255,7 +255,7 @@ router.get('/:id', authenticate, async (req: Request, res: Response) => {
 });
 
 // POST /api/depreciation - Create depreciation record
-router.post('/', authenticate, requireRole(['ADMIN']), async (req: Request<{}, {}, CreateDepreciationRecordBody>, res: Response) => {
+router.post('/', authenticate, requireRole('ADMIN'), async (req: Request<{}, {}, CreateDepreciationRecordBody>, res: Response) => {
   try {
     const {
       assetId,
@@ -360,7 +360,7 @@ router.post('/', authenticate, requireRole(['ADMIN']), async (req: Request<{}, {
 });
 
 // PUT /api/depreciation/:id - Update depreciation record
-router.put('/:id', authenticate, requireRole(['ADMIN']), async (req: Request<{ id: string }, {}, UpdateDepreciationRecordBody>, res: Response) => {
+router.put('/:id', authenticate, requireRole('ADMIN'), async (req: Request<{ id: string }, {}, UpdateDepreciationRecordBody>, res: Response) => {
   try {
     const { id } = req.params;
     const { salvageValue, notes, isActive } = req.body;
@@ -395,7 +395,7 @@ router.put('/:id', authenticate, requireRole(['ADMIN']), async (req: Request<{ i
 });
 
 // POST /api/depreciation/:id/post - Post depreciation for period
-router.post('/:id/post', authenticate, requireRole(['ADMIN']), async (req: Request<{ id: string }, {}, PostDepreciationPeriodBody>, res: Response) => {
+router.post('/:id/post', authenticate, requireRole('ADMIN'), async (req: Request<{ id: string }, {}, PostDepreciationPeriodBody>, res: Response) => {
   try {
     const { id } = req.params;
     const { periodId } = req.body;
@@ -464,7 +464,7 @@ router.post('/:id/post', authenticate, requireRole(['ADMIN']), async (req: Reque
 // =====================================================
 
 // POST /api/depreciation/valuations - Create valuation
-router.post('/valuations', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: Request<{}, {}, CreateAssetValuationBody>, res: Response) => {
+router.post('/valuations', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: Request<{}, {}, CreateAssetValuationBody>, res: Response) => {
   try {
     const {
       assetId,
@@ -551,7 +551,7 @@ router.get('/valuations/:assetId', authenticate, async (req: Request, res: Respo
 // =====================================================
 
 // POST /api/depreciation/disposals - Create disposal record
-router.post('/disposals', authenticate, requireRole(['ADMIN']), async (req: Request<{}, {}, CreateAssetDisposalBody>, res: Response) => {
+router.post('/disposals', authenticate, requireRole('ADMIN'), async (req: Request<{}, {}, CreateAssetDisposalBody>, res: Response) => {
   try {
     const {
       assetId,

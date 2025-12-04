@@ -367,7 +367,7 @@ router.get('/tickets', authenticate, cacheMiddleware(60000), async (req: Request
 });
 
 // GET /api/analytics/users - User activity analytics
-router.get('/users', authenticate, requireRole(['ADMIN']), async (req: Request, res) => {
+router.get('/users', authenticate, requireRole('ADMIN'), async (req: Request, res) => {
   try {
     const [
       byRole,
@@ -537,7 +537,7 @@ router.get('/inventory', authenticate, async (req: Request, res) => {
 });
 
 // GET /api/analytics/export - Export analytics data
-router.get('/export', authenticate, requireRole(['ADMIN']), async (req: Request, res) => {
+router.get('/export', authenticate, requireRole('ADMIN'), async (req: Request, res) => {
   try {
     const { type, format = 'json', startDate, endDate } = req.query;
 

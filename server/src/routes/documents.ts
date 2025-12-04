@@ -721,7 +721,7 @@ router.get('/categories/all', authenticate, async (req: Request, res: Response) 
 });
 
 // POST /api/documents/categories - Create category
-router.post('/categories', authenticate, requireRole(['ADMIN']), async (req: Request<{}, {}, DocumentCategoryBody>, res: Response) => {
+router.post('/categories', authenticate, requireRole('ADMIN'), async (req: Request<{}, {}, DocumentCategoryBody>, res: Response) => {
   try {
     const { name, description, icon, color, parentCategoryId, sortOrder } = req.body;
 

@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
-import { prisma, Prisma } from '../lib/prisma';
+import { prisma } from '../lib/prisma';
+import { Prisma } from '@prisma/client';
 import { authenticate, requireRole } from '../middleware/auth';
 import { logAudit } from '../lib/auditLog';
 import { createNotificationIfNotExists } from '../lib/notificationHelper';

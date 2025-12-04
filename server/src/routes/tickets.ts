@@ -15,14 +15,25 @@ import { autoAssignmentEngine } from '../lib/autoAssignment';
 import { slaEngine } from '../lib/slaEngine';
 import { cacheMiddleware, invalidateCache } from '../middleware/cache';
 
-// Type for ticket with all relations
-type TicketWithAllRelations = Awaited<ReturnType<typeof prisma.ticket.findUnique<{
-  include: {
-    createdBy: { select: { id: true, email: true, name: true, role: true } };
-    assignedTo: { select: { id: true, email: true, name: true } };
-    asset: true;
-  };
-}>>>;
+// Type for ticket with all relations - matches what we actually fetch
+type TicketWithAllRelations = {
+  id: string;
+  number: string;
+  title: string;
+  description: string;
+  priority: string;
+  status: string;
+  resolution: string;
+  createdById: string;
+  assignedToId: string | null;
+  assetId: string | null;
+  dueDate: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  createdBy: { id: string; email: string; name: string | null; role: string } | null;
+  assignedTo: { id: string; email: string; name: string | null } | null;
+  asset: any | null;
+};
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });

@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { authenticate, requireRole } from '../middleware/auth';
 import { logAudit } from '../lib/auditLog';
@@ -437,7 +437,7 @@ router.get('/:id', authenticate, async (req: Request, res: Response) => {
 // POST /api/checkout - Create new checkout
 // =====================================================
 
-router.post('/', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: Request<{}, {}, CreateCheckoutBody>, res: Response) => {
+router.post('/', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: Request<{}, {}, CreateCheckoutBody>, res: Response) => {
   try {
     const {
       assetId,
@@ -569,7 +569,7 @@ router.post('/', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req:
 // POST /api/checkout/:id/checkin - Check in asset
 // =====================================================
 
-router.post('/:id/checkin', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: Request<{ id: string }, {}, CheckinAssetBody>, res: Response) => {
+router.post('/:id/checkin', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: Request<{ id: string }, {}, CheckinAssetBody>, res: Response) => {
   try {
     const { id } = req.params;
     const {
@@ -663,7 +663,7 @@ router.post('/:id/checkin', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), 
 // PUT /api/checkout/:id - Update checkout
 // =====================================================
 
-router.put('/:id', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: Request<{ id: string }, {}, UpdateCheckoutBody>, res: Response) => {
+router.put('/:id', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: Request<{ id: string }, {}, UpdateCheckoutBody>, res: Response) => {
   try {
     const { id } = req.params;
     const {
@@ -747,7 +747,7 @@ router.put('/:id', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (re
 // DELETE /api/checkout/:id - Delete checkout
 // =====================================================
 
-router.delete('/:id', authenticate, requireRole(['ADMIN']), async (req: Request, res: Response) => {
+router.delete('/:id', authenticate, requireRole('ADMIN'), async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
@@ -817,7 +817,7 @@ router.get('/qr/asset/:assetId', authenticate, async (req: Request, res: Respons
 });
 
 // POST /api/checkout/qr/generate - Generate QR code for asset
-router.post('/qr/generate', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: Request<{}, {}, GenerateQRCodeBody>, res: Response) => {
+router.post('/qr/generate', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: Request<{}, {}, GenerateQRCodeBody>, res: Response) => {
   try {
     const { assetId } = req.body;
 
