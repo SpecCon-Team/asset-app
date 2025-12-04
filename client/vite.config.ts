@@ -16,21 +16,17 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: (id) => {
-          // React and React DOM - must be in the same chunk and loaded first
-          // Include all React-related packages to ensure they load together
+          // Don't split React - keep it in the main bundle to ensure it's always available
+          // This prevents "React is undefined" errors in lazy-loaded components
           if (
             id.includes('node_modules/react/') || 
             id.includes('node_modules/react-dom/') || 
-            id.includes('node_modules/react/jsx-runtime') ||
-            id.includes('node_modules/react/index') ||
-            id.includes('node_modules/react/cjs/') ||
-            id.includes('node_modules/react-dom/index') ||
-            id.includes('node_modules/react-dom/cjs/')
+            id.includes('node_modules/react/jsx-runtime')
           ) {
-            return 'react-vendor';
+            return undefined; // Keep React in main bundle
           }
           
-          // All React-related libraries must be in react-vendor to ensure React is available
+          // React-related libraries can be in a separate chunk
           if (
             id.includes('node_modules/react-router') ||
             id.includes('node_modules/react-chartjs-2') ||
@@ -38,7 +34,7 @@ export default defineConfig({
             id.includes('node_modules/qrcode.react') ||
             id.includes('node_modules/react-hot-toast')
           ) {
-            return 'react-vendor';
+            return 'react-libs';
           }
           
           // Chart libraries (non-React)
@@ -70,13 +66,6 @@ export default defineConfig({
           if (id.includes('node_modules')) {
             return 'vendor';
           }
-        },
-        // Ensure react-vendor chunk loads first
-        chunkFileNames: (chunkInfo) => {
-          if (chunkInfo.name === 'react-vendor') {
-            return 'assets/react-vendor-[hash].js';
-          }
-          return 'assets/[name]-[hash].js';
         },
       },
     },
