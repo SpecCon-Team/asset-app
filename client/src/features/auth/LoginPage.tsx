@@ -276,7 +276,7 @@ export default function LoginPage() {
                 >
                   Forgot password?
                 </Link>
-                <p className="text-sm text-white/90">
+                <p className="text-sm text-gray-700 dark:text-gray-300">
                   Don't have an account?{' '}
                   <Link
                     to="/signup"
