@@ -35,11 +35,8 @@ export default function PEGAdminDashboard() {
     try {
       setLoading(true);
       const response = await api.get('/peg-admin/dashboard');
-      console.log('Dashboard stats response:', response.data);
       setStats(response.data);
     } catch (error: any) {
-      console.error('Error loading dashboard stats:', error);
-      console.error('Error details:', error?.response?.data || error?.message);
       // Set empty stats on error so UI doesn't break
       setStats({
         totalClients: 0,
