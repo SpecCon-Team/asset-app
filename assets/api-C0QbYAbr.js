@@ -1,0 +1,1 @@
+import{h as r,g as a}from"./index-B1z0njpd.js";const s=r.create({baseURL:a(),withCredentials:!0});s.interceptors.request.use(e=>{const t=localStorage.getItem("token");return t&&(e.headers.Authorization=`Bearer ${t}`),e});export{s as a};
