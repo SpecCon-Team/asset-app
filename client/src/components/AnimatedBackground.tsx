@@ -1,18 +1,23 @@
 import React, { useEffect, useRef } from 'react';
 
-interface Particle {
+interface Bubble {
   x: number;
   y: number;
+  radius: number;
   vx: number;
   vy: number;
-  radius: number;
   opacity: number;
+  initialX: number;
+  initialY: number;
+  angle: number;
+  speed: number;
 }
 
 const AnimatedBackground: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const particlesRef = useRef<Particle[]>([]);
+  const bubblesRef = useRef<Bubble[]>([]);
   const animationFrameRef = useRef<number>();
+  const timeRef = useRef<number>(0);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -29,92 +34,112 @@ const AnimatedBackground: React.FC = () => {
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
-    // Create particles
-    const particleCount = Math.min(80, Math.floor((canvas.width * canvas.height) / 15000));
-    const particles: Particle[] = [];
+    // Create large bubbles
+    const bubbleCount = Math.min(12, Math.floor((canvas.width * canvas.height) / 100000));
+    const bubbles: Bubble[] = [];
 
-    for (let i = 0; i < particleCount; i++) {
-      particles.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        vx: (Math.random() - 0.5) * 0.5,
-        vy: (Math.random() - 0.5) * 0.5,
-        radius: Math.random() * 3 + 1,
-        opacity: Math.random() * 0.5 + 0.2,
+    for (let i = 0; i < bubbleCount; i++) {
+      const radius = Math.random() * 80 + 40; // Large bubbles: 40-120px
+      const initialX = Math.random() * canvas.width;
+      const initialY = Math.random() * canvas.height;
+      
+      bubbles.push({
+        x: initialX,
+        y: initialY,
+        radius: radius,
+        vx: (Math.random() - 0.5) * 0.3, // Slow horizontal movement
+        vy: (Math.random() - 0.5) * 0.3, // Slow vertical movement
+        opacity: Math.random() * 0.15 + 0.05, // Subtle opacity
+        initialX: initialX,
+        initialY: initialY,
+        angle: Math.random() * Math.PI * 2, // Random starting angle
+        speed: Math.random() * 0.5 + 0.3, // Slow speed
       });
     }
 
-    particlesRef.current = particles;
+    bubblesRef.current = bubbles;
 
     // Animation loop
-    const animate = () => {
+    const animate = (timestamp: number) => {
+      timeRef.current = timestamp * 0.001; // Convert to seconds
+      
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      particles.forEach((particle, index) => {
-        // Update position with antigravity effect (floating upward)
-        particle.vy -= 0.01; // Upward force
-        particle.vx += (Math.random() - 0.5) * 0.02; // Slight horizontal drift
-
-        // Apply velocity
-        particle.x += particle.vx;
-        particle.y += particle.vy;
-
-        // Boundary wrapping with slight variation
-        if (particle.x < 0) {
-          particle.x = canvas.width;
-          particle.y = Math.random() * canvas.height;
-        } else if (particle.x > canvas.width) {
-          particle.x = 0;
-          particle.y = Math.random() * canvas.height;
+      bubbles.forEach((bubble) => {
+        // Slow circular/loop movement pattern
+        bubble.angle += bubble.speed * 0.01;
+        
+        // Create a gentle floating loop motion
+        const loopRadius = 50 + bubble.radius * 0.3;
+        bubble.x = bubble.initialX + Math.cos(bubble.angle) * loopRadius;
+        bubble.y = bubble.initialY + Math.sin(bubble.angle) * loopRadius + Math.sin(timeRef.current + bubble.angle) * 20;
+        
+        // Wrap around edges smoothly
+        if (bubble.x < -bubble.radius) {
+          bubble.x = canvas.width + bubble.radius;
+          bubble.initialX = bubble.x;
+        } else if (bubble.x > canvas.width + bubble.radius) {
+          bubble.x = -bubble.radius;
+          bubble.initialX = bubble.x;
+        }
+        
+        if (bubble.y < -bubble.radius) {
+          bubble.y = canvas.height + bubble.radius;
+          bubble.initialY = bubble.y;
+        } else if (bubble.y > canvas.height + bubble.radius) {
+          bubble.y = -bubble.radius;
+          bubble.initialY = bubble.y;
         }
 
-        if (particle.y < 0) {
-          particle.y = canvas.height;
-          particle.x = Math.random() * canvas.width;
-        } else if (particle.y > canvas.height) {
-          particle.y = 0;
-          particle.x = Math.random() * canvas.width;
-        }
-
-        // Draw particle with gradient
+        // Draw bubble with soft gradient
         const gradient = ctx.createRadialGradient(
-          particle.x,
-          particle.y,
+          bubble.x - bubble.radius * 0.3,
+          bubble.y - bubble.radius * 0.3,
           0,
-          particle.x,
-          particle.y,
-          particle.radius * 2
+          bubble.x,
+          bubble.y,
+          bubble.radius
         );
-        gradient.addColorStop(0, `rgba(59, 130, 246, ${particle.opacity})`);
-        gradient.addColorStop(0.5, `rgba(99, 102, 241, ${particle.opacity * 0.5})`);
-        gradient.addColorStop(1, `rgba(139, 92, 246, 0)`);
+        
+        // Soft white/light blue bubble
+        gradient.addColorStop(0, `rgba(255, 255, 255, ${bubble.opacity * 0.8})`);
+        gradient.addColorStop(0.4, `rgba(200, 220, 255, ${bubble.opacity * 0.4})`);
+        gradient.addColorStop(0.7, `rgba(150, 180, 255, ${bubble.opacity * 0.2})`);
+        gradient.addColorStop(1, `rgba(100, 150, 255, 0)`);
 
         ctx.fillStyle = gradient;
         ctx.beginPath();
-        ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
+        ctx.arc(bubble.x, bubble.y, bubble.radius, 0, Math.PI * 2);
         ctx.fill();
 
-        // Draw connections between nearby particles
-        particles.slice(index + 1).forEach((otherParticle) => {
-          const dx = particle.x - otherParticle.x;
-          const dy = particle.y - otherParticle.y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-
-          if (distance < 120) {
-            ctx.strokeStyle = `rgba(59, 130, 246, ${0.1 * (1 - distance / 120)})`;
-            ctx.lineWidth = 0.5;
-            ctx.beginPath();
-            ctx.moveTo(particle.x, particle.y);
-            ctx.lineTo(otherParticle.x, otherParticle.y);
-            ctx.stroke();
-          }
-        });
+        // Add subtle highlight for depth
+        const highlightGradient = ctx.createRadialGradient(
+          bubble.x - bubble.radius * 0.4,
+          bubble.y - bubble.radius * 0.4,
+          0,
+          bubble.x - bubble.radius * 0.4,
+          bubble.y - bubble.radius * 0.4,
+          bubble.radius * 0.5
+        );
+        highlightGradient.addColorStop(0, `rgba(255, 255, 255, ${bubble.opacity * 0.3})`);
+        highlightGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        
+        ctx.fillStyle = highlightGradient;
+        ctx.beginPath();
+        ctx.arc(
+          bubble.x - bubble.radius * 0.3,
+          bubble.y - bubble.radius * 0.3,
+          bubble.radius * 0.4,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
       });
 
       animationFrameRef.current = requestAnimationFrame(animate);
     };
 
-    animate();
+    animate(0);
 
     return () => {
       window.removeEventListener('resize', resizeCanvas);
