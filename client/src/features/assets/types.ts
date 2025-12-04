@@ -23,6 +23,7 @@ export const AssetSchema = z.object({
   department: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
   ownerId: z.string().optional().nullable(),
+  pegClientId: z.string().optional().nullable(),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
 });

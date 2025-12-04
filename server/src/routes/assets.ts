@@ -111,6 +111,7 @@ const createSchema = z.object({
   department: emptyStringToNull,
   notes: emptyStringToNull,
   ownerId: emptyStringToNull,
+  pegClientId: emptyStringToNull,
 });
 
 const updateSchema = createSchema.partial();

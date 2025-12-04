@@ -11,6 +11,8 @@ const PageLoader = () => <LoadingOverlay message="Loading page" />;
 const Dashboard = lazy(() => import('@/features/dashboard/Dashboard'));
 const AssetsListPage = lazy(() => import('@/features/assets/pages/AssetsListPage'));
 const AssetDetailsPage = lazy(() => import('@/features/assets/pages/AssetDetailsPage'));
+const PegAssetsPage = lazy(() => import('@/features/assets/pages/PegAssetsPage'));
+const ShAssetsPage = lazy(() => import('@/features/assets/pages/ShAssetsPage'));
 const TicketsListPage = lazy(() => import('@/features/tickets/pages/TicketsListPage'));
 const TicketDetailsPage = lazy(() => import('@/features/tickets/pages/TicketDetailsPage'));
 const NewTicketPage = lazy(() => import('@/features/tickets/pages/NewTicketPage'));
@@ -94,6 +96,8 @@ export const router = createHashRouter([
     children: [
       { index: true, element: <LazyPage><Dashboard /></LazyPage> },
       { path: 'assets', element: <LazyPage><AssetsListPage /></LazyPage> },
+      { path: 'assets/peg', element: <LazyPage><PegAssetsPage /></LazyPage> },
+      { path: 'assets/sh', element: <LazyPage><ShAssetsPage /></LazyPage> },
       { path: 'assets/new', element: <LazyPage><AssetDetailsPage /></LazyPage> },
       { path: 'assets/:id', element: <LazyPage><AssetDetailsPage /></LazyPage> },
       { path: 'tickets', element: <LazyPage><TicketsListPage /></LazyPage> },

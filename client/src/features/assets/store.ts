@@ -36,8 +36,18 @@ export const useAssetsStore = create<AssetsState>((set, get) => ({
     try {
       const assets = await listAssets(params);
       set({ assets, isLoading: false });
-    } catch (error) {
-      set({ error: (error as Error).message, isLoading: false });
+    } catch (error: any) {
+      // Handle network errors more gracefully
+      let errorMessage = 'Failed to load assets';
+      if (error.message === 'Network Error' || error.code === 'ERR_NETWORK') {
+        errorMessage = 'Network Error: Unable to connect to the server. Please check your connection and ensure the backend is running.';
+      } else if (error.response) {
+        errorMessage = error.response.data?.error || error.response.data?.message || `Server Error: ${error.response.status}`;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      console.error('Error fetching assets:', error);
+      set({ error: errorMessage, isLoading: false });
     }
   },
 

@@ -37,6 +37,7 @@ export const assetFieldPermissions: FieldPermissions = {
   // Assignment fields - allow technicians to assign assets
   assigned_to: { ADMIN: 'write', PEG: 'write', TECHNICIAN: 'write', USER: 'read' },
   ownerId: { ADMIN: 'write', PEG: 'write', TECHNICIAN: 'write', USER: 'read' },
+  pegClientId: { ADMIN: 'write', PEG: 'read', TECHNICIAN: 'read', USER: 'read' },
   scanned_by: { ADMIN: 'write', PEG: 'write', TECHNICIAN: 'write', USER: 'none' },
   scan_datetime: { ADMIN: 'write', PEG: 'write', TECHNICIAN: 'write', USER: 'none' },
 

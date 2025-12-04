@@ -36,15 +36,23 @@ export async function listAssets(params: ListAssetsParams = {}): Promise<Asset[]
     queryParams.limit = -1;
   }
 
-  const res = await client.get('/assets', { params: queryParams });
+  try {
+    const res = await client.get('/assets', { params: queryParams });
 
-  // Accept either array (old format) or paginated object (new format)
-  if (Array.isArray(res.data)) {
-    return z.array(AssetSchema).parse(res.data);
+    // Accept either array (old format) or paginated object (new format)
+    if (Array.isArray(res.data)) {
+      return z.array(AssetSchema).parse(res.data);
+    }
+
+    const parsed = PaginatedAssetsSchema.parse(res.data);
+    return parsed.data;
+  } catch (error: any) {
+    // Re-throw with more context for network errors
+    if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+      throw new Error('Network Error: Unable to connect to the server. Please check your connection and ensure the backend is running.');
+    }
+    throw error;
   }
-
-  const parsed = PaginatedAssetsSchema.parse(res.data);
-  return parsed.data;
 }
 
 export async function getAsset(id: string): Promise<Asset> {

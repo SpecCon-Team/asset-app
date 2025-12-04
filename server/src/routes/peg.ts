@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../lib/prisma';
 import { authenticate } from '../middleware/auth';
 import { logAudit } from '../lib/auditLog';
+import { invalidateCache } from '../middleware/cache';
 import { Role } from '@prisma/client';
 
 const router = Router();
@@ -388,6 +389,10 @@ router.post('/:clientId/assets', authenticate, async (req: Request, res: Respons
       }
     );
 
+    // Invalidate assets cache to ensure updated data is returned
+    invalidateCache('/api/assets');
+    invalidateCache('/api/assets/available');
+
     res.json(updatedAsset);
   } catch (error) {
     console.error('Error assigning asset to client:', error);
@@ -443,6 +448,10 @@ router.delete('/:clientId/assets/:assetId', authenticate, async (req: Request, r
         new: { pegClientId: updatedAsset.pegClientId, status: updatedAsset.status }
       }
     );
+
+    // Invalidate assets cache to ensure updated data is returned
+    invalidateCache('/api/assets');
+    invalidateCache('/api/assets/available');
 
     res.json({ message: 'Asset unassigned successfully', asset: updatedAsset });
   } catch (error) {

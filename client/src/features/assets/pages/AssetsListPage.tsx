@@ -7,14 +7,14 @@ import { ConfirmDialog, CSVImportModal } from '@/components';
 import toast from 'react-hot-toast';
 import { exportToCSV, ASSET_EXPORT_COLUMNS, generateFilename, downloadCSVTemplate, ASSET_IMPORT_TEMPLATE_COLUMNS } from '@/lib/exportUtils';
 import { getApiClient } from '@/features/assets/lib/apiClient';
+import AssignAssetsToClientModal from '../components/AssignAssetsToClientModal';
 
 export default function AssetsListPage() {
   const navigate = useNavigate();
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
 
   const { assets, isLoading, error, fetchAssets, deleteAsset } = useAssetsStore();
 
@@ -33,8 +33,8 @@ export default function AssetsListPage() {
   }, [navigate]);
 
   useEffect(() => {
-    fetchAssets({ search, status: statusFilter });
-  }, [search, statusFilter, fetchAssets]);
+    fetchAssets({});
+  }, [fetchAssets]);
 
   const handleDeleteClick = (id: string) => {
     setDeleteConfirmId(id);
@@ -54,10 +54,6 @@ export default function AssetsListPage() {
     } finally {
       setIsDeleting(false);
     }
-  };
-
-  const handleEdit = (id: string) => {
-    navigate(`/assets/${id}`);
   };
 
   const handleExportCSV = () => {
@@ -102,9 +98,17 @@ export default function AssetsListPage() {
     const result = response.data;
 
     // Refresh assets list after import
-    await fetchAssets({ search, status: statusFilter });
+    await fetchAssets({});
 
     return result;
+  };
+
+  const handleContainerClick = (type: 'peg' | 'sh') => {
+    if (type === 'peg') {
+      navigate('/assets/peg');
+    } else {
+      navigate('/assets/sh');
+    }
   };
 
   if (loading) {
@@ -112,7 +116,20 @@ export default function AssetsListPage() {
   }
 
   if (error) {
-    return <div className="p-8 text-red-600 dark:text-red-400 bg-gray-50 dark:bg-gray-900 min-h-screen">Error: {error}</div>;
+    return (
+      <div className="p-8 bg-gray-50 dark:bg-gray-900 min-h-screen">
+        <div className="max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+          <h2 className="text-xl font-bold text-red-600 dark:text-red-400 mb-4">Error Loading Assets</h2>
+          <p className="text-gray-700 dark:text-gray-300 mb-4">{error}</p>
+          <button
+            onClick={() => fetchAssets({})}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -152,10 +169,10 @@ export default function AssetsListPage() {
             <span className="truncate">Export CSV</span>
           </button>
           <button
-            onClick={() => navigate('/assets/new')}
+            onClick={() => setIsAssignModalOpen(true)}
             className="px-3 sm:px-4 py-2 sm:py-2.5 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 flex items-center justify-center gap-2 transition-colors text-sm sm:text-base min-h-[44px]"
           >
-            <span>+</span> <span className="truncate">Add Asset</span>
+            <span>+</span> <span className="truncate">Add Client Assets</span>
           </button>
         </div>
       </div>
@@ -186,108 +203,58 @@ export default function AssetsListPage() {
         </div>
       </div>
 
-      {/* Filters - Responsive Stack */}
-      <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row gap-3 sm:gap-4">
-        <input
-          type="text"
-          placeholder="Search by name, code, or type..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base min-h-[44px] dark:bg-gray-800 dark:text-white"
-        />
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm sm:text-base min-h-[44px] dark:bg-gray-800 dark:text-white sm:w-auto w-full"
+      {/* PEG Assets and SH Assets Containers */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6 md:mb-8">
+        {/* PEG Assets Card */}
+        <button
+          onClick={() => handleContainerClick('peg')}
+          className="p-3 sm:p-4 md:p-6 rounded-lg border-2 transition-all hover:scale-105 hover:shadow-lg bg-white dark:bg-gray-800 cursor-pointer text-left w-full"
+          style={{
+            borderColor: '#FF9800',
+          }}
         >
-          <option value="">All Status</option>
-          <option value="available">Available</option>
-          <option value="assigned">Assigned</option>
-          <option value="maintenance">Maintenance</option>
-          <option value="repair">Repair</option>
-          <option value="retired">Retired</option>
-        </select>
-      </div>
-
-      {/* Assets Grid - Responsive */}
-      {assets.length === 0 ? (
-        <div className="bg-white dark:bg-gray-800 p-8 sm:p-12 rounded-lg shadow text-center">
-          <p className="text-gray-500 dark:text-gray-400">No assets found</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
-          {assets.map((asset) => (
-            <div key={asset.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-              <div className="p-4 sm:p-5 md:p-6">
-                <div className="flex justify-between items-start mb-3 sm:mb-4 gap-2">
-                  <div className="min-w-0 flex-1">
-                    <h3 className="font-semibold text-base sm:text-lg text-gray-900 dark:text-white truncate">{asset.name}</h3>
-                    <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate">{asset.asset_code}</p>
-                  </div>
-                  <span className={`px-2 sm:px-3 py-1 text-xs rounded-full whitespace-nowrap flex-shrink-0 ${
-                    asset.status === 'available' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
-                    asset.status === 'assigned' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
-                    asset.status === 'maintenance' || asset.status === 'repair' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200' :
-                    'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
-                  }`}>
-                    {asset.status}
-                  </span>
-                </div>
-
-                <div className="space-y-1.5 sm:space-y-2 mb-3 sm:mb-4">
-                  <div className="flex items-center text-xs sm:text-sm">
-                    <span className="text-gray-500 dark:text-gray-400 w-20 sm:w-24 flex-shrink-0">Type:</span>
-                    <span className="font-medium text-gray-900 dark:text-white truncate">{asset.asset_type || '-'}</span>
-                  </div>
-                  <div className="flex items-center text-xs sm:text-sm">
-                    <span className="text-gray-500 dark:text-gray-400 w-20 sm:w-24 flex-shrink-0">Condition:</span>
-                    <span className="font-medium text-gray-900 dark:text-white truncate">{asset.condition || '-'}</span>
-                  </div>
-                  <div className="flex items-center text-xs sm:text-sm">
-                    <span className="text-gray-500 dark:text-gray-400 w-20 sm:w-24 flex-shrink-0">Assigned to:</span>
-                    <span className="font-medium text-gray-900 dark:text-white truncate">{asset.assigned_to || 'Unassigned'}</span>
-                  </div>
-                  {asset.office_location && (
-                    <div className="flex items-center text-xs sm:text-sm">
-                      <span className="text-gray-500 dark:text-gray-400 w-20 sm:w-24 flex-shrink-0">Location:</span>
-                      <span className="font-medium text-gray-900 dark:text-white truncate">{asset.office_location}</span>
-                    </div>
-                  )}
-                  {asset.department && (
-                    <div className="flex items-center text-xs sm:text-sm">
-                      <span className="text-gray-500 dark:text-gray-400 w-20 sm:w-24 flex-shrink-0">Department:</span>
-                      <span className="font-medium text-gray-900 dark:text-white truncate">{asset.department}</span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex gap-2 pt-3 sm:pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <button
-                    onClick={() => handleEdit(asset.id!)}
-                    className="flex-1 px-2 sm:px-3 py-2 text-xs sm:text-sm bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded hover:bg-blue-100 dark:hover:bg-blue-900/50 flex items-center justify-center gap-1 sm:gap-2 transition-colors min-h-[40px]"
-                  >
-                    <Pencil className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
-                    <span className="hidden xs:inline">Edit</span>
-                  </button>
-                  <button
-                    onClick={() => navigate(`/assets/${asset.id}`)}
-                    className="flex-1 px-2 sm:px-3 py-2 text-xs sm:text-sm bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded hover:bg-gray-100 dark:hover:bg-gray-600 flex items-center justify-center gap-1 sm:gap-2 transition-colors min-h-[40px]"
-                  >
-                    <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
-                    <span className="hidden xs:inline">View</span>
-                  </button>
-                  <button
-                    onClick={() => handleDeleteClick(asset.id!)}
-                    className="px-2 sm:px-3 py-2 text-xs sm:text-sm bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded hover:bg-red-100 dark:hover:bg-red-900/50 flex items-center justify-center gap-1 sm:gap-2 transition-colors min-h-[40px]"
-                  >
-                    <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
-                  </button>
-                </div>
-              </div>
+          <div className="text-center w-full">
+            <div
+              className="text-sm sm:text-base md:text-lg font-bold mb-1 sm:mb-2 whitespace-nowrap"
+              style={{ color: '#FF9800' }}
+            >
+              PEG Assets
             </div>
-          ))}
-        </div>
-      )}
+            <div className="text-xl sm:text-2xl md:text-3xl font-bold mb-1 text-gray-900 dark:text-white">
+              {assets.filter((a) => a.pegClientId).length}
+            </div>
+            <div className="text-xs sm:text-sm opacity-90 text-gray-600 dark:text-gray-400">
+              {assets.filter((a) => a.pegClientId).length === 1 ? 'Asset' : 'Assets'}
+            </div>
+            <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">Click to manage</div>
+          </div>
+        </button>
+
+        {/* SH Assets Card */}
+        <button
+          onClick={() => handleContainerClick('sh')}
+          className="p-3 sm:p-4 md:p-6 rounded-lg border-2 transition-all hover:scale-105 hover:shadow-lg bg-white dark:bg-gray-800 cursor-pointer text-left w-full"
+          style={{
+            borderColor: '#8D6E63',
+          }}
+        >
+          <div className="text-center w-full">
+            <div
+              className="text-sm sm:text-base md:text-lg font-bold mb-1 sm:mb-2 whitespace-nowrap"
+              style={{ color: '#8D6E63' }}
+            >
+              SH Assets
+            </div>
+            <div className="text-xl sm:text-2xl md:text-3xl font-bold mb-1 text-gray-900 dark:text-white">
+              {assets.filter((a) => !a.pegClientId).length}
+            </div>
+            <div className="text-xs sm:text-sm opacity-90 text-gray-600 dark:text-gray-400">
+              {assets.filter((a) => !a.pegClientId).length === 1 ? 'Asset' : 'Assets'}
+            </div>
+            <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">Click to manage</div>
+          </div>
+        </button>
+      </div>
 
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog
@@ -309,6 +276,15 @@ export default function AssetsListPage() {
         onImport={handleImportCSV}
         title="Import Assets from CSV"
         entityType="assets"
+      />
+
+      {/* Assign Assets to Client Modal */}
+      <AssignAssetsToClientModal
+        isOpen={isAssignModalOpen}
+        onClose={() => setIsAssignModalOpen(false)}
+        onSuccess={() => {
+          fetchAssets({});
+        }}
       />
     </div>
   );
