@@ -23,6 +23,17 @@ export function getApiClient(): AxiosInstance {
   client.interceptors.response.use(
     (resp) => resp,
     (error) => {
+      // Log detailed error information for debugging
+      console.error('API Error:', {
+        url: error.config?.url,
+        method: error.config?.method,
+        baseURL: error.config?.baseURL,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        hasAuth: !!error.config?.headers?.Authorization,
+      });
+
       // Handle rate limiting and non-JSON error responses
       if (error.response) {
         const contentType = error.response.headers['content-type'];
@@ -35,6 +46,15 @@ export function getApiClient(): AxiosInstance {
             error: 'Rate Limit',
             message: typeof textError === 'string' ? textError : 'Too many requests. Please try again later.'
           };
+        }
+
+        // Log specific 500 errors with more context
+        if (error.response.status === 500) {
+          console.error('Server Error (500):', {
+            endpoint: error.config?.url,
+            errorMessage: error.response.data?.message || error.response.data?.error,
+            fullResponse: error.response.data,
+          });
         }
       }
 
