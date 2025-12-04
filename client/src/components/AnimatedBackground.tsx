@@ -21,27 +21,47 @@ const AnimatedBackground: React.FC = () => {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas) {
+      console.warn('AnimatedBackground: Canvas ref not available');
+      return;
+    }
 
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    const ctx = canvas.getContext('2d', { alpha: true });
+    if (!ctx) {
+      console.warn('AnimatedBackground: Canvas context not available');
+      return;
+    }
 
-    // Set canvas size
+    // Set canvas size - ensure it's set immediately
     const resizeCanvas = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      if (!canvas) return;
+      const width = window.innerWidth || 1920;
+      const height = window.innerHeight || 1080;
+      canvas.width = width;
+      canvas.height = height;
     };
+    
+    // Initialize immediately
     resizeCanvas();
+    
+    // Also set size after a small delay to ensure window is ready
+    let initTimeout: NodeJS.Timeout | null = setTimeout(() => {
+      resizeCanvas();
+      initTimeout = null;
+    }, 100);
+    
     window.addEventListener('resize', resizeCanvas);
 
-    // Create large bubbles
-    const bubbleCount = Math.min(12, Math.floor((canvas.width * canvas.height) / 100000));
+    // Create large bubbles - ensure we have valid dimensions
+    const canvasWidth = canvas.width || window.innerWidth || 1920;
+    const canvasHeight = canvas.height || window.innerHeight || 1080;
+    const bubbleCount = Math.max(6, Math.min(12, Math.floor((canvasWidth * canvasHeight) / 100000)));
     const bubbles: Bubble[] = [];
 
     for (let i = 0; i < bubbleCount; i++) {
       const radius = Math.random() * 80 + 40; // Large bubbles: 40-120px
-      const initialX = Math.random() * canvas.width;
-      const initialY = Math.random() * canvas.height;
+      const initialX = Math.random() * canvasWidth;
+      const initialY = Math.random() * canvasHeight;
       
       bubbles.push({
         x: initialX,
@@ -61,9 +81,14 @@ const AnimatedBackground: React.FC = () => {
 
     // Animation loop
     const animate = (timestamp: number) => {
+      if (!canvas || !ctx) return;
+      
       timeRef.current = timestamp * 0.001; // Convert to seconds
       
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const width = canvas.width || window.innerWidth || 1920;
+      const height = canvas.height || window.innerHeight || 1080;
+      
+      ctx.clearRect(0, 0, width, height);
 
       bubbles.forEach((bubble) => {
         // Slow circular/loop movement pattern
@@ -75,18 +100,21 @@ const AnimatedBackground: React.FC = () => {
         bubble.y = bubble.initialY + Math.sin(bubble.angle) * loopRadius + Math.sin(timeRef.current + bubble.angle) * 20;
         
         // Wrap around edges smoothly
+        const width = canvas.width || window.innerWidth || 1920;
+        const height = canvas.height || window.innerHeight || 1080;
+        
         if (bubble.x < -bubble.radius) {
-          bubble.x = canvas.width + bubble.radius;
+          bubble.x = width + bubble.radius;
           bubble.initialX = bubble.x;
-        } else if (bubble.x > canvas.width + bubble.radius) {
+        } else if (bubble.x > width + bubble.radius) {
           bubble.x = -bubble.radius;
           bubble.initialX = bubble.x;
         }
         
         if (bubble.y < -bubble.radius) {
-          bubble.y = canvas.height + bubble.radius;
+          bubble.y = height + bubble.radius;
           bubble.initialY = bubble.y;
-        } else if (bubble.y > canvas.height + bubble.radius) {
+        } else if (bubble.y > height + bubble.radius) {
           bubble.y = -bubble.radius;
           bubble.initialY = bubble.y;
         }
@@ -142,6 +170,9 @@ const AnimatedBackground: React.FC = () => {
     animate(0);
 
     return () => {
+      if (initTimeout) {
+        clearTimeout(initTimeout);
+      }
       window.removeEventListener('resize', resizeCanvas);
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
