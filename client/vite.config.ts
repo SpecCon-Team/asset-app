@@ -16,17 +16,14 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: (id) => {
-          // CRITICAL: Never split React or ReactDOM - they must stay in main bundle
-          // This prevents "React is undefined" errors in lazy-loaded components
+          // CRITICAL: Exclude React completely from chunking - must stay in main bundle
+          // Check for React FIRST and return void to prevent any chunking
           if (
-            id.includes('node_modules/react/') || 
-            id.includes('node_modules/react-dom/') || 
-            id.includes('node_modules/react/jsx-runtime') ||
-            id.includes('node_modules/react/index') ||
-            id.includes('node_modules/react-dom/index')
+            id.includes('node_modules/react') || 
+            id.includes('node_modules/react-dom')
           ) {
-            // Return null to keep in main bundle, not undefined
-            return null;
+            // Return void/undefined explicitly to keep in main bundle
+            return;
           }
           
           // React-related libraries can be in a separate chunk
@@ -65,7 +62,7 @@ export default defineConfig({
             return 'form-libs';
           }
           
-          // Other large vendor libraries
+          // Other large vendor libraries (but NOT React - already excluded above)
           if (id.includes('node_modules')) {
             return 'vendor';
           }
