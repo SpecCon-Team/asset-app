@@ -16,14 +16,17 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: (id) => {
-          // Don't split React - keep it in the main bundle to ensure it's always available
+          // CRITICAL: Never split React or ReactDOM - they must stay in main bundle
           // This prevents "React is undefined" errors in lazy-loaded components
           if (
             id.includes('node_modules/react/') || 
             id.includes('node_modules/react-dom/') || 
-            id.includes('node_modules/react/jsx-runtime')
+            id.includes('node_modules/react/jsx-runtime') ||
+            id.includes('node_modules/react/index') ||
+            id.includes('node_modules/react-dom/index')
           ) {
-            return undefined; // Keep React in main bundle
+            // Return null to keep in main bundle, not undefined
+            return null;
           }
           
           // React-related libraries can be in a separate chunk
