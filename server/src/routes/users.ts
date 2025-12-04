@@ -34,66 +34,89 @@ const updatePasswordSchema = z.object({
 
 // Get all users - requires authentication, admins see all fields
 router.get('/', authenticate, cacheMiddleware(30000), applyFieldVisibility('user'), async (req: Request, res: Response) => {
-  const { type, page = '1', limit = '100' } = req.query;
+  try {
+    const { type, page = '1', limit = '100' } = req.query;
 
-  let whereClause: any = {};
+    let whereClause: any = {};
 
-  // Filter by user type if specified
-  if (type === 'whatsapp') {
-    whereClause.isWhatsAppUser = true;
-  } else if (type === 'regular') {
-    whereClause.isWhatsAppUser = false;
-  }
-
-  // Parse pagination parameters
-  const pageNum = parseInt(page as string, 10);
-  const limitNum = parseInt(limit as string, 10);
-  const skip = (pageNum - 1) * limitNum;
-
-  // Get total count for pagination metadata
-  const totalCount = await prisma.user.count({ where: whereClause });
-
-  const users = await prisma.user.findMany({
-    where: whereClause,
-    select: {
-      id: true,
-      email: true,
-      name: true,
-      role: true,
-      isAvailable: true,
-      profilePicture: true,
-      phone: true,
-      isWhatsAppUser: true,
-      whatsAppNotifications: true,
-      createdAt: true
-    },
-    orderBy: { createdAt: 'desc' },
-    skip: limitNum === -1 ? undefined : skip,  // -1 means no pagination
-    take: limitNum === -1 ? undefined : limitNum
-  });
-
-  // Return with pagination metadata
-  res.json({
-    data: users,
-    pagination: limitNum === -1 ? null : {
-      page: pageNum,
-      limit: limitNum,
-      total: totalCount,
-      totalPages: Math.ceil(totalCount / limitNum)
+    // Filter by user type if specified
+    if (type === 'whatsapp') {
+      whereClause.isWhatsAppUser = true;
+    } else if (type === 'regular') {
+      whereClause.isWhatsAppUser = false;
     }
-  });
+
+    // Parse pagination parameters
+    const pageNum = parseInt(page as string, 10);
+    const limitNum = parseInt(limit as string, 10);
+    const skip = (pageNum - 1) * limitNum;
+
+    // Get total count for pagination metadata
+    const totalCount = await prisma.user.count({ where: whereClause });
+
+    const users = await prisma.user.findMany({
+      where: whereClause,
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        isAvailable: true,
+        profilePicture: true,
+        phone: true,
+        isWhatsAppUser: true,
+        whatsAppNotifications: true,
+        createdAt: true
+      },
+      orderBy: { createdAt: 'desc' },
+      skip: limitNum === -1 ? undefined : skip,  // -1 means no pagination
+      take: limitNum === -1 ? undefined : limitNum
+    });
+
+    // Return with pagination metadata
+    res.json({
+      data: users,
+      pagination: limitNum === -1 ? null : {
+        page: pageNum,
+        limit: limitNum,
+        total: totalCount,
+        totalPages: Math.ceil(totalCount / limitNum)
+      }
+    });
+  } catch (error: any) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch users', 
+      message: error.message || 'Unknown error occurred' 
+    });
+  }
 });
 
 // Assign role - ADMIN or PEG
 router.patch('/:id/role', authenticate, requireRole('ADMIN', 'PEG'), async (req: Request, res: Response) => {
-  const parsed = assignRoleSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json(parsed.error.flatten());
-  const user = await prisma.user.update({
-    where: { id: req.params.id },
-    data: { role: parsed.data.role },
-    select: { id: true, email: true, role: true, isAvailable: true },
-  });
-  res.json(user);
+  try {
+    const parsed = assignRoleSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json(parsed.error.flatten());
+    }
+    
+    const user = await prisma.user.update({
+      where: { id: req.params.id },
+      data: { role: parsed.data.role },
+      select: { id: true, email: true, role: true, isAvailable: true },
+    });
+    
+    // Invalidate cache
+    invalidateCache('/api/users');
+    
+    res.json(user);
+  } catch (error: any) {
+    console.error('Error updating user role:', error);
+    if (error.code === 'P2025') {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    res.status(500).json({ error: 'Failed to update user role', message: error.message });
+  }
 });
 
 // Update availability - self or ADMIN

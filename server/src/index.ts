@@ -204,7 +204,8 @@ const allowedOrigins = [
   process.env.CLIENT_URL || 'http://localhost:5174',
   'http://localhost:5173', // Vite default port
   'http://localhost:5174',  // Alternative port
-  'https://speccon-team.github.io' // Added for GitHub Pages
+  'https://speccon-team.github.io', // Added for GitHub Pages
+  'https://speccon-team.github.io/asset-app' // GitHub Pages with path
 ];
 
 app.use(cors({
