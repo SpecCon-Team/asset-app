@@ -1,41 +1,31 @@
-import pg from 'pg';
-const { Client } = pg;
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 async function addPegClientIdColumn() {
-  const databaseUrl = process.env.DATABASE_URL;
-  
-  if (!databaseUrl) {
-    console.error('❌ DATABASE_URL environment variable is not set');
-    process.exit(1);
-  }
-
-  const client = new Client({
-    connectionString: databaseUrl,
-  });
-
   try {
     console.log('🔌 Connecting to database...');
-    await client.connect();
+    await prisma.$connect();
     console.log('✅ Connected!\n');
 
     // Check if column already exists
     console.log('📝 Checking if pegClientId column exists...');
-    const checkResult = await client.query(`
+    const checkResult = await prisma.$queryRawUnsafe(`
       SELECT column_name 
       FROM information_schema.columns 
       WHERE table_name = 'Asset' 
       AND column_name = 'pegClientId'
     `);
 
-    if (checkResult.rows.length > 0) {
+    if (Array.isArray(checkResult) && checkResult.length > 0) {
       console.log('✅ Column pegClientId already exists! Skipping migration.\n');
-      await client.end();
+      await prisma.$disconnect();
       return;
     }
 
     // Add pegClientId column
     console.log('📝 Adding pegClientId column to Asset table...');
-    await client.query(`
+    await prisma.$executeRawUnsafe(`
       ALTER TABLE "Asset" 
       ADD COLUMN IF NOT EXISTS "pegClientId" TEXT
     `);
@@ -44,7 +34,7 @@ async function addPegClientIdColumn() {
     // Add foreign key constraint
     console.log('📝 Adding foreign key constraint...');
     try {
-      await client.query(`
+      await prisma.$executeRawUnsafe(`
         ALTER TABLE "Asset" 
         ADD CONSTRAINT "Asset_pegClientId_fkey" 
         FOREIGN KEY ("pegClientId") 
@@ -54,7 +44,7 @@ async function addPegClientIdColumn() {
       `);
       console.log('✅ Foreign key constraint added!\n');
     } catch (error) {
-      if (error.message.includes('already exists')) {
+      if (error.message.includes('already exists') || error.message.includes('duplicate')) {
         console.log('⚠️  Foreign key constraint already exists, skipping...\n');
       } else {
         throw error;
@@ -64,13 +54,13 @@ async function addPegClientIdColumn() {
     // Add index
     console.log('📝 Creating index on pegClientId...');
     try {
-      await client.query(`
+      await prisma.$executeRawUnsafe(`
         CREATE INDEX IF NOT EXISTS "Asset_pegClientId_idx" 
         ON "Asset"("pegClientId")
       `);
       console.log('✅ Index created!\n');
     } catch (error) {
-      if (error.message.includes('already exists')) {
+      if (error.message.includes('already exists') || error.message.includes('duplicate')) {
         console.log('⚠️  Index already exists, skipping...\n');
       } else {
         throw error;
@@ -78,10 +68,10 @@ async function addPegClientIdColumn() {
     }
 
     console.log('✅ Migration completed successfully!\n');
-    await client.end();
+    await prisma.$disconnect();
   } catch (error) {
     console.error('❌ Migration failed:', error);
-    await client.end();
+    await prisma.$disconnect();
     process.exit(1);
   }
 }
