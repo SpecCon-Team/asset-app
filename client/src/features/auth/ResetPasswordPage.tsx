@@ -98,7 +98,7 @@ export default function ResetPasswordPage() {
         <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-lg shadow-xl p-8 border border-white/20">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-white mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 New Password
               </label>
               <div className="relative">
@@ -121,13 +121,13 @@ export default function ResetPasswordPage() {
                   {showPassword ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
                 </button>
               </div>
-              <p className="mt-1 text-xs text-white/80">
+              <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
                 Must be at least 12 characters long
               </p>
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-white mb-2">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Confirm New Password
               </label>
               <div className="relative">
@@ -160,7 +160,7 @@ export default function ResetPasswordPage() {
                   <div className={`h-2 flex-1 rounded ${password.length >= 16 ? 'bg-green-500' : 'bg-gray-200 dark:bg-gray-600'}`}></div>
                   <div className={`h-2 flex-1 rounded ${/[A-Z]/.test(password) && /[a-z]/.test(password) && /[0-9]/.test(password) ? 'bg-green-500' : 'bg-gray-200 dark:bg-gray-600'}`}></div>
                 </div>
-                <p className="text-xs text-white/80">
+                <p className="text-xs text-gray-600 dark:text-gray-400">
                   Password strength: {
                     password.length >= 16 && /[A-Z]/.test(password) && /[a-z]/.test(password) && /[0-9]/.test(password)
                       ? 'Strong'

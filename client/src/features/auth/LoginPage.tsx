@@ -145,16 +145,16 @@ export default function LoginPage() {
             // 2FA Verification Form
             <form onSubmit={handleTwoFactorSubmit} className="space-y-6">
               <div className="text-center mb-6">
-                <h2 className="text-xl font-semibold text-white mb-2">
+                <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">
                   Two-Factor Authentication
                 </h2>
-                <p className="text-sm text-white/80">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   Enter the 6-digit code from your authenticator app or an 8-character backup code
                 </p>
               </div>
 
               <div>
-                <label htmlFor="twoFactorCode" className="block text-sm font-medium text-white mb-2">
+                <label htmlFor="twoFactorCode" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Verification Code
                 </label>
                 <input
@@ -204,7 +204,7 @@ export default function LoginPage() {
             <>
               <form onSubmit={handleLogin} className="space-y-6">
                 <div>
-                <label htmlFor="email" className="block text-sm font-medium text-white mb-2">
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Email
                 </label>
                   <input
@@ -223,7 +223,7 @@ export default function LoginPage() {
                 </div>
 
                 <div>
-                <label htmlFor="password" className="block text-sm font-medium text-white mb-2">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Password
                 </label>
                   <div className="relative">
