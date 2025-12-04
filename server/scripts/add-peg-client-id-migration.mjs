@@ -1,8 +1,5 @@
-import { PrismaClient } from '@prisma/client';
 import pg from 'pg';
 const { Client } = pg;
-
-const prisma = new PrismaClient();
 
 async function addPegClientIdColumn() {
   const databaseUrl = process.env.DATABASE_URL;
