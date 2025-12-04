@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../lib/prisma';
 import { authenticate } from '../middleware/auth';
 import { logAudit } from '../lib/auditLog';
+import { Role } from '@prisma/client';
 
 const router = Router();
 
@@ -18,7 +19,7 @@ const pegClientSchema = z.object({
 });
 
 // Get all PEG clients for the authenticated user
-// For ADMIN, TECHNICIAN, and PEG_ADMIN roles, show merged data from all admins and technicians
+// For ADMIN, TECHNICIAN, and PEG roles, show merged data from all admins and technicians
 router.get('/', authenticate, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
@@ -26,13 +27,13 @@ router.get('/', authenticate, async (req: Request, res: Response) => {
 
     let clients;
 
-    // If user is ADMIN, TECHNICIAN, or PEG_ADMIN, show all clients from admins and technicians
-    if (userRole === 'ADMIN' || userRole === 'TECHNICIAN' || userRole === 'PEG_ADMIN') {
-      // First, get all users who are admins, technicians, or pegadmins
+    // If user is ADMIN, TECHNICIAN, or PEG, show all clients from admins and technicians
+    if (userRole === 'ADMIN' || userRole === 'TECHNICIAN' || userRole === 'PEG') {
+      // First, get all users who are admins, technicians, or peg users
       const adminTechUsers = await prisma.user.findMany({
         where: {
           role: {
-            in: ['ADMIN', 'TECHNICIAN', 'PEG_ADMIN']
+            in: [Role.ADMIN, Role.TECHNICIAN, Role.PEG]
           }
         },
         select: { id: true }
@@ -40,15 +41,20 @@ router.get('/', authenticate, async (req: Request, res: Response) => {
 
       const userIds = adminTechUsers.map(u => u.id);
 
-      // Get all PEG clients created by any admin, technician, or peg admin
-      clients = await prisma.pEGClient.findMany({
-        where: {
-          userId: {
-            in: userIds
-          }
-        },
-        orderBy: { createdAt: 'desc' },
-      });
+      // Handle empty userIds array - if no admin/tech users exist, return empty array
+      if (userIds.length === 0) {
+        clients = [];
+      } else {
+        // Get all PEG clients created by any admin, technician, or peg admin
+        clients = await prisma.pEGClient.findMany({
+          where: {
+            userId: {
+              in: userIds
+            }
+          },
+          orderBy: { createdAt: 'desc' },
+        });
+      }
     } else {
       // Regular users only see their own clients
       clients = await prisma.pEGClient.findMany({
@@ -58,9 +64,18 @@ router.get('/', authenticate, async (req: Request, res: Response) => {
     }
 
     res.json(clients);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching PEG clients:', error);
-    res.status(500).json({ error: 'Failed to fetch PEG clients' });
+    console.error('Error details:', {
+      message: error?.message,
+      code: error?.code,
+      meta: error?.meta,
+      stack: error?.stack
+    });
+    res.status(500).json({ 
+      error: 'Failed to fetch PEG clients',
+      message: error?.message || 'Unknown error occurred'
+    });
   }
 });
 

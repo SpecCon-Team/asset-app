@@ -1270,5 +1270,5 @@ enum Role {
   ADMIN
   USER
   TECHNICIAN
-  PEG_ADMIN
+  PEG
 }

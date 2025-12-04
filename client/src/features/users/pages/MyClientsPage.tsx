@@ -6,6 +6,7 @@ import { Users, Shield, UserCheck, Search, Trash2, MessageCircle } from 'lucide-
 import toast from 'react-hot-toast';
 import { formatDate } from '@/lib/dateFormatter';
 import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
+import axios from 'axios'; // Import axios here
 
 export default function MyClientsPage() {
   const [users, setUsers] = useState<User[]>([]);
@@ -104,7 +105,13 @@ export default function MyClientsPage() {
       fetchUsers();
     } catch (error) {
       console.error('Failed to update role:', error);
-      toast.error('Failed to update user role');
+      if (axios.isAxiosError(error) && error.response) {
+        // Extract a more specific error message from the server response
+        const serverMessage = error.response.data.message || error.response.data.error || 'An unknown error occurred.';
+        toast.error(`Failed to update role: ${serverMessage}`);
+      } else {
+        toast.error('Failed to update user role');
+      }
     } finally {
       setIsUpdating(null);
     }
@@ -158,7 +165,7 @@ export default function MyClientsPage() {
         return 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 border-purple-200 dark:border-purple-700';
       case 'TECHNICIAN':
         return 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-700';
-      case 'PEG_ADMIN':
+      case 'PEG':
         return 'bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 border-emerald-200 dark:border-emerald-700';
       case 'USER':
         return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-600';
@@ -337,7 +344,7 @@ export default function MyClientsPage() {
         >
           <option value="">All Roles</option>
           <option value="ADMIN">Admin</option>
-          <option value="PEG_ADMIN">PEG Admin</option>
+          <option value="PEG">PEG</option>
           <option value="TECHNICIAN">Technician</option>
           <option value="USER">User</option>
         </select>
@@ -474,7 +481,7 @@ export default function MyClientsPage() {
                       >
                         <option value="USER">User</option>
                         <option value="TECHNICIAN">Technician</option>
-                        <option value="PEG_ADMIN">PEG Admin</option>
+                        <option value="PEG">PEG</option>
                         <option value="ADMIN">Admin</option>
                       </select>
                     </td>

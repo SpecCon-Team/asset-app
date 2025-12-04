@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 
 export interface CurrentUser {
   email: string;
-  role: 'ADMIN' | 'USER' | 'TECHNICIAN';
+  role: 'ADMIN' | 'USER' | 'TECHNICIAN' | 'PEG';
   id?: string;
   name?: string;
 }

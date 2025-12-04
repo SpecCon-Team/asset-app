@@ -11,7 +11,7 @@ import { cacheMiddleware, invalidateCache } from '../middleware/cache';
 const router = Router();
 
 const assignRoleSchema = z.object({
-  role: z.nativeEnum(Role),
+  role: z.enum(['ADMIN', 'USER', 'TECHNICIAN', 'PEG']),
 });
 
 const updateAvailabilitySchema = z.object({
@@ -84,8 +84,8 @@ router.get('/', authenticate, cacheMiddleware(30000), applyFieldVisibility('user
   });
 });
 
-// Assign role - ADMIN only
-router.patch('/:id/role', authenticate, requireRole('ADMIN'), async (req: Request, res: Response) => {
+// Assign role - ADMIN or PEG
+router.patch('/:id/role', authenticate, requireRole('ADMIN', 'PEG'), async (req: Request, res: Response) => {
   const parsed = assignRoleSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json(parsed.error.flatten());
   const user = await prisma.user.update({

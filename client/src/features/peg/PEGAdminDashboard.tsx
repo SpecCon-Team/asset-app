@@ -33,10 +33,19 @@ export default function PEGAdminDashboard() {
 
   const loadDashboardStats = async () => {
     try {
+      setLoading(true);
       const response = await api.get('/peg-admin/dashboard');
+      console.log('Dashboard stats response:', response.data);
       setStats(response.data);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading dashboard stats:', error);
+      console.error('Error details:', error?.response?.data || error?.message);
+      // Set empty stats on error so UI doesn't break
+      setStats({
+        totalClients: 0,
+        recentClients: 0,
+        clientsByProvince: []
+      });
     } finally {
       setLoading(false);
     }
@@ -106,35 +115,43 @@ export default function PEGAdminDashboard() {
           <BarChart3 className="w-5 h-5" />
           Clients by Province
         </h2>
-        <div className="space-y-4">
-          {provinces.map(province => {
-            const provinceData = stats?.clientsByProvince?.find(p => p.provinceId === province.id);
-            const count = provinceData?._count || 0;
-            const percentage = stats?.totalClients ? (count / stats.totalClients) * 100 : 0;
+        {stats && stats.totalClients === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-gray-500 dark:text-gray-400">
+              No clients found. Start by adding clients in the "My PEG" section.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {provinces.map(province => {
+              const provinceData = stats?.clientsByProvince?.find(p => p.provinceId === province.id);
+              const count = provinceData?.count || 0;
+              const percentage = stats?.totalClients ? (count / stats.totalClients) * 100 : 0;
 
-            return (
-              <div key={province.id}>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {province.name}
-                  </span>
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    {count} clients
-                  </span>
+              return (
+                <div key={province.id}>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      {province.name}
+                    </span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      {count} clients
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                    <div
+                      className="h-2 rounded-full transition-all duration-300"
+                      style={{
+                        width: `${percentage}%`,
+                        backgroundColor: province.color
+                      }}
+                    />
+                  </div>
                 </div>
-                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                  <div
-                    className="h-2 rounded-full transition-all duration-300"
-                    style={{
-                      width: `${percentage}%`,
-                      backgroundColor: province.color
-                    }}
-                  />
-                </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Quick Actions */}

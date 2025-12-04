@@ -57,7 +57,9 @@ export default function LoginPage() {
       toast.success('Login successful!');
 
       // Navigate based on role
-      if (data.user.role === 'ADMIN' || data.user.role === 'TECHNICIAN') {
+      if (data.user.role === 'PEG') {
+        navigate('/peg-admin-dashboard');
+      } else if (data.user.role === 'ADMIN' || data.user.role === 'TECHNICIAN') {
         navigate('/');
       } else {
         navigate('/my-tickets');
@@ -99,7 +101,9 @@ export default function LoginPage() {
       toast.success('Login successful!');
 
       // Navigate based on role
-      if (data.user.role === 'ADMIN' || data.user.role === 'TECHNICIAN') {
+      if (data.user.role === 'PEG') {
+        navigate('/peg-admin-dashboard');
+      } else if (data.user.role === 'ADMIN' || data.user.role === 'TECHNICIAN') {
         navigate('/');
       } else {
         navigate('/my-tickets');

@@ -1,22 +1,25 @@
 import { Request, Response, NextFunction } from 'express';
 
 /**
- * Middleware to require PEG_ADMIN or ADMIN role
- * PEG Admins have special permissions to manage PEG clients
+ * Middleware to require PEG or ADMIN role
  */
-export const requirePegAdmin = (req: Request, res: Response, next: NextFunction) => {
+export const requirePegAdmin = (req: Request, res: Response, next: NextFunction): void => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Authentication required' });
+    res.status(401).json({
+      error: 'Unauthorized',
+      message: 'Authentication required',
+    });
+    return;
   }
 
-  const allowedRoles = ['PEG_ADMIN', 'ADMIN'];
-  
-  if (allowedRoles.includes(req.user.role)) {
-    return next();
+  const allowedRoles = ['PEG', 'ADMIN'];
+  if (!allowedRoles.includes(req.user.role)) {
+    res.status(403).json({
+      error: 'Forbidden',
+      message: `Access denied. Required roles: ${allowedRoles.join(', ')}`,
+    });
+    return;
   }
 
-  return res.status(403).json({ 
-    error: 'PEG Admin access required',
-    message: 'This endpoint requires PEG Admin or Admin role'
-  });
+  next();
 };
