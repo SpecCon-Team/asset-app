@@ -52,9 +52,23 @@ export default function WorkflowStatsWidget() {
         });
       }
     } catch (error: any) {
+      // Handle network errors silently (server might not be running)
+      if (error?.code === 'ERR_NETWORK' || error?.message?.includes('Network Error') || error?.message?.includes('Failed to fetch')) {
+        // Silently handle network errors - don't log to prevent console spam
+        setStats({
+          total: 0,
+          active: 0,
+          paused: 0,
+          recentExecutions: 0,
+        });
+        setLoading(false);
+        return;
+      }
+      
       if (error.response?.status === 403) {
         setAccessDenied(true);
       } else {
+        // Only log non-network errors
         console.error('Failed to fetch workflow stats:', error);
       }
       // Keep default empty stats on error
