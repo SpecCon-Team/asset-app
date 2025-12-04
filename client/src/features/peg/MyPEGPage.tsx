@@ -376,7 +376,7 @@ export default function MyPEGPage() {
                           <MapPin className="w-5 h-5" style={{ color: province?.color }} />
                           <h3 className="font-bold text-lg text-gray-900 dark:text-white">{client.name}</h3>
                           <span
-                            className="px-2 py-0.5 rounded-full text-xs font-medium text-white"
+                            className="px-2 py-0.5 rounded-full text-xs font-medium text-white whitespace-nowrap"
                             style={{ backgroundColor: province?.color }}
                           >
                             {province?.name}
@@ -501,8 +501,9 @@ export default function MyPEGPage() {
               >
                 <div className="text-center">
                   <div
-                    className="text-sm sm:text-base md:text-lg font-bold mb-1 sm:mb-2"
+                    className="text-sm sm:text-base md:text-lg font-bold mb-1 sm:mb-2 whitespace-nowrap overflow-hidden text-ellipsis"
                     style={{ color: province.color }}
+                    title={province.name}
                   >
                     {province.name}
                   </div>
