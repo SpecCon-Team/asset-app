@@ -246,6 +246,7 @@ model PEGClient {
   provinceId     String   // 'WC', 'EC', 'NC', 'FS', 'KZN', 'NW', 'GP', 'MP', 'LP'
   userId         String   // Owner of this client entry
   user           User     @relation("PEGClients", fields: [userId], references: [id], onDelete: Cascade)
+  routeStops     TripRouteStop[] // Trips that visit this client
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -366,6 +367,8 @@ model Trip {
   itinerary   Json?    // Store itinerary items as JSON array
   userId      String
   user        User     @relation("UserTrips", fields: [userId], references: [id], onDelete: Cascade)
+  isPegRoute  Boolean  @default(false) // Indicates if this is a PEG client route
+  routeStops  TripRouteStop[] // Client visits for PEG routes
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -373,6 +376,28 @@ model Trip {
   @@index([status])
   @@index([category])
   @@index([startDate])
+  @@index([isPegRoute])
+}
+
+model TripRouteStop {
+  id          String   @id @default(cuid())
+  tripId      String
+  trip        Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  clientId    String
+  client      PEGClient @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  visitDate   DateTime // Date and time for this client visit
+  visitTime   String?  // Specific time (e.g., "09:00", "14:30")
+  duration    Int?     // Duration in minutes
+  notes       String?  @db.Text
+  order       Int      // Order in the route sequence
+  status      String   @default("planned") // planned, visited, cancelled
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([tripId])
+  @@index([clientId])
+  @@index([visitDate])
+  @@unique([tripId, clientId, order])
 }
 
 model WorkflowTemplate {

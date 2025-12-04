@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Plane, MapPin, Calendar, Plus, X, Edit2, Trash2, Search,
   DollarSign, FileText, Clock, Map as MapIcon, Download,
   Filter, ChevronDown, ChevronUp, Briefcase, Users, Heart,
-  TrendingUp, Globe, Hotel, Car, Camera, Sparkles, Cross
+  TrendingUp, Globe, Hotel, Car, Camera, Sparkles, Cross, Route
 } from 'lucide-react';
 import { showSuccess, showError, showConfirm, showInfo } from '@/lib/sweetalert';
 import { getApiClient } from '@/features/assets/lib/apiClient';
@@ -130,6 +131,7 @@ const countries = [
 ];
 
 export default function TravelPlanPage() {
+  const navigate = useNavigate();
   const [trips, setTrips] = useState<Trip[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
@@ -328,6 +330,13 @@ export default function TravelPlanPage() {
             >
               <TrendingUp className="w-4 h-4" />
               Stats
+            </button>
+            <button
+              onClick={() => navigate('/travel-plan/peg-route-creator')}
+              className="px-3 sm:px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xs sm:text-sm font-medium flex items-center gap-2"
+            >
+              <Route className="w-4 h-4" />
+              PEG Route
             </button>
             <button
               onClick={handleAddTrip}

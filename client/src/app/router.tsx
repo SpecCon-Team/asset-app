@@ -22,6 +22,8 @@ const MyPEGPage = lazy(() => import('@/features/peg/MyPEGPage'));
 const ProvinceDetailsPage = lazy(() => import('@/features/peg/ProvinceDetailsPage'));
 const PEGAdminDashboard = lazy(() => import('@/features/peg/PEGAdminDashboard'));
 const TravelPlanPage = lazy(() => import('@/features/travel/TravelPlanPage'));
+const PegRouteCreatorPage = lazy(() => import('@/features/travel/PegRouteCreatorPage'));
+const PegRouteEditorPage = lazy(() => import('@/features/travel/PegRouteEditorPage'));
 const MyProfilePage = lazy(() => import('@/features/users/pages/MyProfilePage'));
 const GeneralSettingsPage = lazy(() => import('@/features/users/pages/GeneralSettingsPage'));
 const TwoFactorManagementPage = lazy(() => import('@/features/users/pages/TwoFactorManagementPage'));
@@ -105,6 +107,8 @@ export const router = createHashRouter([
       { path: 'peg-admin-dashboard', element: <LazyPage><PEGAdminDashboard /></LazyPage> },
       { path: 'my-peg/:provinceId', element: <LazyPage><ProvinceDetailsPage /></LazyPage> },
       { path: 'travel-plan', element: <LazyPage><TravelPlanPage /></LazyPage> },
+      { path: 'travel-plan/peg-route-creator', element: <LazyPage><PegRouteCreatorPage /></LazyPage> },
+      { path: 'travel-plan/peg-route-editor', element: <LazyPage><PegRouteEditorPage /></LazyPage> },
       { path: 'my-profile', element: <LazyPage><MyProfilePage /></LazyPage> },
       { path: 'settings', element: <LazyPage><GeneralSettingsPage /></LazyPage> },
       { path: '2fa-setup', element: <LazyPage><TwoFactorSetupPage /></LazyPage> },

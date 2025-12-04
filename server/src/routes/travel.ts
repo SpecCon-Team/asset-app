@@ -172,6 +172,151 @@ router.delete('/:id', authenticate, async (req: Request, res) => {
   }
 });
 
+// Create PEG client route
+router.post('/peg-route', authenticate, async (req: Request, res) => {
+  try {
+    const {
+      destination,
+      country,
+      startDate,
+      endDate,
+      category,
+      status,
+      budget,
+      spent,
+      notes,
+      routeStops,
+    } = req.body;
+
+    // Validation
+    if (!destination || !startDate || !endDate || !routeStops || !Array.isArray(routeStops) || routeStops.length === 0) {
+      return res.status(400).json({
+        error: 'Missing required fields: destination, startDate, endDate, routeStops',
+      });
+    }
+
+    // Validate route stops
+    for (const stop of routeStops) {
+      if (!stop.clientId || !stop.visitDate || !stop.visitTime || stop.order === undefined) {
+        return res.status(400).json({
+          error: 'Each route stop must have clientId, visitDate, visitTime, and order',
+        });
+      }
+    }
+
+    // Create trip with route stops
+    const trip = await prisma.trip.create({
+      data: {
+        destination,
+        country: country || 'South Africa',
+        startDate: new Date(startDate),
+        endDate: new Date(endDate),
+        category: category || 'business',
+        status: status || 'upcoming',
+        budget: parseFloat(budget) || 0,
+        spent: parseFloat(spent) || 0,
+        notes: notes || null,
+        isPegRoute: true,
+        userId: req.user!.id,
+        routeStops: {
+          create: routeStops.map((stop: any) => ({
+            clientId: stop.clientId,
+            visitDate: new Date(stop.visitDate),
+            visitTime: stop.visitTime,
+            duration: stop.duration || 60,
+            notes: stop.notes || null,
+            order: stop.order,
+            status: 'planned',
+          })),
+        },
+      },
+      include: {
+        routeStops: {
+          include: {
+            client: true,
+          },
+          orderBy: {
+            order: 'asc',
+          },
+        },
+      },
+    });
+
+    res.status(201).json(trip);
+  } catch (error) {
+    console.error('Error creating PEG route:', error);
+    res.status(500).json({ error: 'Failed to create PEG route', details: error instanceof Error ? error.message : 'Unknown error' });
+  }
+});
+
+// Get trip with route stops
+router.get('/:id/route', authenticate, async (req: Request, res) => {
+  try {
+    const trip = await prisma.trip.findFirst({
+      where: {
+        id: req.params.id,
+        userId: req.user!.id,
+        isPegRoute: true,
+      },
+      include: {
+        routeStops: {
+          include: {
+            client: true,
+          },
+          orderBy: {
+            order: 'asc',
+          },
+        },
+      },
+    });
+
+    if (!trip) {
+      return res.status(404).json({ error: 'PEG route not found' });
+    }
+
+    res.json(trip);
+  } catch (error) {
+    console.error('Error fetching PEG route:', error);
+    res.status(500).json({ error: 'Failed to fetch PEG route' });
+  }
+});
+
+// Update route stop
+router.put('/route-stops/:id', authenticate, async (req: Request, res) => {
+  try {
+    const { visitDate, visitTime, duration, notes, order, status } = req.body;
+
+    // Verify the route stop belongs to a trip owned by the user
+    const routeStop = await prisma.tripRouteStop.findUnique({
+      where: { id: req.params.id },
+      include: {
+        trip: true,
+      },
+    });
+
+    if (!routeStop || routeStop.trip.userId !== req.user!.id) {
+      return res.status(404).json({ error: 'Route stop not found' });
+    }
+
+    const updated = await prisma.tripRouteStop.update({
+      where: { id: req.params.id },
+      data: {
+        visitDate: visitDate ? new Date(visitDate) : undefined,
+        visitTime,
+        duration,
+        notes,
+        order,
+        status,
+      },
+    });
+
+    res.json(updated);
+  } catch (error) {
+    console.error('Error updating route stop:', error);
+    res.status(500).json({ error: 'Failed to update route stop' });
+  }
+});
+
 // Get trip statistics
 router.get('/stats/summary', authenticate, async (req: Request, res) => {
   try {
