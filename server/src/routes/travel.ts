@@ -8,10 +8,21 @@ const prisma = new PrismaClient();
 // Get all trips for current user
 router.get('/', authenticate, async (req: Request, res) => {
   try {
+    const userRole = req.user!.role;
+    
+    // Build where clause
+    const whereClause: any = {};
+    
+    if (userRole === 'PEG') {
+      // PEG users can see all PEG routes (created by admins or themselves)
+      whereClause.isPegRoute = true;
+    } else {
+      // Other users see only their own trips
+      whereClause.userId = req.user!.id;
+    }
+    
     const trips = await prisma.trip.findMany({
-      where: {
-        userId: req.user!.id,
-      },
+      where: whereClause,
       orderBy: {
         startDate: 'desc',
       },
@@ -232,6 +243,7 @@ router.post('/peg-route', authenticate, async (req: Request, res) => {
             visitDate: new Date(stop.visitDate),
             visitTime: stop.visitTime,
             duration: stop.duration || 60,
+            travelTime: stop.travelTime || 0,
             notes: stop.notes || null,
             order: stop.order,
             status: 'planned',
@@ -260,12 +272,21 @@ router.post('/peg-route', authenticate, async (req: Request, res) => {
 // Get trip with route stops
 router.get('/:id/route', authenticate, async (req: Request, res) => {
   try {
+    const userRole = req.user!.role;
+    
+    // Build where clause
+    const whereClause: any = {
+      id: req.params.id,
+      isPegRoute: true,
+    };
+    
+    // PEG users can view any PEG route, others can only view their own
+    if (userRole !== 'PEG') {
+      whereClause.userId = req.user!.id;
+    }
+    
     const trip = await prisma.trip.findFirst({
-      where: {
-        id: req.params.id,
-        userId: req.user!.id,
-        isPegRoute: true,
-      },
+      where: whereClause,
       include: {
         routeStops: {
           include: {
@@ -292,9 +313,10 @@ router.get('/:id/route', authenticate, async (req: Request, res) => {
 // Update route stop
 router.put('/route-stops/:id', authenticate, async (req: Request, res) => {
   try {
-    const { visitDate, visitTime, duration, notes, order, status } = req.body;
+    const { visitDate, visitTime, duration, travelTime, notes, order, status } = req.body;
+    const userRole = req.user!.role;
 
-    // Verify the route stop belongs to a trip owned by the user
+    // Verify the route stop exists and user has access
     const routeStop = await prisma.tripRouteStop.findUnique({
       where: { id: req.params.id },
       include: {
@@ -302,8 +324,22 @@ router.put('/route-stops/:id', authenticate, async (req: Request, res) => {
       },
     });
 
-    if (!routeStop || routeStop.trip.userId !== req.user!.id) {
+    if (!routeStop) {
       return res.status(404).json({ error: 'Route stop not found' });
+    }
+
+    // PEG users can only update status (mark as completed), not edit other fields
+    if (userRole === 'PEG') {
+      // Only allow status updates for PEG users
+      if (status === undefined) {
+        return res.status(403).json({ error: 'PEG users can only update delivery status' });
+      }
+      // Allow status update even if trip is not owned by PEG user
+    } else {
+      // Other users can only update their own trips
+      if (routeStop.trip.userId !== req.user!.id) {
+        return res.status(404).json({ error: 'Route stop not found' });
+      }
     }
 
     const updated = await prisma.tripRouteStop.update({
@@ -312,6 +348,7 @@ router.put('/route-stops/:id', authenticate, async (req: Request, res) => {
         visitDate: visitDate ? new Date(visitDate) : undefined,
         visitTime,
         duration,
+        travelTime,
         notes,
         order,
         status,

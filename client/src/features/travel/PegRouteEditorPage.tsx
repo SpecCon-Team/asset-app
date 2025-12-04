@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
-import { Calendar, Clock, MapPin, Save, ArrowLeft, Plus, Trash2, GripVertical, Check, CheckCircle2, Filter, X } from 'lucide-react';
+import { Calendar, Clock, MapPin, Save, ArrowLeft, Plus, Trash2, GripVertical, Check, CheckCircle2, Filter, X, Navigation } from 'lucide-react';
 import { showSuccess, showError } from '@/lib/sweetalert';
 import { getApiClient } from '@/features/assets/lib/apiClient';
 import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
+import { getCurrentUserRole } from '@/features/auth/hooks';
 
 // South African Provinces
 const provinces = [
@@ -36,6 +37,7 @@ interface RouteStop {
   visitDate: string; // YYYY-MM-DD
   visitTime: string; // HH:mm
   duration: number; // minutes
+  travelTime?: number; // Travel time to next client in minutes
   notes: string;
   order: number;
   status?: string; // 'planned', 'visited', 'cancelled'
@@ -52,6 +54,8 @@ export default function PegRouteEditorPage() {
   const [saving, setSaving] = useState(false);
   const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'pending'>('all');
   const showLoading = useMinLoadingTime(loading, 2000);
+  const userRole = getCurrentUserRole();
+  const isPegUser = userRole === 'PEG';
 
   useEffect(() => {
     if (tripId) {
@@ -90,6 +94,7 @@ export default function PegRouteEditorPage() {
         visitDate: new Date(stop.visitDate).toISOString().split('T')[0],
         visitTime: stop.visitTime || '09:00',
         duration: stop.duration || 60,
+        travelTime: stop.travelTime || 0,
         notes: stop.notes || '',
         order: stop.order,
         status: stop.status || 'planned',
@@ -134,6 +139,7 @@ export default function PegRouteEditorPage() {
           visitDate: defaultDate,
           visitTime: defaultTime,
           duration: 60, // 1 hour default
+          travelTime: 0, // Default travel time
           notes: '',
           order: index + 1,
           status: 'planned',
@@ -252,6 +258,7 @@ export default function PegRouteEditorPage() {
             visitDate: new Date(`${stop.visitDate}T${stop.visitTime}`).toISOString(),
             visitTime: stop.visitTime,
             duration: stop.duration,
+            travelTime: stop.travelTime || 0,
             notes: stop.notes,
             order: stop.order,
             status: stop.status || 'planned',
@@ -284,6 +291,7 @@ export default function PegRouteEditorPage() {
             visitDate: new Date(`${stop.visitDate}T${stop.visitTime}`).toISOString(),
             visitTime: stop.visitTime,
             duration: stop.duration,
+            travelTime: stop.travelTime || 0,
             notes: stop.notes,
             order: stop.order,
             status: stop.status || 'planned',
@@ -321,10 +329,10 @@ export default function PegRouteEditorPage() {
           Back to Client Selection
         </button>
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-          Edit Route Schedule
+          {isPegUser ? 'View Route Schedule' : 'Edit Route Schedule'}
         </h1>
         <p className="text-gray-600 dark:text-gray-400">
-          Set dates and times for each client visit
+          {isPegUser ? 'View delivery schedule and mark completions' : 'Set dates and times for each client visit'}
         </p>
       </div>
 
@@ -469,14 +477,16 @@ export default function PegRouteEditorPage() {
               {routeStops.map(s => s.client.name).join(' → ')}
             </p>
           </div>
-          <button
-            onClick={handleSave}
-            disabled={saving || routeStops.length === 0}
-            className="flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg font-medium transition-colors"
-          >
-            <Save className="w-5 h-5" />
-            {saving ? 'Saving...' : 'Save Route'}
-          </button>
+          {!isPegUser && (
+            <button
+              onClick={handleSave}
+              disabled={saving || routeStops.length === 0}
+              className="flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg font-medium transition-colors"
+            >
+              <Save className="w-5 h-5" />
+              {saving ? 'Saving...' : 'Save Route'}
+            </button>
+          )}
         </div>
       </div>
 
@@ -503,6 +513,9 @@ export default function PegRouteEditorPage() {
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Duration
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Travel Time
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Notes
@@ -563,7 +576,8 @@ export default function PegRouteEditorPage() {
                           type="date"
                           value={stop.visitDate}
                           onChange={(e) => updateStop(originalIndex, 'visitDate', e.target.value)}
-                          className="pl-8 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500"
+                          disabled={isPegUser}
+                          className="pl-8 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                         />
                       </div>
                     </td>
@@ -574,7 +588,8 @@ export default function PegRouteEditorPage() {
                           type="time"
                           value={stop.visitTime}
                           onChange={(e) => updateStop(originalIndex, 'visitTime', e.target.value)}
-                          className="pl-8 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500"
+                          disabled={isPegUser}
+                          className="pl-8 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                         />
                       </div>
                     </td>
@@ -582,7 +597,8 @@ export default function PegRouteEditorPage() {
                       <select
                         value={stop.duration}
                         onChange={(e) => updateStop(originalIndex, 'duration', parseInt(e.target.value))}
-                        className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500"
+                        disabled={isPegUser}
+                        className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <option value={30}>30 min</option>
                         <option value={60}>1 hour</option>
@@ -593,12 +609,31 @@ export default function PegRouteEditorPage() {
                       </select>
                     </td>
                     <td className="px-4 py-3">
+                      <div className="relative">
+                        <Navigation className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <input
+                          type="number"
+                          min="0"
+                          step="5"
+                          value={stop.travelTime || 0}
+                          onChange={(e) => updateStop(originalIndex, 'travelTime', parseInt(e.target.value) || 0)}
+                          placeholder="0"
+                          disabled={isPegUser}
+                          className="pl-8 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                        />
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-500 dark:text-gray-400">
+                          min
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
                       <input
                         type="text"
                         value={stop.notes}
                         onChange={(e) => updateStop(originalIndex, 'notes', e.target.value)}
                         placeholder="Notes..."
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500"
+                        disabled={isPegUser}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                       />
                     </td>
                     <td className="px-4 py-3">
@@ -648,29 +683,33 @@ export default function PegRouteEditorPage() {
                             <Check className="w-5 h-5" />
                           )}
                         </button>
-                        <button
-                          onClick={() => moveStop(originalIndex, 'up')}
-                          disabled={originalIndex === 0}
-                          className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30"
-                          title="Move up"
-                        >
-                          ↑
-                        </button>
-                        <button
-                          onClick={() => moveStop(originalIndex, 'down')}
-                          disabled={originalIndex === routeStops.length - 1}
-                          className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30"
-                          title="Move down"
-                        >
-                          ↓
-                        </button>
-                        <button
-                          onClick={() => removeStop(originalIndex)}
-                          className="p-1 text-red-400 hover:text-red-600"
-                          title="Remove"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        {!isPegUser && (
+                          <>
+                            <button
+                              onClick={() => moveStop(originalIndex, 'up')}
+                              disabled={originalIndex === 0}
+                              className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30"
+                              title="Move up"
+                            >
+                              ↑
+                            </button>
+                            <button
+                              onClick={() => moveStop(originalIndex, 'down')}
+                              disabled={originalIndex === routeStops.length - 1}
+                              className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30"
+                              title="Move down"
+                            >
+                              ↓
+                            </button>
+                            <button
+                              onClick={() => removeStop(originalIndex)}
+                              className="p-1 text-red-400 hover:text-red-600"
+                              title="Remove"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>

@@ -9,6 +9,7 @@ import {
 import { showSuccess, showError, showConfirm, showInfo } from '@/lib/sweetalert';
 import { getApiClient } from '@/features/assets/lib/apiClient';
 import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
+import { getCurrentUserRole } from '@/features/auth/hooks';
 
 interface Trip {
   id: string;
@@ -145,6 +146,8 @@ export default function TravelPlanPage() {
   const [showStats, setShowStats] = useState(true);
   const [loading, setLoading] = useState(true);
   const showLoading = useMinLoadingTime(loading, 2000);
+  const userRole = getCurrentUserRole();
+  const isPegUser = userRole === 'PEG';
 
   const [formData, setFormData] = useState({
     destination: '',

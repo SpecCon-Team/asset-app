@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapPin, Check, X, ArrowRight, Search, Calendar, Clock, ArrowLeft } from 'lucide-react';
-import { showSuccess, showError } from '@/lib/sweetalert';
+import { showSuccess, showError, showInfo } from '@/lib/sweetalert';
 import { getApiClient } from '@/features/assets/lib/apiClient';
 import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
+import { getCurrentUserRole } from '@/features/auth/hooks';
 
 // South African Provinces
 const provinces = [
@@ -37,6 +38,17 @@ export default function PegRouteCreatorPage() {
   const [filterProvince, setFilterProvince] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const showLoading = useMinLoadingTime(loading, 2000);
+  const userRole = getCurrentUserRole();
+  const isPegUser = userRole === 'PEG';
+
+  useEffect(() => {
+    if (isPegUser) {
+      showInfo('View Only', 'PEG users can view travel plans but cannot create new routes. Redirecting to Travel Plan...');
+      setTimeout(() => {
+        navigate('/travel-plan');
+      }, 2000);
+    }
+  }, [isPegUser, navigate]);
 
   useEffect(() => {
     loadClients();
@@ -78,6 +90,11 @@ export default function PegRouteCreatorPage() {
   const selectedClientsData = clients.filter(c => selectedClients.includes(c.id));
 
   const handleCreateRoute = () => {
+    if (isPegUser) {
+      showError('Access Denied', 'PEG users cannot create travel routes. Please contact an administrator.');
+      return;
+    }
+
     if (selectedClients.length === 0) {
       showError('No Clients Selected', 'Please select at least one client to create a route');
       return;
@@ -107,10 +124,10 @@ export default function PegRouteCreatorPage() {
           Back to Travel Plan
         </button>
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-          Create PEG Client Route
+          {isPegUser ? 'PEG Client Routes' : 'Create PEG Client Route'}
         </h1>
         <p className="text-gray-600 dark:text-gray-400">
-          Select clients from My PEG to create a travel route
+          {isPegUser ? 'PEG users can view routes created by administrators' : 'Select clients from My PEG to create a travel route'}
         </p>
       </div>
 
@@ -152,13 +169,15 @@ export default function PegRouteCreatorPage() {
                 {selectedClientsData.map(c => c.name).join(', ')}
               </p>
             </div>
-            <button
-              onClick={handleCreateRoute}
-              className="flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-            >
-              <ArrowRight className="w-5 h-5" />
-              Create Route
-            </button>
+            {!isPegUser && (
+              <button
+                onClick={handleCreateRoute}
+                className="flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+              >
+                <ArrowRight className="w-5 h-5" />
+                Create Route
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -183,19 +202,23 @@ export default function PegRouteCreatorPage() {
               return (
                 <div
                   key={client.id}
-                  onClick={() => toggleClientSelection(client.id)}
-                  className={`p-4 cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50 ${
+                  onClick={!isPegUser ? () => toggleClientSelection(client.id) : undefined}
+                  className={`p-4 transition-colors ${
+                    !isPegUser ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50' : ''
+                  } ${
                     isSelected ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500' : ''
                   }`}
                 >
                   <div className="flex items-start gap-4">
-                    <div className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                      isSelected
-                        ? 'bg-blue-600 border-blue-600'
-                        : 'border-gray-300 dark:border-gray-600'
-                    }`}>
-                      {isSelected && <Check className="w-4 h-4 text-white" />}
-                    </div>
+                    {!isPegUser && (
+                      <div className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+                        isSelected
+                          ? 'bg-blue-600 border-blue-600'
+                          : 'border-gray-300 dark:border-gray-600'
+                      }`}>
+                        {isSelected && <Check className="w-4 h-4 text-white" />}
+                      </div>
+                    )}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">

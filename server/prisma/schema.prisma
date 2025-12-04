@@ -388,6 +388,7 @@ model TripRouteStop {
   visitDate   DateTime // Date and time for this client visit
   visitTime   String?  // Specific time (e.g., "09:00", "14:30")
   duration    Int?     // Duration in minutes
+  travelTime  Int?     // Travel time to next client in minutes
   notes       String?  @db.Text
   order       Int      // Order in the route sequence
   status      String   @default("planned") // planned, visited, cancelled
