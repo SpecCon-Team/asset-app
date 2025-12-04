@@ -29,31 +29,74 @@ router.get('/', authenticate, async (req: Request, res: Response) => {
 
     // If user is ADMIN, TECHNICIAN, or PEG, show all clients from admins and technicians
     if (userRole === 'ADMIN' || userRole === 'TECHNICIAN' || userRole === 'PEG') {
-      // First, get all users who are admins, technicians, or peg users
-      const adminTechUsers = await prisma.user.findMany({
-        where: {
-          role: {
-            in: [Role.ADMIN, Role.TECHNICIAN, Role.PEG]
-          }
-        },
-        select: { id: true }
-      });
-
-      const userIds = adminTechUsers.map(u => u.id);
-
-      // Handle empty userIds array - if no admin/tech users exist, return empty array
-      if (userIds.length === 0) {
-        clients = [];
-      } else {
-        // Get all PEG clients created by any admin, technician, or peg admin
-        clients = await prisma.pEGClient.findMany({
-          where: {
-            userId: {
-              in: userIds
+      try {
+        // First, get all users who are admins, technicians, or peg users
+        // Try with PEG role first, fallback to just ADMIN and TECHNICIAN if PEG doesn't exist in enum
+        let adminTechUsers;
+        try {
+          adminTechUsers = await prisma.user.findMany({
+            where: {
+              role: {
+                in: [Role.ADMIN, Role.TECHNICIAN, Role.PEG]
+              }
+            },
+            select: { id: true }
+          });
+        } catch (prismaError: any) {
+          // If PEG role doesn't exist in database enum, fallback to just ADMIN and TECHNICIAN
+          if (prismaError?.code === 'P2001' || prismaError?.code === 'P2025' || prismaError?.message?.includes('Invalid value') || prismaError?.message?.includes('enum')) {
+            console.warn('PEG role not found in database enum, falling back to ADMIN and TECHNICIAN only');
+            adminTechUsers = await prisma.user.findMany({
+              where: {
+                role: {
+                  in: [Role.ADMIN, Role.TECHNICIAN]
+                }
+              },
+              select: { id: true }
+            });
+            // Also include the current user if they are PEG (even if enum doesn't support it yet)
+            if (userRole === 'PEG') {
+              const currentUser = await prisma.user.findUnique({
+                where: { id: userId },
+                select: { id: true }
+              });
+              if (currentUser && !adminTechUsers.find(u => u.id === currentUser.id)) {
+                adminTechUsers.push(currentUser);
+              }
             }
-          },
-          orderBy: { createdAt: 'desc' },
-        });
+          } else {
+            throw prismaError;
+          }
+        }
+
+        const userIds = adminTechUsers.map(u => u.id);
+
+        // Handle empty userIds array - if no admin/tech users exist, return empty array
+        if (userIds.length === 0) {
+          clients = [];
+        } else {
+          // Get all PEG clients created by any admin, technician, or peg admin
+          clients = await prisma.pEGClient.findMany({
+            where: {
+              userId: {
+                in: userIds
+              }
+            },
+            orderBy: { createdAt: 'desc' },
+          });
+        }
+      } catch (queryError: any) {
+        console.error('Error querying users for PEG clients:', queryError);
+        // Fallback: if query fails, just return empty array or user's own clients
+        if (userRole === 'PEG') {
+          // For PEG users, try to get their own clients as fallback
+          clients = await prisma.pEGClient.findMany({
+            where: { userId },
+            orderBy: { createdAt: 'desc' },
+          });
+        } else {
+          clients = [];
+        }
       }
     } else {
       // Regular users only see their own clients
