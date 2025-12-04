@@ -562,8 +562,9 @@ export default function PegRouteEditorPage() {
                     <td className="px-4 py-3">
                       {province && (
                         <span
-                          className="px-2 py-1 text-xs font-medium text-white rounded"
+                          className="px-2 py-1 text-xs font-medium text-white rounded whitespace-nowrap inline-block"
                           style={{ backgroundColor: province.color }}
+                          title={province.name}
                         >
                           {province.name}
                         </span>

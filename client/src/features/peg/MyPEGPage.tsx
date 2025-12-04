@@ -329,7 +329,7 @@ export default function MyPEGPage() {
                   className="p-3 bg-white dark:bg-gray-800 rounded-lg border-2 shadow-sm"
                   style={{ borderColor: province.color }}
                 >
-                  <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{province.name}</div>
+                  <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1 whitespace-nowrap">{province.name}</div>
                   <div className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white" style={{ color: province.color }}>
                     {count}
                   </div>
@@ -494,14 +494,14 @@ export default function MyPEGPage() {
               <button
                 key={province.id}
                 onClick={() => handleProvinceClickNew(province.id)}
-                className="p-3 sm:p-4 md:p-6 rounded-lg border-2 transition-all hover:scale-105 hover:shadow-lg bg-white dark:bg-gray-800"
+                className="p-3 sm:p-4 md:p-6 rounded-lg border-2 transition-all hover:scale-105 hover:shadow-lg bg-white dark:bg-gray-800 w-full"
                 style={{
                   borderColor: province.color,
                 }}
               >
-                <div className="text-center">
+                <div className="text-center w-full">
                   <div
-                    className="text-sm sm:text-base md:text-lg font-bold mb-1 sm:mb-2 whitespace-nowrap overflow-hidden text-ellipsis"
+                    className="text-sm sm:text-base md:text-lg font-bold mb-1 sm:mb-2 whitespace-nowrap"
                     style={{ color: province.color }}
                     title={province.name}
                   >

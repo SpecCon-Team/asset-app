@@ -237,8 +237,9 @@ export default function PegRouteCreatorPage() {
                         </div>
                         {province && (
                           <div
-                            className="px-2 py-0.5 rounded text-xs font-medium text-white"
+                            className="px-2 py-0.5 rounded text-xs font-medium text-white whitespace-nowrap"
                             style={{ backgroundColor: province.color }}
+                            title={province.name}
                           >
                             {province.name}
                           </div>
