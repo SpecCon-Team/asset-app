@@ -14,33 +14,38 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: (id) => {
-          // React and React DOM
-          if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+          // React and React DOM - must be in the same chunk and loaded first
+          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/') || id.includes('node_modules/react/jsx-runtime')) {
             return 'react-vendor';
           }
           
+          // React Router - depends on React, so keep separate but ensure React loads first
+          if (id.includes('node_modules/react-router')) {
+            return 'react-router-vendor';
+          }
+          
           // Chart libraries
-          if (id.includes('chart.js') || id.includes('react-chartjs-2') || id.includes('recharts')) {
+          if (id.includes('node_modules/chart.js') || id.includes('node_modules/react-chartjs-2') || id.includes('node_modules/recharts')) {
             return 'charts';
           }
           
           // PDF and Excel libraries
-          if (id.includes('jspdf') || id.includes('xlsx') || id.includes('papaparse')) {
+          if (id.includes('node_modules/jspdf') || id.includes('node_modules/xlsx') || id.includes('node_modules/papaparse')) {
             return 'export-libs';
           }
           
           // UI libraries
-          if (id.includes('sweetalert2') || id.includes('lucide-react') || id.includes('@hello-pangea/dnd')) {
+          if (id.includes('node_modules/sweetalert2') || id.includes('node_modules/lucide-react') || id.includes('node_modules/@hello-pangea/dnd')) {
             return 'ui-libs';
           }
           
           // QR Code libraries
-          if (id.includes('qrcode') || id.includes('html5-qrcode')) {
+          if (id.includes('node_modules/qrcode') || id.includes('node_modules/html5-qrcode')) {
             return 'qrcode-libs';
           }
           
           // Form libraries
-          if (id.includes('react-hook-form') || id.includes('@hookform/resolvers') || id.includes('zod')) {
+          if (id.includes('node_modules/react-hook-form') || id.includes('node_modules/@hookform/resolvers') || id.includes('node_modules/zod')) {
             return 'form-libs';
           }
           
@@ -52,6 +57,10 @@ export default defineConfig({
       },
     },
     chunkSizeWarningLimit: 1000, // Increase limit to 1MB for large apps
+    commonjsOptions: {
+      include: [/node_modules/],
+      transformMixedEsModules: true,
+    },
   },
   server: {
     host: true,
