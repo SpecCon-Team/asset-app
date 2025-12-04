@@ -15,17 +15,32 @@ export default defineConfig({
       output: {
         manualChunks: (id) => {
           // React and React DOM - must be in the same chunk and loaded first
-          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/') || id.includes('node_modules/react/jsx-runtime')) {
+          // Include all React-related packages to ensure they load together
+          if (
+            id.includes('node_modules/react/') || 
+            id.includes('node_modules/react-dom/') || 
+            id.includes('node_modules/react/jsx-runtime') ||
+            id.includes('node_modules/react/index') ||
+            id.includes('node_modules/react/cjs/') ||
+            id.includes('node_modules/react-dom/index') ||
+            id.includes('node_modules/react-dom/cjs/')
+          ) {
             return 'react-vendor';
           }
           
-          // React Router - depends on React, so keep separate but ensure React loads first
-          if (id.includes('node_modules/react-router')) {
-            return 'react-router-vendor';
+          // All React-related libraries must be in react-vendor to ensure React is available
+          if (
+            id.includes('node_modules/react-router') ||
+            id.includes('node_modules/react-chartjs-2') ||
+            id.includes('node_modules/react-hook-form') ||
+            id.includes('node_modules/qrcode.react') ||
+            id.includes('node_modules/react-hot-toast')
+          ) {
+            return 'react-vendor';
           }
           
-          // Chart libraries
-          if (id.includes('node_modules/chart.js') || id.includes('node_modules/react-chartjs-2') || id.includes('node_modules/recharts')) {
+          // Chart libraries (non-React)
+          if (id.includes('node_modules/chart.js') || id.includes('node_modules/recharts')) {
             return 'charts';
           }
           
@@ -39,13 +54,13 @@ export default defineConfig({
             return 'ui-libs';
           }
           
-          // QR Code libraries
+          // QR Code libraries (non-React)
           if (id.includes('node_modules/qrcode') || id.includes('node_modules/html5-qrcode')) {
             return 'qrcode-libs';
           }
           
-          // Form libraries
-          if (id.includes('node_modules/react-hook-form') || id.includes('node_modules/@hookform/resolvers') || id.includes('node_modules/zod')) {
+          // Form libraries (non-React parts)
+          if (id.includes('node_modules/@hookform/resolvers') || id.includes('node_modules/zod')) {
             return 'form-libs';
           }
           
