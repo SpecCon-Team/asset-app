@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Edit2, Trash2, Phone, Mail, MapPin, User, Building2, Calendar } from 'lucide-react';
+import { ArrowLeft, Plus, Edit2, Trash2, Phone, Mail, MapPin, User, Building2, Calendar, Eye, X } from 'lucide-react';
 import { showSuccess, showError, showConfirm } from '@/lib/sweetalert';
 import { getApiClient } from '@/features/assets/lib/apiClient';
 import { formatDate } from '@/lib/dateFormatter';
@@ -41,6 +41,7 @@ export default function ProvinceDetailsPage() {
   const showLoading = useMinLoadingTime(loading, 2000);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
+  const [viewingClient, setViewingClient] = useState<Client | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     location: '',
@@ -289,6 +290,13 @@ export default function ProvinceDetailsPage() {
 
                 <div className="flex gap-2">
                   <button
+                    onClick={() => setViewingClient(client)}
+                    className="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/30 rounded-lg transition-colors"
+                    title="View Details"
+                  >
+                    <Eye className="w-4 h-4" />
+                  </button>
+                  <button
                     onClick={() => handleEditClient(client)}
                     className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
                     title="Edit Client"
@@ -459,6 +467,213 @@ export default function ProvinceDetailsPage() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Client Details Modal */}
+      {viewingClient && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex items-center gap-4">
+                  <div
+                    className="w-16 h-16 rounded-lg flex items-center justify-center text-white text-2xl font-bold shadow-lg"
+                    style={{ backgroundColor: province.color }}
+                  >
+                    {viewingClient.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                      {viewingClient.name}
+                    </h2>
+                    {viewingClient.clientCode && (
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 font-mono">
+                        Code: {viewingClient.clientCode}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <button
+                  onClick={() => setViewingClient(null)}
+                  className="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  title="Close"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Client Information */}
+              <div className="space-y-6">
+                {/* Basic Information */}
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <Building2 className="w-5 h-5 text-blue-600" />
+                    Basic Information
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Client Name</p>
+                      <p className="text-base font-medium text-gray-900 dark:text-white">
+                        {viewingClient.name}
+                      </p>
+                    </div>
+                    <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Province</p>
+                      <p className="text-base font-medium text-gray-900 dark:text-white">
+                        {province.name}
+                      </p>
+                    </div>
+                    <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 md:col-span-2">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1 flex items-center gap-2">
+                        <MapPin className="w-4 h-4" />
+                        Location
+                      </p>
+                      <p className="text-base font-medium text-gray-900 dark:text-white">
+                        {viewingClient.location}
+                      </p>
+                    </div>
+                    {viewingClient.clientCode && (
+                      <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 md:col-span-2">
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Client Code</p>
+                        <p className="text-base font-mono font-medium text-blue-600 dark:text-blue-400">
+                          {viewingClient.clientCode}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Contact Information */}
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <Phone className="w-5 h-5 text-green-600" />
+                    Contact Information
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {viewingClient.contactPerson ? (
+                      <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1 flex items-center gap-2">
+                          <User className="w-4 h-4" />
+                          Contact Person
+                        </p>
+                        <p className="text-base font-medium text-gray-900 dark:text-white">
+                          {viewingClient.contactPerson}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1 flex items-center gap-2">
+                          <User className="w-4 h-4" />
+                          Contact Person
+                        </p>
+                        <p className="text-base text-gray-400 dark:text-gray-500 italic">
+                          Not provided
+                        </p>
+                      </div>
+                    )}
+
+                    {viewingClient.phone ? (
+                      <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1 flex items-center gap-2">
+                          <Phone className="w-4 h-4" />
+                          Phone Number
+                        </p>
+                        <a
+                          href={`tel:${viewingClient.phone}`}
+                          className="text-base font-medium text-blue-600 dark:text-blue-400 hover:underline"
+                        >
+                          {viewingClient.phone}
+                        </a>
+                      </div>
+                    ) : (
+                      <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1 flex items-center gap-2">
+                          <Phone className="w-4 h-4" />
+                          Phone Number
+                        </p>
+                        <p className="text-base text-gray-400 dark:text-gray-500 italic">
+                          Not provided
+                        </p>
+                      </div>
+                    )}
+
+                    {viewingClient.email ? (
+                      <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 md:col-span-2">
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1 flex items-center gap-2">
+                          <Mail className="w-4 h-4" />
+                          Email Address
+                        </p>
+                        <a
+                          href={`mailto:${viewingClient.email}`}
+                          className="text-base font-medium text-blue-600 dark:text-blue-400 hover:underline break-all"
+                        >
+                          {viewingClient.email}
+                        </a>
+                      </div>
+                    ) : (
+                      <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 md:col-span-2">
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1 flex items-center gap-2">
+                          <Mail className="w-4 h-4" />
+                          Email Address
+                        </p>
+                        <p className="text-base text-gray-400 dark:text-gray-500 italic">
+                          Not provided
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Additional Information */}
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-purple-600" />
+                    Additional Information
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {viewingClient.createdAt && (
+                      <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Date Added</p>
+                        <p className="text-base font-medium text-gray-900 dark:text-white">
+                          {formatDate(viewingClient.createdAt)}
+                        </p>
+                      </div>
+                    )}
+                    {viewingClient.updatedAt && (
+                      <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Last Updated</p>
+                        <p className="text-base font-medium text-gray-900 dark:text-white">
+                          {formatDate(viewingClient.updatedAt)}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                <button
+                  onClick={() => {
+                    setViewingClient(null);
+                    handleEditClient(viewingClient);
+                  }}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                >
+                  <Edit2 className="w-4 h-4" />
+                  Edit Client
+                </button>
+                <button
+                  onClick={() => setViewingClient(null)}
+                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </div>
