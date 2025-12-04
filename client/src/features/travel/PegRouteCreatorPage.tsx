@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapPin, Check, X, ArrowRight, Search, Calendar, Clock } from 'lucide-react';
+import { MapPin, Check, X, ArrowRight, Search, Calendar, Clock, ArrowLeft } from 'lucide-react';
 import { showSuccess, showError } from '@/lib/sweetalert';
 import { getApiClient } from '@/features/assets/lib/apiClient';
 import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
@@ -99,6 +99,13 @@ export default function PegRouteCreatorPage() {
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="mb-6">
+        <button
+          onClick={() => navigate('/travel-plan')}
+          className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          Back to Travel Plan
+        </button>
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
           Create PEG Client Route
         </h1>
