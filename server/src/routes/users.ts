@@ -100,6 +100,54 @@ router.patch('/:id/role', authenticate, requireRole('ADMIN', 'PEG'), async (req:
       return res.status(400).json(parsed.error.flatten());
     }
     
+    // Check if trying to set PEG role and handle enum error gracefully
+    if (parsed.data.role === 'PEG') {
+      try {
+        const user = await prisma.user.update({
+          where: { id: req.params.id },
+          data: { role: parsed.data.role },
+          select: { id: true, email: true, role: true, isAvailable: true },
+        });
+        
+        // Invalidate cache
+        invalidateCache('/api/users');
+        
+        return res.json(user);
+      } catch (pegError: any) {
+        // Check if error is due to missing PEG enum value
+        if (pegError?.message?.includes('invalid input value for enum "Role": "PEG"') || 
+            pegError?.code === 'P2003' ||
+            (pegError?.meta?.target && pegError.meta.target.includes('Role'))) {
+          console.error('PEG role not found in database enum. Migration may not have run yet.');
+          
+          // Try to add PEG role to enum dynamically
+          try {
+            await prisma.$executeRawUnsafe(`ALTER TYPE "Role" ADD VALUE IF NOT EXISTS 'PEG';`);
+            console.log('✅ Successfully added PEG role to enum');
+            
+            // Retry the update
+            const user = await prisma.user.update({
+              where: { id: req.params.id },
+              data: { role: parsed.data.role },
+              select: { id: true, email: true, role: true, isAvailable: true },
+            });
+            
+            invalidateCache('/api/users');
+            return res.json(user);
+          } catch (migrationError: any) {
+            console.error('Failed to add PEG role to enum:', migrationError);
+            return res.status(500).json({ 
+              error: 'PEG role not available in database', 
+              message: 'The PEG role needs to be added to the database. Please contact an administrator or redeploy the server to run the migration.',
+              details: migrationError.message 
+            });
+          }
+        }
+        throw pegError;
+      }
+    }
+    
+    // For non-PEG roles, proceed normally
     const user = await prisma.user.update({
       where: { id: req.params.id },
       data: { role: parsed.data.role },

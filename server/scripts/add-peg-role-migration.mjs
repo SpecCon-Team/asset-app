@@ -23,10 +23,21 @@ async function addPegRole() {
     }
 
     // Add PEG to the enum
+    // Note: PostgreSQL doesn't support IF NOT EXISTS for ALTER TYPE ADD VALUE
+    // So we need to check first and handle the error if it already exists
     console.log('Adding PEG to Role enum...');
-    await prisma.$executeRawUnsafe(`
-      ALTER TYPE "Role" ADD VALUE IF NOT EXISTS 'PEG';
-    `);
+    try {
+      await prisma.$executeRawUnsafe(`
+        ALTER TYPE "Role" ADD VALUE 'PEG';
+      `);
+    } catch (addError) {
+      // PostgreSQL error code 42710 means the enum value already exists
+      if (addError.code === '42710' || addError.message?.includes('already exists') || addError.message?.includes('duplicate')) {
+        console.log('✅ PEG role already exists in enum (skipping)');
+      } else {
+        throw addError;
+      }
+    }
 
     console.log('✅ Successfully added PEG role to database');
     
