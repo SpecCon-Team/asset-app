@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { Role } from '@prisma/client';
+import { Role } from '../lib/permissions';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 import { prisma } from '../lib/prisma';

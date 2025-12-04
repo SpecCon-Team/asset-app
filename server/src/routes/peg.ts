@@ -4,7 +4,7 @@ import { prisma } from '../lib/prisma';
 import { authenticate } from '../middleware/auth';
 import { logAudit } from '../lib/auditLog';
 import { invalidateCache } from '../middleware/cache';
-import { Role } from '@prisma/client';
+import { Role } from '../lib/permissions';
 
 const router = Router();
 

@@ -173,7 +173,7 @@ router.get('/:id', authenticate, async (req: Request, res: Response) => {
 });
 
 // Create maintenance schedule
-router.post('/', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: Request<{}, {}, CreateMaintenanceScheduleBody>, res: Response) => {
+router.post('/', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: Request<{}, {}, CreateMaintenanceScheduleBody>, res: Response) => {
   try {
     const {
       assetId,
@@ -219,7 +219,7 @@ router.post('/', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req:
 });
 
 // Update maintenance schedule
-router.put('/:id', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: Request<{ id: string }, {}, UpdateMaintenanceScheduleBody>, res: Response) => {
+router.put('/:id', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: Request<{ id: string }, {}, UpdateMaintenanceScheduleBody>, res: Response) => {
   try {
     const {
       title,
@@ -269,7 +269,7 @@ router.put('/:id', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (re
 });
 
 // Delete maintenance schedule
-router.delete('/:id', authenticate, requireRole(['ADMIN']), async (req: Request, res: Response) => {
+router.delete('/:id', authenticate, requireRole('ADMIN'), async (req: Request, res: Response) => {
   try {
     const schedule = await prisma.maintenanceSchedule.findUnique({
       where: { id: req.params.id },
@@ -293,7 +293,7 @@ router.delete('/:id', authenticate, requireRole(['ADMIN']), async (req: Request,
 });
 
 // Complete maintenance task
-router.post('/:id/complete', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: Request<{ id: string }, {}, CompleteMaintenanceTaskBody>, res: Response) => {
+router.post('/:id/complete', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: Request<{ id: string }, {}, CompleteMaintenanceTaskBody>, res: Response) => {
   try {
     const {
       status,

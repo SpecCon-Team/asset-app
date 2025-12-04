@@ -15,13 +15,14 @@ import { autoAssignmentEngine } from '../lib/autoAssignment';
 import { slaEngine } from '../lib/slaEngine';
 import { cacheMiddleware, invalidateCache } from '../middleware/cache';
 
-type TicketWithAllRelations = Prisma.TicketGetPayload<{
+// Type for ticket with all relations
+type TicketWithAllRelations = Awaited<ReturnType<typeof prisma.ticket.findUnique<{
   include: {
     createdBy: { select: { id: true, email: true, name: true, role: true } };
     assignedTo: { select: { id: true, email: true, name: true } };
     asset: true;
   };
-}>;
+}>>>;
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });

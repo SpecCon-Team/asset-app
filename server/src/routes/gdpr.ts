@@ -3,7 +3,7 @@
  * Provides endpoints for data export, deletion, and privacy management
  */
 
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { authenticate, requireRole } from '../middleware/auth';
 import {

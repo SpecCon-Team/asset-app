@@ -330,7 +330,7 @@ router.get('/:id', authenticate, async (req: Request, res: Response) => {
 });
 
 // POST /api/inventory - Create new inventory item
-router.post('/', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: Request<{}, {}, CreateInventoryItemBody>, res: Response) => {
+router.post('/', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: Request<{}, {}, CreateInventoryItemBody>, res: Response) => {
   try {
     const {
       itemCode,
@@ -421,7 +421,7 @@ router.post('/', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req:
 });
 
 // PUT /api/inventory/:id - Update inventory item
-router.put('/:id', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: Request<{ id: string }, {}, UpdateInventoryItemBody>, res: Response) => {
+router.put('/:id', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: Request<{ id: string }, {}, UpdateInventoryItemBody>, res: Response) => {
   try {
     const { id } = req.params;
     const {
@@ -490,7 +490,7 @@ router.put('/:id', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (re
 });
 
 // DELETE /api/inventory/:id - Delete inventory item
-router.delete('/:id', authenticate, requireRole(['ADMIN']), async (req: Request, res: Response) => {
+router.delete('/:id', authenticate, requireRole('ADMIN'), async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
@@ -516,7 +516,7 @@ router.delete('/:id', authenticate, requireRole(['ADMIN']), async (req: Request,
 // =====================================================
 
 // POST /api/inventory/:id/transaction - Create stock transaction
-router.post('/:id/transaction', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: Request<{ id: string }, {}, CreateStockTransactionBody>, res: Response) => {
+router.post('/:id/transaction', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: Request<{ id: string }, {}, CreateStockTransactionBody>, res: Response) => {
   try {
     const { id } = req.params;
     const {
@@ -708,7 +708,7 @@ router.get('/suppliers/list', authenticate, async (req: Request, res: Response) 
 });
 
 // POST /api/inventory/suppliers - Create supplier
-router.post('/suppliers/create', authenticate, requireRole(['ADMIN', 'TECHNICIAN']), async (req: Request<{}, {}, CreateSupplierBody>, res: Response) => {
+router.post('/suppliers/create', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: Request<{}, {}, CreateSupplierBody>, res: Response) => {
   try {
     const {
       supplierCode,
