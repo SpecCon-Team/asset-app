@@ -49,16 +49,16 @@ export default function ForgotPasswordPage() {
               <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
             </div>
 
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            <h2 className="text-2xl font-bold text-white drop-shadow-lg mb-4">
               Check Your Email
             </h2>
 
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
-              We've sent password reset instructions to <strong className="text-gray-900 dark:text-white">{email}</strong>
+            <p className="text-white/90 mb-6">
+              We've sent password reset instructions to <strong className="text-white">{email}</strong>
             </p>
 
             <div className="space-y-4">
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-white/80">
                 Didn't receive the email? Check your spam folder or try again.
               </p>
 
@@ -97,8 +97,8 @@ export default function ForgotPasswordPage() {
           >
             <span className="text-white font-bold text-2xl">AT</span>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Reset Password</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">
+          <h1 className="text-3xl font-bold text-white drop-shadow-lg">Reset Password</h1>
+          <p className="text-white/90 mt-2">
             Enter your email and we'll send you instructions to reset your password
           </p>
         </div>
@@ -125,7 +125,7 @@ export default function ForgotPasswordPage() {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-white mb-2">
                 Email Address
               </label>
               <div className="relative">

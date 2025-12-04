@@ -137,8 +137,8 @@ export default function SignUpPage() {
           >
             <span className="text-white font-bold text-2xl">AT</span>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Create Your Account</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">Join AssetTrack Pro today</p>
+          <h1 className="text-3xl font-bold text-white drop-shadow-lg">Create Your Account</h1>
+          <p className="text-white/90 mt-2">Join AssetTrack Pro today</p>
         </div>
 
         {/* Sign Up Form */}
@@ -172,7 +172,7 @@ export default function SignUpPage() {
 
           <form onSubmit={handleSignUp} className="space-y-6">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="name" className="block text-sm font-medium text-white mb-2">
                 Name
               </label>
               <input
@@ -190,7 +190,7 @@ export default function SignUpPage() {
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-white mb-2">
                 Email
               </label>
               <input
@@ -212,7 +212,7 @@ export default function SignUpPage() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-white mb-2">
                 Password
               </label>
               <div className="relative">
@@ -272,7 +272,7 @@ export default function SignUpPage() {
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-white mb-2">
                 Confirm Password
               </label>
               <div className="relative">
@@ -314,7 +314,7 @@ export default function SignUpPage() {
                 className="mt-1 w-4 h-4 border-gray-300 dark:border-gray-600 rounded"
                 style={{ accentColor: 'var(--color-primary)' }}
               />
-              <label htmlFor="terms" className="ml-2 text-sm text-gray-600 dark:text-gray-400">
+              <label htmlFor="terms" className="ml-2 text-sm text-white/90">
                 I agree to the{' '}
                 <a
                   href="#"
@@ -345,7 +345,7 @@ export default function SignUpPage() {
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-sm text-white/90">
               Already have an account?{' '}
               <Link
                 to="/login"

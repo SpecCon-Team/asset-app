@@ -59,11 +59,11 @@ export default function ResetPasswordPage() {
               <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
             </div>
 
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            <h2 className="text-2xl font-bold text-white drop-shadow-lg mb-4">
               Password Reset Successful!
             </h2>
 
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
+            <p className="text-white/90 mb-6">
               Your password has been changed successfully. Redirecting to login...
             </p>
 
@@ -88,8 +88,8 @@ export default function ResetPasswordPage() {
           <div className="inline-flex w-16 h-16 rounded-full items-center justify-center mb-4" style={{ backgroundColor: 'var(--color-primary)' }}>
             <span className="text-white font-bold text-2xl">AT</span>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Set New Password</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">
+          <h1 className="text-3xl font-bold text-white drop-shadow-lg">Set New Password</h1>
+          <p className="text-white/90 mt-2">
             Enter your new password below
           </p>
         </div>
@@ -98,7 +98,7 @@ export default function ResetPasswordPage() {
         <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-lg shadow-xl p-8 border border-white/20">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-white mb-2">
                 New Password
               </label>
               <div className="relative">
@@ -121,13 +121,13 @@ export default function ResetPasswordPage() {
                   {showPassword ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
                 </button>
               </div>
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              <p className="mt-1 text-xs text-white/80">
                 Must be at least 12 characters long
               </p>
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-white mb-2">
                 Confirm New Password
               </label>
               <div className="relative">
@@ -160,7 +160,7 @@ export default function ResetPasswordPage() {
                   <div className={`h-2 flex-1 rounded ${password.length >= 16 ? 'bg-green-500' : 'bg-gray-200 dark:bg-gray-600'}`}></div>
                   <div className={`h-2 flex-1 rounded ${/[A-Z]/.test(password) && /[a-z]/.test(password) && /[0-9]/.test(password) ? 'bg-green-500' : 'bg-gray-200 dark:bg-gray-600'}`}></div>
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+                <p className="text-xs text-white/80">
                   Password strength: {
                     password.length >= 16 && /[A-Z]/.test(password) && /[a-z]/.test(password) && /[0-9]/.test(password)
                       ? 'Strong'
@@ -184,7 +184,7 @@ export default function ResetPasswordPage() {
           <div className="mt-6 text-center">
             <Link
               to="/login"
-              className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+              className="text-sm text-white/90 hover:text-white transition-colors"
             >
               Back to Login
             </Link>
