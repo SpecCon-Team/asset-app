@@ -18,9 +18,17 @@ router.get('/', authenticate, async (req: Request, res) => {
     });
 
     res.json(trips);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching trips:', error);
-    res.status(500).json({ error: 'Failed to fetch trips' });
+    console.error('Error details:', {
+      message: error?.message,
+      code: error?.code,
+      meta: error?.meta,
+    });
+    res.status(500).json({ 
+      error: 'Failed to fetch trips',
+      details: error?.message || 'Unknown error'
+    });
   }
 });
 
