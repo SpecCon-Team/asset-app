@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
-import { Calendar, Clock, MapPin, Save, ArrowLeft, Plus, Trash2, GripVertical, Check, CheckCircle2 } from 'lucide-react';
+import { Calendar, Clock, MapPin, Save, ArrowLeft, Plus, Trash2, GripVertical, Check, CheckCircle2, Filter, X } from 'lucide-react';
 import { showSuccess, showError } from '@/lib/sweetalert';
 import { getApiClient } from '@/features/assets/lib/apiClient';
 import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
@@ -39,6 +39,7 @@ interface RouteStop {
   notes: string;
   order: number;
   status?: string; // 'planned', 'visited', 'cancelled'
+  completedAt?: string; // ISO timestamp when marked as completed
 }
 
 export default function PegRouteEditorPage() {
@@ -49,6 +50,7 @@ export default function PegRouteEditorPage() {
   const [routeStops, setRouteStops] = useState<RouteStop[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'pending'>('all');
   const showLoading = useMinLoadingTime(loading, 2000);
 
   useEffect(() => {
@@ -91,6 +93,7 @@ export default function PegRouteEditorPage() {
         notes: stop.notes || '',
         order: stop.order,
         status: stop.status || 'planned',
+        completedAt: stop.status === 'visited' && stop.updatedAt ? new Date(stop.updatedAt).toISOString() : undefined,
       }));
 
       setRouteStops(routeStopsData);
@@ -155,9 +158,15 @@ export default function PegRouteEditorPage() {
   const toggleCompletion = async (index: number) => {
     const stop = routeStops[index];
     const newStatus = stop.status === 'visited' ? 'planned' : 'visited';
+    const completedAt = newStatus === 'visited' ? new Date().toISOString() : undefined;
     
     // Update local state immediately for better UX
     updateStop(index, 'status', newStatus);
+    if (completedAt) {
+      updateStop(index, 'completedAt', completedAt);
+    } else {
+      updateStop(index, 'completedAt', undefined);
+    }
     
     // Auto-save if we have a tripId (existing route)
     if (tripId && stop.id) {
@@ -170,11 +179,21 @@ export default function PegRouteEditorPage() {
       } catch (error: any) {
         // Revert on error
         updateStop(index, 'status', stop.status);
+        updateStop(index, 'completedAt', stop.completedAt);
         console.error('Error updating status:', error);
         showError('Error', 'Failed to update delivery status');
       }
     }
   };
+
+  const filteredRouteStops = routeStops.filter(stop => {
+    if (statusFilter === 'all') return true;
+    if (statusFilter === 'completed') return stop.status === 'visited';
+    if (statusFilter === 'pending') return stop.status !== 'visited';
+    return true;
+  });
+
+  const allCompleted = routeStops.length > 0 && routeStops.every(stop => stop.status === 'visited');
 
   const removeStop = (index: number) => {
     setRouteStops(prev => {
@@ -309,6 +328,70 @@ export default function PegRouteEditorPage() {
         </p>
       </div>
 
+      {/* Route Completion Banner */}
+      {allCompleted && routeStops.length > 0 && (
+        <div className="bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg p-4 mb-6 shadow-lg">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                <CheckCircle2 className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold">Route Completed! 🎉</h3>
+                <p className="text-sm text-green-100">
+                  All {routeStops.length} deliveries have been completed successfully
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => navigate('/travel-plan')}
+              className="px-4 py-2 bg-white text-green-600 rounded-lg font-medium hover:bg-green-50 transition-colors"
+            >
+              Back to Travel Plan
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Filter Controls */}
+      {routeStops.length > 0 && (
+        <div className="mb-4 flex items-center gap-3">
+          <Filter className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+          <div className="flex gap-2">
+            <button
+              onClick={() => setStatusFilter('all')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                statusFilter === 'all'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+              }`}
+            >
+              All ({routeStops.length})
+            </button>
+            <button
+              onClick={() => setStatusFilter('completed')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                statusFilter === 'completed'
+                  ? 'bg-green-600 text-white'
+                  : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+              }`}
+            >
+              Completed ({routeStops.filter(s => s.status === 'visited').length})
+            </button>
+            <button
+              onClick={() => setStatusFilter('pending')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                statusFilter === 'pending'
+                  ? 'bg-orange-600 text-white'
+                  : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+              }`}
+            >
+              Pending ({routeStops.filter(s => s.status !== 'visited').length})
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Completion Statistics */}
       {routeStops.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -433,7 +516,9 @@ export default function PegRouteEditorPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {routeStops.map((stop, index) => {
+              {filteredRouteStops.map((stop) => {
+                // Find the original index for updates
+                const originalIndex = routeStops.findIndex(s => s.clientId === stop.clientId && s.order === stop.order);
                 const province = provinces.find(p => p.id === stop.client.provinceId);
                 const isCompleted = stop.status === 'visited';
                 return (
@@ -477,7 +562,7 @@ export default function PegRouteEditorPage() {
                         <input
                           type="date"
                           value={stop.visitDate}
-                          onChange={(e) => updateStop(index, 'visitDate', e.target.value)}
+                          onChange={(e) => updateStop(originalIndex, 'visitDate', e.target.value)}
                           className="pl-8 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
@@ -488,7 +573,7 @@ export default function PegRouteEditorPage() {
                         <input
                           type="time"
                           value={stop.visitTime}
-                          onChange={(e) => updateStop(index, 'visitTime', e.target.value)}
+                          onChange={(e) => updateStop(originalIndex, 'visitTime', e.target.value)}
                           className="pl-8 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
@@ -496,7 +581,7 @@ export default function PegRouteEditorPage() {
                     <td className="px-4 py-3">
                       <select
                         value={stop.duration}
-                        onChange={(e) => updateStop(index, 'duration', parseInt(e.target.value))}
+                        onChange={(e) => updateStop(originalIndex, 'duration', parseInt(e.target.value))}
                         className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500"
                       >
                         <option value={30}>30 min</option>
@@ -511,33 +596,45 @@ export default function PegRouteEditorPage() {
                       <input
                         type="text"
                         value={stop.notes}
-                        onChange={(e) => updateStop(index, 'notes', e.target.value)}
+                        onChange={(e) => updateStop(originalIndex, 'notes', e.target.value)}
                         placeholder="Notes..."
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500"
                       />
                     </td>
                     <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full ${
-                          isCompleted
-                            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                            : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
-                        }`}
-                      >
-                        {isCompleted ? (
-                          <>
-                            <CheckCircle2 className="w-3 h-3" />
-                            Completed
-                          </>
-                        ) : (
-                          'Pending'
+                      <div className="flex flex-col gap-1">
+                        <span
+                          className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full ${
+                            isCompleted
+                              ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                              : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                          }`}
+                        >
+                          {isCompleted ? (
+                            <>
+                              <CheckCircle2 className="w-3 h-3" />
+                              Completed
+                            </>
+                          ) : (
+                            'Pending'
+                          )}
+                        </span>
+                        {isCompleted && stop.completedAt && (
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            {new Date(stop.completedAt).toLocaleString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </span>
                         )}
-                      </span>
+                      </div>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={() => toggleCompletion(index)}
+                          onClick={() => toggleCompletion(originalIndex)}
                           className={`p-2 rounded-lg transition-all ${
                             isCompleted
                               ? 'bg-green-100 text-green-600 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50'
@@ -552,23 +649,23 @@ export default function PegRouteEditorPage() {
                           )}
                         </button>
                         <button
-                          onClick={() => moveStop(index, 'up')}
-                          disabled={index === 0}
+                          onClick={() => moveStop(originalIndex, 'up')}
+                          disabled={originalIndex === 0}
                           className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30"
                           title="Move up"
                         >
                           ↑
                         </button>
                         <button
-                          onClick={() => moveStop(index, 'down')}
-                          disabled={index === routeStops.length - 1}
+                          onClick={() => moveStop(originalIndex, 'down')}
+                          disabled={originalIndex === routeStops.length - 1}
                           className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30"
                           title="Move down"
                         >
                           ↓
                         </button>
                         <button
-                          onClick={() => removeStop(index)}
+                          onClick={() => removeStop(originalIndex)}
                           className="p-1 text-red-400 hover:text-red-600"
                           title="Remove"
                         >
@@ -587,6 +684,20 @@ export default function PegRouteEditorPage() {
       {routeStops.length === 0 && (
         <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
           <p className="text-gray-500 dark:text-gray-400">No clients in route</p>
+        </div>
+      )}
+
+      {routeStops.length > 0 && filteredRouteStops.length === 0 && (
+        <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+          <p className="text-gray-500 dark:text-gray-400">
+            No {statusFilter === 'completed' ? 'completed' : 'pending'} deliveries found
+          </p>
+          <button
+            onClick={() => setStatusFilter('all')}
+            className="mt-2 text-blue-600 dark:text-blue-400 hover:underline"
+          >
+            Show all deliveries
+          </button>
         </div>
       )}
     </div>
