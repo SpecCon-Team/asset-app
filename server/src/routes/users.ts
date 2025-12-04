@@ -115,15 +115,43 @@ router.patch('/:id/role', authenticate, requireRole('ADMIN', 'PEG'), async (req:
         return res.json(user);
       } catch (pegError: any) {
         // Check if error is due to missing PEG enum value
-        if (pegError?.message?.includes('invalid input value for enum "Role": "PEG"') || 
-            pegError?.code === 'P2003' ||
-            (pegError?.meta?.target && pegError.meta.target.includes('Role'))) {
-          console.error('PEG role not found in database enum. Migration may not have run yet.');
+        // PostgreSQL error code 22P02 = invalid input value for enum
+        const errorMessage = JSON.stringify(pegError) + (pegError?.message || '') + (pegError?.cause?.message || '');
+        const isEnumError = 
+          errorMessage.includes('invalid input value for enum') ||
+          errorMessage.includes('enum "Role": "PEG"') ||
+          errorMessage.includes('22P02') ||
+          pegError?.code === 'P2003' ||
+          (pegError?.meta?.target && pegError.meta.target.includes('Role')) ||
+          (pegError?.cause?.code === '22P02');
+        
+        if (isEnumError) {
+          console.error('PEG role not found in database enum. Attempting to add it...');
+          console.error('Error details:', {
+            message: pegError?.message,
+            code: pegError?.code,
+            cause: pegError?.cause,
+            meta: pegError?.meta
+          });
           
           // Try to add PEG role to enum dynamically
           try {
-            await prisma.$executeRawUnsafe(`ALTER TYPE "Role" ADD VALUE IF NOT EXISTS 'PEG';`);
-            console.log('✅ Successfully added PEG role to enum');
+            // PostgreSQL doesn't support IF NOT EXISTS for ALTER TYPE ADD VALUE
+            // So we need to handle the error if it already exists
+            try {
+              await prisma.$executeRawUnsafe(`ALTER TYPE "Role" ADD VALUE 'PEG';`);
+              console.log('✅ Successfully added PEG role to enum');
+            } catch (addError: any) {
+              // Error code 42710 means the enum value already exists
+              if (addError?.code === '42710' || addError?.message?.includes('already exists') || addError?.message?.includes('duplicate')) {
+                console.log('✅ PEG role already exists in enum');
+              } else {
+                throw addError;
+              }
+            }
+            
+            // Wait a moment for the enum change to propagate
+            await new Promise(resolve => setTimeout(resolve, 500));
             
             // Retry the update
             const user = await prisma.user.update({
@@ -139,7 +167,8 @@ router.patch('/:id/role', authenticate, requireRole('ADMIN', 'PEG'), async (req:
             return res.status(500).json({ 
               error: 'PEG role not available in database', 
               message: 'The PEG role needs to be added to the database. Please contact an administrator or redeploy the server to run the migration.',
-              details: migrationError.message 
+              details: migrationError.message,
+              code: migrationError.code
             });
           }
         }
