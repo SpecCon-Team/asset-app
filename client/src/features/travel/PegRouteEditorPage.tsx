@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { Calendar, Clock, MapPin, Save, ArrowLeft, Plus, Trash2, GripVertical } from 'lucide-react';
 import { showSuccess, showError } from '@/lib/sweetalert';
 import { getApiClient } from '@/features/assets/lib/apiClient';
@@ -30,6 +30,7 @@ interface PEGClient {
 }
 
 interface RouteStop {
+  id?: string; // Route stop ID (for existing stops)
   clientId: string;
   client: PEGClient;
   visitDate: string; // YYYY-MM-DD
@@ -41,6 +42,7 @@ interface RouteStop {
 
 export default function PegRouteEditorPage() {
   const navigate = useNavigate();
+  const { tripId } = useParams<{ tripId?: string }>();
   const [searchParams] = useSearchParams();
   const [clients, setClients] = useState<PEGClient[]>([]);
   const [routeStops, setRouteStops] = useState<RouteStop[]>([]);
@@ -49,14 +51,56 @@ export default function PegRouteEditorPage() {
   const showLoading = useMinLoadingTime(loading, 2000);
 
   useEffect(() => {
-    const clientIds = searchParams.get('clients')?.split(',') || [];
-    if (clientIds.length === 0) {
-      showError('No Clients', 'No clients selected. Please go back and select clients.');
-      navigate('/travel-plan/peg-route-creator');
-      return;
+    if (tripId) {
+      // Load existing route
+      loadExistingRoute(tripId);
+    } else {
+      // Create new route from selected clients
+      const clientIds = searchParams.get('clients')?.split(',') || [];
+      if (clientIds.length === 0) {
+        showError('No Clients', 'No clients selected. Please go back and select clients.');
+        navigate('/travel-plan/peg-route-creator');
+        return;
+      }
+      loadClients(clientIds);
     }
-    loadClients(clientIds);
-  }, [searchParams, navigate]);
+  }, [tripId, searchParams, navigate]);
+
+  const loadExistingRoute = async (tripId: string) => {
+    try {
+      setLoading(true);
+      const api = getApiClient();
+      const response = await api.get(`/travel/${tripId}/route`);
+      const trip = response.data;
+      
+      if (!trip || !trip.routeStops) {
+        showError('Route Not Found', 'The travel plan route could not be found.');
+        navigate('/travel-plan');
+        return;
+      }
+
+      // Extract clients and route stops from the trip
+      const routeStopsData: RouteStop[] = trip.routeStops.map((stop: any) => ({
+        id: stop.id,
+        clientId: stop.clientId,
+        client: stop.client,
+        visitDate: new Date(stop.visitDate).toISOString().split('T')[0],
+        visitTime: stop.visitTime || '09:00',
+        duration: stop.duration || 60,
+        notes: stop.notes || '',
+        order: stop.order,
+      }));
+
+      setRouteStops(routeStopsData);
+      setClients(routeStopsData.map(stop => stop.client));
+    } catch (error) {
+      console.error('Error loading route:', error);
+      showError('Error', 'Failed to load travel plan route');
+      navigate('/travel-plan');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const loadClients = async (clientIds: string[]) => {
     try {
@@ -153,27 +197,50 @@ export default function PegRouteEditorPage() {
       const startDate = new Date(Math.min(...dates.map(d => d.getTime())));
       const endDate = new Date(Math.max(...dates.map(d => d.getTime())));
 
-      // Create trip
-      const tripData = {
-        destination: `PEG Route - ${routeStops.length} clients`,
-        country: 'South Africa',
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-        category: 'business',
-        status: 'upcoming',
-        budget: 0,
-        spent: 0,
-        notes: `Route visiting ${routeStops.length} PEG clients`,
-        isPegRoute: true,
-        routeStops: routeStops.map(stop => ({
-          clientId: stop.clientId,
-          visitDate: new Date(`${stop.visitDate}T${stop.visitTime}`).toISOString(),
-          visitTime: stop.visitTime,
-          duration: stop.duration,
-          notes: stop.notes,
-          order: stop.order,
-        })),
-      };
+      if (tripId) {
+        // Update existing route stops
+        for (const stop of routeStops) {
+          if (stop.id) {
+            // Update existing route stop
+            await api.put(`/travel/route-stops/${stop.id}`, {
+              visitDate: new Date(`${stop.visitDate}T${stop.visitTime}`).toISOString(),
+              visitTime: stop.visitTime,
+              duration: stop.duration,
+              notes: stop.notes,
+              order: stop.order,
+            });
+          }
+        }
+        
+        // Update trip dates
+        await api.put(`/travel/${tripId}`, {
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString(),
+        });
+
+        showSuccess('Updated!', 'Travel plan route updated successfully', 2000);
+        navigate('/travel-plan');
+      } else {
+        // Create new trip
+        const tripData = {
+          destination: `PEG Route - ${routeStops.length} clients`,
+          country: 'South Africa',
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString(),
+          category: 'business',
+          status: 'upcoming',
+          budget: 0,
+          spent: 0,
+          notes: `Route visiting ${routeStops.length} PEG clients`,
+          routeStops: routeStops.map(stop => ({
+            clientId: stop.clientId,
+            visitDate: new Date(`${stop.visitDate}T${stop.visitTime}`).toISOString(),
+            visitTime: stop.visitTime,
+            duration: stop.duration,
+            notes: stop.notes,
+            order: stop.order,
+          })),
+        };
 
       const response = await api.post('/travel/peg-route', tripData);
       showSuccess('Route Created!', 'Your PEG client route has been created successfully');
@@ -198,7 +265,7 @@ export default function PegRouteEditorPage() {
     <div className="p-6 max-w-7xl mx-auto">
       <div className="mb-6">
         <button
-          onClick={() => navigate('/travel-plan/peg-route-creator')}
+          onClick={() => navigate(tripId ? '/travel-plan' : '/travel-plan/peg-route-creator')}
           className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4"
         >
           <ArrowLeft className="w-5 h-5" />

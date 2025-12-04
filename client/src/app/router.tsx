@@ -108,7 +108,7 @@ export const router = createHashRouter([
       { path: 'my-peg/:provinceId', element: <LazyPage><ProvinceDetailsPage /></LazyPage> },
       { path: 'travel-plan', element: <LazyPage><TravelPlanPage /></LazyPage> },
       { path: 'travel-plan/peg-route-creator', element: <LazyPage><PegRouteCreatorPage /></LazyPage> },
-      { path: 'travel-plan/peg-route-editor', element: <LazyPage><PegRouteEditorPage /></LazyPage> },
+      { path: 'travel-plan/peg-route-editor/:tripId?', element: <LazyPage><PegRouteEditorPage /></LazyPage> },
       { path: 'my-profile', element: <LazyPage><MyProfilePage /></LazyPage> },
       { path: 'settings', element: <LazyPage><GeneralSettingsPage /></LazyPage> },
       { path: '2fa-setup', element: <LazyPage><TwoFactorSetupPage /></LazyPage> },
