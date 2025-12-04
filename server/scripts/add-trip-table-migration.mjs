@@ -17,9 +17,12 @@ async function ensureTripTable() {
     `);
 
     if (!Array.isArray(tableCheck) || tableCheck.length === 0) {
-      console.log('❌ Trip table does not exist. Please run prisma migrate deploy first.');
+      console.log('⚠️  Trip table does not exist. This should be created by prisma migrate deploy.');
+      console.log('📝 The migration script will only add the isPegRoute column if the table exists.');
+      console.log('⚠️  If you see this message, ensure prisma migrate deploy runs successfully.\n');
       await prisma.$disconnect();
-      process.exit(1);
+      // Don't exit with error - let prisma migrate deploy handle table creation
+      return;
     }
 
     console.log('✅ Trip table exists!\n');
