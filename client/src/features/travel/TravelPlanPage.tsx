@@ -20,8 +20,8 @@ interface Trip {
   status: 'upcoming' | 'ongoing' | 'completed' | 'cancelled';
   budget: number;
   spent: number;
-  notes: string;
-  itinerary: ItineraryItem[];
+  notes: string | null;
+  itinerary: ItineraryItem[] | null;
 }
 
 interface ItineraryItem {
@@ -167,7 +167,13 @@ export default function TravelPlanPage() {
       setLoading(true);
       const api = getApiClient();
       const response = await api.get('/travel');
-      setTrips(response.data);
+      // Normalize null values to empty arrays/strings
+      const normalizedTrips = (response.data || []).map((trip: any) => ({
+        ...trip,
+        itinerary: trip.itinerary || [],
+        notes: trip.notes || '',
+      }));
+      setTrips(normalizedTrips);
     } catch (error) {
       console.error('Error loading trips:', error);
       showError('Error', 'Failed to load trips');
@@ -180,7 +186,7 @@ export default function TravelPlanPage() {
     const matchesSearch =
       trip.destination.toLowerCase().includes(searchQuery.toLowerCase()) ||
       trip.country.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      trip.notes.toLowerCase().includes(searchQuery.toLowerCase());
+      (trip.notes || '').toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesCategory = filterCategory === 'all' || trip.category === filterCategory;
     const matchesStatus = filterStatus === 'all' || trip.status === filterStatus;
@@ -278,7 +284,7 @@ export default function TravelPlanPage() {
         budget: parseFloat(formData.budget) || 0,
         spent: parseFloat(formData.spent) || 0,
         notes: formData.notes,
-        itinerary: editingTrip?.itinerary || [],
+        itinerary: editingTrip?.itinerary || null,
       };
 
       if (editingTrip) {
@@ -878,7 +884,7 @@ export default function TravelPlanPage() {
               )}
 
               {/* Itinerary */}
-              {selectedTrip.itinerary.length > 0 && (
+              {selectedTrip.itinerary && selectedTrip.itinerary.length > 0 && (
                 <div>
                   <h4 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                     <MapIcon className="w-5 h-5" />
