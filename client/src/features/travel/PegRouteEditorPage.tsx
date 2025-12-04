@@ -242,9 +242,10 @@ export default function PegRouteEditorPage() {
           })),
         };
 
-      const response = await api.post('/travel/peg-route', tripData);
-      showSuccess('Route Created!', 'Your PEG client route has been created successfully');
-      navigate('/travel-plan');
+        const response = await api.post('/travel/peg-route', tripData);
+        showSuccess('Route Created!', 'Your PEG client route has been created successfully');
+        navigate('/travel-plan');
+      }
     } catch (error: any) {
       console.error('Error saving route:', error);
       showError('Error', error.response?.data?.error || 'Failed to save route');
