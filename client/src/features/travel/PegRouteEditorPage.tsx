@@ -319,7 +319,7 @@ export default function PegRouteEditorPage() {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-6 w-full">
       <div className="mb-6">
         <button
           onClick={() => navigate(tripId ? '/travel-plan' : '/travel-plan/peg-route-creator')}
