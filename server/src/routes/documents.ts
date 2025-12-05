@@ -174,7 +174,8 @@ router.get('/', authenticate, async (req: Request, res: Response) => {
       prisma.document.count({ where })
     ]);
 
-    res.json({
+    // Convert BigInt values to numbers for JSON serialization
+    res.json(convertBigIntsToNumbers({
       documents,
       pagination: {
         total,
@@ -182,7 +183,7 @@ router.get('/', authenticate, async (req: Request, res: Response) => {
         limit: limitNum,
         pages: Math.ceil(total / limitNum)
       }
-    });
+    }));
   } catch (error: any) {
     console.error('Error fetching documents:', error);
     res.status(500).json({
@@ -286,7 +287,8 @@ router.get('/recent', authenticate, async (req: Request, res: Response) => {
       take: parseInt(limit)
     });
 
-    res.json({ documents });
+    // Convert BigInt values to numbers for JSON serialization
+    res.json(convertBigIntsToNumbers({ documents }));
   } catch (error: any) {
     console.error('Error fetching recent documents:', error);
     res.status(500).json({
@@ -370,7 +372,8 @@ router.get('/:id', authenticate, async (req: Request, res: Response) => {
       }
     });
 
-    res.json(document);
+    // Convert BigInt values to numbers for JSON serialization
+    res.json(convertBigIntsToNumbers(document));
   } catch (error: any) {
     console.error('Error fetching document:', error);
     res.status(500).json({
@@ -426,10 +429,11 @@ router.post('/upload', authenticate, upload.single('file'), async (req: Request<
       fileName: req.file.originalname
     });
 
-    res.status(201).json({
+    // Convert BigInt values to numbers for JSON serialization
+    res.status(201).json(convertBigIntsToNumbers({
       message: 'Document uploaded successfully',
       document
-    });
+    }));
   } catch (error: any) {
     console.error('Error uploading document:', error);
 
@@ -492,10 +496,11 @@ router.put('/:id', authenticate, async (req: Request<{ id: string }, {}, Documen
 
     await logAudit(req, 'UPDATE', 'Document', id, req.body);
 
-    res.json({
+    // Convert BigInt values to numbers for JSON serialization
+    res.json(convertBigIntsToNumbers({
       message: 'Document updated successfully',
       document: updated
-    });
+    }));
   } catch (error: any) {
     console.error('Error updating document:', error);
     res.status(500).json({
