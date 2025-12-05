@@ -59,7 +59,7 @@ const AnimatedBackground: React.FC = () => {
     const bubbles: Bubble[] = [];
 
     for (let i = 0; i < bubbleCount; i++) {
-      const radius = Math.random() * 80 + 40; // Large bubbles: 40-120px
+      const radius = Math.random() * 120 + 60; // Larger flares: 60-180px
       const initialX = Math.random() * canvasWidth;
       const initialY = Math.random() * canvasHeight;
       
@@ -69,7 +69,7 @@ const AnimatedBackground: React.FC = () => {
         radius: radius,
         vx: (Math.random() - 0.5) * 0.3, // Slow horizontal movement
         vy: (Math.random() - 0.5) * 0.3, // Slow vertical movement
-        opacity: Math.random() * 0.15 + 0.05, // Subtle opacity
+        opacity: Math.random() * 0.25 + 0.15, // More visible light flares
         initialX: initialX,
         initialY: initialY,
         angle: Math.random() * Math.PI * 2, // Random starting angle
@@ -119,7 +119,7 @@ const AnimatedBackground: React.FC = () => {
           bubble.initialY = bubble.y;
         }
 
-        // Draw bubble with soft gradient
+        // Draw soft light flare with gradient
         const gradient = ctx.createRadialGradient(
           bubble.x - bubble.radius * 0.3,
           bubble.y - bubble.radius * 0.3,
@@ -129,11 +129,11 @@ const AnimatedBackground: React.FC = () => {
           bubble.radius
         );
         
-        // Soft white/light blue bubble
-        gradient.addColorStop(0, `rgba(255, 255, 255, ${bubble.opacity * 0.8})`);
-        gradient.addColorStop(0.4, `rgba(200, 220, 255, ${bubble.opacity * 0.4})`);
-        gradient.addColorStop(0.7, `rgba(150, 180, 255, ${bubble.opacity * 0.2})`);
-        gradient.addColorStop(1, `rgba(100, 150, 255, 0)`);
+        // Soft white/light purple-blue flare for subtle glow effect
+        gradient.addColorStop(0, `rgba(255, 255, 255, ${bubble.opacity * 0.6})`);
+        gradient.addColorStop(0.3, `rgba(220, 230, 255, ${bubble.opacity * 0.4})`);
+        gradient.addColorStop(0.6, `rgba(180, 200, 255, ${bubble.opacity * 0.2})`);
+        gradient.addColorStop(1, `rgba(150, 180, 255, 0)`);
 
         ctx.fillStyle = gradient;
         ctx.beginPath();
@@ -184,7 +184,9 @@ const AnimatedBackground: React.FC = () => {
     <canvas
       ref={canvasRef}
       className="fixed inset-0 w-full h-full pointer-events-none z-0"
-      style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #00f2fe 100%)' }}
+      style={{ 
+        background: 'linear-gradient(135deg, #6B46C1 0%, #8B5CF6 30%, #A78BFA 50%, #60A5FA 70%, #3B82F6 100%)'
+      }}
     />
   );
 };
