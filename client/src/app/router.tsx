@@ -55,6 +55,7 @@ const InventoryPage = lazy(() => import('@/features/inventory/InventoryPage'));
 const InventoryFormPage = lazy(() => import('@/features/inventory/InventoryFormPage'));
 const InventoryDetailPage = lazy(() => import('@/features/inventory/InventoryDetailPage'));
 const SuppliersPage = lazy(() => import('@/features/inventory/SuppliersPage'));
+const SupplierFormPage = lazy(() => import('@/features/inventory/SupplierFormPage'));
 const DepreciationPage = lazy(() => import('@/features/depreciation/DepreciationPage'));
 const DepreciationFormPage = lazy(() => import('@/features/depreciation/DepreciationFormPage'));
 const DepreciationDetailPage = lazy(() => import('@/features/depreciation/DepreciationDetailPage'));
@@ -142,6 +143,7 @@ export const router = createHashRouter([
       { path: 'inventory', element: <LazyPage><InventoryPage /></LazyPage> },
       { path: 'inventory/new', element: <LazyPage><InventoryFormPage /></LazyPage> },
       { path: 'inventory/suppliers', element: <LazyPage><SuppliersPage /></LazyPage> },
+      { path: 'inventory/suppliers/new', element: <LazyPage><SupplierFormPage /></LazyPage> },
       { path: 'inventory/:id', element: <LazyPage><InventoryDetailPage /></LazyPage> },
       { path: 'inventory/:id/edit', element: <LazyPage><InventoryFormPage /></LazyPage> },
       { path: 'depreciation', element: <LazyPage><DepreciationPage /></LazyPage> },

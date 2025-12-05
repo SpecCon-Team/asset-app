@@ -155,10 +155,7 @@ export default function SuppliersPage() {
           </button>
 
           <button
-            onClick={() => {
-              // TODO: Navigate to create supplier form when implemented
-              showError('Not Implemented', 'Create supplier functionality is not yet available');
-            }}
+            onClick={() => navigate('/inventory/suppliers/new')}
             className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2 whitespace-nowrap"
           >
             <Plus className="w-5 h-5" />
@@ -177,9 +174,7 @@ export default function SuppliersPage() {
             </p>
             {!search && (
               <button
-                onClick={() => {
-                  showError('Not Implemented', 'Create supplier functionality is not yet available');
-                }}
+                onClick={() => navigate('/inventory/suppliers/new')}
                 className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors inline-flex items-center gap-2"
               >
                 <Plus className="w-5 h-5" />
@@ -285,7 +280,7 @@ export default function SuppliersPage() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => {
-                          // TODO: Navigate to edit supplier when implemented
+                          // Edit functionality not yet implemented in backend
                           showError('Not Implemented', 'Edit supplier functionality is not yet available');
                         }}
                         className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
