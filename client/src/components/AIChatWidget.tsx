@@ -35,11 +35,26 @@ export default function AIChatWidget() {
     const welcomeShown = localStorage.getItem(welcomeShownKey);
 
     if (savedMessages) {
-      const parsed = JSON.parse(savedMessages);
-      setMessages(parsed.map((msg: any) => ({
-        ...msg,
-        timestamp: new Date(msg.timestamp)
-      })));
+      try {
+        const parsed = JSON.parse(savedMessages);
+        setMessages(parsed.map((msg: any) => {
+          const timestamp = msg.timestamp ? new Date(msg.timestamp) : new Date();
+          // Validate the date
+          if (isNaN(timestamp.getTime())) {
+            return {
+              ...msg,
+              timestamp: new Date()
+            };
+          }
+          return {
+            ...msg,
+            timestamp
+          };
+        }));
+      } catch (error) {
+        console.error('Error parsing saved messages:', error);
+        setMessages([]);
+      }
     } else {
       // Clear messages if no saved history for this user
       setMessages([]);
@@ -156,11 +171,18 @@ export default function AIChatWidget() {
   };
 
   const formatTime = (date: Date) => {
-    return new Date(date).toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    });
+    if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
+      return 'Just now';
+    }
+    try {
+      return new Date(date).toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      });
+    } catch (error) {
+      return 'Just now';
+    }
   };
 
   return (

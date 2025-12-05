@@ -52,19 +52,55 @@ const DocumentDetailPage: React.FC = () => {
 
   const handleDownload = async () => {
     try {
-      window.open(`${getApiBaseUrl()}/documents/${id}/download`, '_blank');
-    } catch (error) {
-      showError('Failed to download document');
+      const token = localStorage.getItem('token');
+      if (!token) {
+        showError('Authentication required', 'Please log in to download documents');
+        return;
+      }
+
+      // Create a temporary link with authentication
+      const downloadUrl = `${getApiBaseUrl()}/documents/${id}/download`;
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      
+      // Use fetch with authentication headers
+      const response = await fetch(downloadUrl, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Download failed');
+      }
+
+      // Get the blob and create a download link
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      link.href = url;
+      link.download = document?.originalFileName || 'document';
+      link.click();
+      
+      // Cleanup
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(link);
+    } catch (error: any) {
+      console.error('Error downloading document:', error);
+      showError('Failed to download document', error.message || 'Please try again');
     }
   };
 
   const handleDelete = async () => {
-    const confirmed = await showConfirmDialog(
+    const result = await showConfirmDialog(
       'Delete Document',
-      'Are you sure you want to delete this document? This action cannot be undone.'
+      'Are you sure you want to delete this document? This action cannot be undone.',
+      'Yes',
+      'Cancel'
     );
 
-    if (!confirmed) return;
+    if (!result || !result.isConfirmed) return;
 
     try {
       await getApiClient().delete(`/documents/${id}`);
