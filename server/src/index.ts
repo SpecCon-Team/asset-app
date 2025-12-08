@@ -44,8 +44,15 @@ import {
   preventParameterPollution,
   validateDataIntegrity
 } from './middleware/security';
+import { enhancedCSPMiddleware } from './middleware/csp';
+import { setCSRFProtection, validateCSRFToken } from './middleware/csrf';
+import { sessionFixationProtection, validateSession } from './middleware/sessionSecurity';
 import { dynamicRateLimiter, progressiveDelayMiddleware } from './lib/enhancedRateLimiting';
 import { parseQuery } from './middleware/queryParser';
+import { verifyWhatsAppWebhook, webhookRateLimiter, logWebhookEvent } from './middleware/webhookSecurity';
+import { ddosProtection } from './lib/ddosProtection';
+import { sanitizeRequestBody } from './middleware/htmlSanitizer';
+import { cookieTamperingDetection, cookieRotation } from './middleware/secureCookies';
 
 const app = express();
 
@@ -91,8 +98,17 @@ app.get('/api/whatsapp/webhook', (req, res) => {
 // WhatsApp Webhook POST handler - registered early before security middleware
 // This needs to be here because WhatsApp webhooks need special handling
 const whatsappWebhookRouter = express.Router();
-whatsappWebhookRouter.post('/api/whatsapp/webhook', express.json(), async (req, res) => {
+whatsappWebhookRouter.post('/api/whatsapp/webhook', 
+  express.json({
+    verify: (req: any, res, buf) => {
+      req.rawBody = buf.toString();
+    }
+  }),
+  webhookRateLimiter(50, 60000), // 50 requests per minute
+  verifyWhatsAppWebhook,
+  async (req, res) => {
   try {
+    logWebhookEvent(req, 'whatsapp', 'message_received');
     console.log('📩 Received webhook:', JSON.stringify(req.body, null, 2));
 
     const body = req.body;
@@ -169,24 +185,21 @@ if (process.env.NODE_ENV === 'development') {
 // 3. Security logging
 app.use(securityLogger);
 
-// 4. Enhanced security headers
-app.use(enhancedSecurityHeaders);
+// 4. Cookie parser (required for CSRF) - must come before CSRF protection
+app.use(cookieParser());
 
-// 5. Security headers with Helmet (Enhanced CSP)
+// 5. Enhanced CSP with nonce-based protection
+app.use(enhancedCSPMiddleware);
+
+// 6. CSRF Protection
+app.use(setCSRFProtection);
+
+// 7. Session Fixation Protection
+app.use(sessionFixationProtection);
+
+// 8. Security headers with Helmet (Enhanced CSP without unsafe-inline)
 app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"], // TODO: Replace with nonces in production
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'", process.env.CLIENT_URL || "http://localhost:5173"],
-      frameSrc: ["'none'"],
-      objectSrc: ["'none'"],
-      upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : null,
-    },
-    reportOnly: false,
-  },
+  contentSecurityPolicy: false, // Disabled as we handle it with enhancedCSPMiddleware
   strictTransportSecurity: {
     maxAge: 31536000, // 1 year
     includeSubDomains: true,
@@ -195,9 +208,6 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false, // Allow embedding for development
   referrerPolicy: { policy: 'strict-origin-when-cross-origin' }
 }));
-
-// 6. Cookie parser (required for CSRF)
-app.use(cookieParser());
 
 // 7. CORS must be configured before other middleware
 const allowedOrigins = [
@@ -221,7 +231,7 @@ app.use(cors({
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID', 'X-CSRF-Token']
 }));
 
 // 8. Response compression - optimized for better performance
@@ -244,14 +254,7 @@ app.use(compression({
 // 9. Data sanitization against NoSQL injection
 app.use(mongoSanitize());
 
-// 10. Body parser with size limits
-app.use(express.json({
-  limit: '10mb',
-  verify: (req: any, res, buf) => {
-    req.rawBody = buf.toString();
-  }
-}));
-app.use(express.urlencoded({ limit: '10mb', extended: true }));
+// 10. Body parser moved to specific routes to avoid conflicts
 
 // 11. Input validation and sanitization
 app.use(validateInput);
@@ -265,7 +268,20 @@ app.use(parseQuery);
 // 13. Data integrity validation
 app.use(validateDataIntegrity);
 
-// 14. Enhanced dynamic rate limiting (applies to all routes)
+// 14. Input sanitization
+app.use('/api/', sanitizeRequestBody);
+
+// 15. Cookie security and tampering detection
+app.use('/api/', cookieTamperingDetection);
+app.use('/api/', cookieRotation);
+
+// 16. Advanced DDoS protection
+app.use('/api/', ddosProtection);
+
+// 17. CSRF validation for state-changing requests
+app.use('/api/', validateCSRFToken);
+
+// 18. Enhanced dynamic rate limiting (applies to all routes)
 app.use('/api/', dynamicRateLimiter);
 app.use('/api/', progressiveDelayMiddleware);
 
@@ -303,14 +319,52 @@ app.get('/health', async (_req, res) => {
 // Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
-app.use('/api/auth', authRouter);
-app.use('/api/users', usersRouter);
-app.use('/api/assets', assetsRouter);
-app.use('/api/tickets', ticketsRouter);
-app.use('/api/ticket-templates', ticketTemplatesRouter);
-app.use('/api/comments', commentsRouter);
-app.use('/api/notifications', notificationsRouter);
-app.use('/api/audit-logs', auditLogsRouter);
+  // Apply body parser specifically to auth routes
+  app.use('/api/auth', express.json({
+    limit: '10mb',
+    verify: (req: any, res, buf) => {
+      req.rawBody = buf.toString();
+    }
+  }));
+  app.use('/api/auth', express.urlencoded({ limit: '10mb', extended: true }));
+  app.use('/api/auth', authRouter);
+  
+  // Apply body parser to assets route
+  app.use('/api/assets', express.json({
+    limit: '10mb',
+    verify: (req: any, res, buf) => {
+      req.rawBody = buf.toString();
+    }
+  }));
+  app.use('/api/assets', express.urlencoded({ limit: '10mb', extended: true }));
+  app.use('/api/assets', assetsRouter);
+  
+  app.use('/api/users', usersRouter);
+  
+  // Apply body parser to tickets route
+  app.use('/api/tickets', express.json({
+    limit: '10mb',
+    verify: (req: any, res, buf) => {
+      req.rawBody = buf.toString();
+    }
+  }));
+  app.use('/api/tickets', express.urlencoded({ limit: '10mb', extended: true }));
+  app.use('/api/tickets', ticketsRouter);
+  
+  // Apply body parser to other routes
+  app.use('/api/ticket-templates', express.json({ limit: '10mb' }));
+  app.use('/api/ticket-templates', express.urlencoded({ limit: '10mb', extended: true }));
+  app.use('/api/ticket-templates', ticketTemplatesRouter);
+  
+  app.use('/api/comments', express.json({ limit: '10mb' }));
+  app.use('/api/comments', express.urlencoded({ limit: '10mb', extended: true }));
+  app.use('/api/comments', commentsRouter);
+  
+  app.use('/api/notifications', express.json({ limit: '10mb' }));
+  app.use('/api/notifications', express.urlencoded({ limit: '10mb', extended: true }));
+  app.use('/api/notifications', notificationsRouter);
+  
+  app.use('/api/audit-logs', auditLogsRouter);
 app.use('/api/2fa', twoFactorRouter);
 app.use('/api/gdpr', gdprRouter);
 app.use('/api/whatsapp', whatsappRouter);

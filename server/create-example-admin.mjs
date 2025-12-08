@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
-async function createExampleAdmin() {
+async function createAdminUser() {
   try {
     console.log('🔍 Checking for admin user: admin@example.com');
     
@@ -18,8 +18,8 @@ async function createExampleAdmin() {
       console.log('Role:', existingUser.role);
       console.log('Email Verified:', existingUser.emailVerified);
       
-      // Reset password to default
-      const newPassword = 'Admin@123456';
+      // Reset password
+      const newPassword = 'admin123456789';
       const hashedPassword = await bcrypt.hash(newPassword, 10);
       
       await prisma.user.update({
@@ -38,14 +38,14 @@ async function createExampleAdmin() {
     } else {
       console.log('❌ Admin user not found. Creating new admin...');
       
-      const password = 'Admin@123456';
+      const password = 'admin123456789';
       const hashedPassword = await bcrypt.hash(password, 10);
       
       const newAdmin = await prisma.user.create({
         data: {
           email: 'admin@example.com',
           password: hashedPassword,
-          name: 'Example Admin',
+          name: 'Admin User',
           role: 'ADMIN',
           emailVerified: true,
           loginAttempts: 0
@@ -60,7 +60,7 @@ async function createExampleAdmin() {
     
     console.log('\n🎉 You can now login with:');
     console.log('   Email: admin@example.com');
-    console.log('   Password: Admin@123456');
+    console.log('   Password: admin123456789');
     console.log('\n⚠️  Remember to change your password after first login!');
     
   } catch (error) {
@@ -70,4 +70,4 @@ async function createExampleAdmin() {
   }
 }
 
-createExampleAdmin();
+createAdminUser();

@@ -165,30 +165,30 @@ export default function AssetDetailsPage() {
   }
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
-      <div className="mb-6">
+    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-4xl mx-auto">
+      <div className="mb-4 sm:mb-6">
         <button
           onClick={() => navigate('/assets')}
-          className="text-blue-600 hover:text-blue-700 mb-4 flex items-center gap-2"
+          className="text-blue-600 hover:text-blue-700 mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base"
         >
           ← Back to Assets
         </button>
-        <h1 className="text-3xl font-bold dark:text-white">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold dark:text-white">
           {isEditMode ? 'Edit Asset' : 'Create New Asset'}
         </h1>
       </div>
 
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600">
+        <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm sm:text-base">
           {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           {/* Asset Code - Only show when editing (read-only) */}
           {isEditMode && (
-            <div>
+            <div className="lg:col-span-2">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Asset Code (Auto-generated)
               </label>
@@ -197,7 +197,7 @@ export default function AssetDetailsPage() {
                 name="asset_code"
                 value={formData.asset_code}
                 disabled
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
+                className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed text-sm sm:text-base"
                 placeholder="Will be auto-generated"
               />
               <p className="mt-1 text-xs text-gray-500">
@@ -208,7 +208,7 @@ export default function AssetDetailsPage() {
 
           {/* Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Asset Name <span className="text-red-500">*</span>
             </label>
             <input
@@ -217,14 +217,14 @@ export default function AssetDetailsPage() {
               value={formData.name}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
               placeholder="e.g., Dell Laptop"
             />
           </div>
 
           {/* Serial Number */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Serial Number
             </label>
             <input
@@ -232,14 +232,14 @@ export default function AssetDetailsPage() {
               name="serial_number"
               value={formData.serial_number}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
               placeholder="e.g., SN123456789"
             />
           </div>
 
           {/* Remote ID */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Remote ID
             </label>
             <input
@@ -247,14 +247,14 @@ export default function AssetDetailsPage() {
               name="remote_id"
               value={formData.remote_id}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
               placeholder="e.g., RMT-001"
             />
           </div>
 
           {/* Asset Type */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Asset Type
             </label>
             <input
@@ -262,21 +262,21 @@ export default function AssetDetailsPage() {
               name="asset_type"
               value={formData.asset_type}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
               placeholder="e.g., Laptop, Desktop, Monitor"
             />
           </div>
 
           {/* Condition */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Condition
             </label>
             <select
               name="condition"
               value={formData.condition}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
             >
               <option value="">Select condition</option>
               <option value="Excellent">Excellent</option>
@@ -288,14 +288,14 @@ export default function AssetDetailsPage() {
 
           {/* Status */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Status
             </label>
             <select
               name="status"
               value={formData.status}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
             >
               <option value="available">Available</option>
               <option value="assigned">Assigned</option>
@@ -307,7 +307,7 @@ export default function AssetDetailsPage() {
 
           {/* Assigned To */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Assigned To (User)
             </label>
             <select
@@ -315,7 +315,7 @@ export default function AssetDetailsPage() {
               value={formData.ownerId}
               onChange={handleChange}
               disabled={loadingUsers}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
             >
               <option value="">Select a user (optional)</option>
               {users.map((user) => (
@@ -324,14 +324,14 @@ export default function AssetDetailsPage() {
                 </option>
               ))}
             </select>
-            <p className="mt-1 text-xs text-gray-500">
-              Select the user who will be assigned this asset
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Select a user who will be assigned this asset
             </p>
           </div>
 
           {/* Department */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Department
             </label>
             <input
@@ -339,14 +339,15 @@ export default function AssetDetailsPage() {
               name="department"
               value={formData.department}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
               placeholder="e.g., IT, HR, Finance"
             />
           </div>
 
+
           {/* Office Location */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Office Location
             </label>
             <input
@@ -354,14 +355,14 @@ export default function AssetDetailsPage() {
               name="office_location"
               value={formData.office_location}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
               placeholder="e.g., Building A, Floor 3"
             />
           </div>
 
           {/* Ownership */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Ownership
             </label>
             <input
@@ -369,14 +370,14 @@ export default function AssetDetailsPage() {
               name="ownership"
               value={formData.ownership}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="e.g., Company, Leased"
+              className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+              placeholder="Company, Client, etc."
             />
           </div>
 
           {/* Extension */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Extension
             </label>
             <input
@@ -384,29 +385,29 @@ export default function AssetDetailsPage() {
               name="extension"
               value={formData.extension}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Phone extension"
+              className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+              placeholder="Phone numbers"
             />
           </div>
 
-          {/* Desk Phones */}
+          {/* Deskphones */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Desk Phones
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Deskphones
             </label>
             <input
               type="text"
               name="deskphones"
               value={formData.deskphones}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Phone numbers"
+              className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+              placeholder="Phone models"
             />
           </div>
 
           {/* Mouse */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Mouse
             </label>
             <input
@@ -414,14 +415,14 @@ export default function AssetDetailsPage() {
               name="mouse"
               value={formData.mouse}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
               placeholder="Mouse type/model"
             />
           </div>
 
           {/* Keyboard */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Keyboard
             </label>
             <input
@@ -429,14 +430,14 @@ export default function AssetDetailsPage() {
               name="keyboard"
               value={formData.keyboard}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
               placeholder="Keyboard type/model"
             />
           </div>
 
           {/* Scanned By */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Scanned By
             </label>
             <input
@@ -444,29 +445,15 @@ export default function AssetDetailsPage() {
               name="scanned_by"
               value={formData.scanned_by}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
               placeholder="Scanner name"
             />
           </div>
 
-          {/* Scan DateTime */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Scan Date/Time
-            </label>
-            <input
-              type="text"
-              name="scan_datetime"
-              value={formData.scan_datetime}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Scan date and time"
-            />
-          </div>
 
           {/* Description - Full Width */}
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="lg:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Description
             </label>
             <textarea
@@ -474,14 +461,14 @@ export default function AssetDetailsPage() {
               value={formData.description}
               onChange={handleChange}
               rows={3}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base resize-y"
               placeholder="Asset description..."
             />
           </div>
 
           {/* Notes - Full Width */}
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="lg:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Notes
             </label>
             <textarea
@@ -489,19 +476,19 @@ export default function AssetDetailsPage() {
               value={formData.notes}
               onChange={handleChange}
               rows={3}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base resize-y"
               placeholder="Additional notes..."
             />
           </div>
         </div>
 
         {/* Form Actions */}
-        <div className="mt-8 flex gap-4 justify-end">
+        <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-end sm:justify-start">
           {isEditMode && currentAsset && (
             <button
               type="button"
               onClick={() => setShowQRCode(true)}
-              className="px-6 py-2 bg-purple-600 dark:bg-purple-500 text-white rounded-lg hover:bg-purple-700 dark:hover:bg-purple-600 flex items-center gap-2 transition-colors"
+              className="w-full sm:w-auto px-4 sm:px-6 py-2 bg-purple-600 dark:bg-purple-500 text-white rounded-lg hover:bg-purple-700 dark:hover:bg-purple-600 flex items-center justify-center gap-2 transition-colors text-sm sm:text-base min-h-[44px]"
             >
               <QrCode className="w-4 h-4" />
               <span>Generate QR Code</span>
@@ -510,14 +497,14 @@ export default function AssetDetailsPage() {
           <button
             type="button"
             onClick={() => navigate('/assets')}
-            className="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-gray-300 transition-colors"
+            className="w-full sm:w-auto px-4 sm:px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-gray-300 transition-colors text-sm sm:text-base min-h-[44px]"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={isLoading}
-            className="px-6 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 disabled:bg-gray-400 transition-colors flex items-center gap-2"
+            className="w-full sm:w-auto px-4 sm:px-6 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 disabled:bg-gray-400 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base min-h-[44px]"
           >
             {isLoading ? (
               <>

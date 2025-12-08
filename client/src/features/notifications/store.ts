@@ -2,6 +2,20 @@ import { create } from 'zustand';
 import type { Notification } from './types';
 import { getApiBaseUrl } from '@/lib/apiConfig';
 
+// Helper function to fetch CSRF token
+async function fetchCSRFToken(): Promise<string | null> {
+  try {
+    const response = await fetch(`${getApiBaseUrl()}/auth/csrf-token`, {
+      credentials: 'include'
+    });
+    const data = await response.json();
+    return data.csrfToken || null;
+  } catch (error) {
+    console.warn('Failed to fetch CSRF token:', error);
+    return null;
+  }
+}
+
 interface NotificationsState {
   notifications: Notification[];
   unreadCount: number;
@@ -110,6 +124,12 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
+      
+      // Get CSRF token
+      const csrfToken = await fetchCSRFToken();
+      if (csrfToken) {
+        headers['X-CSRF-Token'] = csrfToken;
+      }
 
       const response = await fetch(`${getApiBaseUrl()}/notifications/${notificationId}/read`, {
         method: 'PATCH',
@@ -141,6 +161,12 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
+      
+      // Get CSRF token
+      const csrfToken = await fetchCSRFToken();
+      if (csrfToken) {
+        headers['X-CSRF-Token'] = csrfToken;
+      }
 
       const response = await fetch(`${getApiBaseUrl()}/notifications/user/${userId}/read-all`, {
         method: 'PATCH',
@@ -170,6 +196,12 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
+      
+      // Get CSRF token
+      const csrfToken = await fetchCSRFToken();
+      if (csrfToken) {
+        headers['X-CSRF-Token'] = csrfToken;
+      }
 
       const response = await fetch(`${getApiBaseUrl()}/notifications/${notificationId}`, {
         method: 'DELETE',
@@ -198,6 +230,12 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
 
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      // Get CSRF token
+      const csrfToken = await fetchCSRFToken();
+      if (csrfToken) {
+        headers['X-CSRF-Token'] = csrfToken;
       }
 
       const response = await fetch(`${getApiBaseUrl()}/notifications/user/${userId}/dismiss-all`, {

@@ -28,6 +28,32 @@ interface CommentSectionProps {
 let isGloballySubmitting = false;
 const requestQueue: Array<() => Promise<void>> = [];
 
+// Function to get CSRF token from cookies
+function getCSRFToken(): string | null {
+  const cookies = document.cookie.split(';');
+  for (const cookie of cookies) {
+    const [name, value] = cookie.trim().split('=');
+    if (name === 'csrfToken') {
+      return decodeURIComponent(value);
+    }
+  }
+  return null;
+}
+
+// Function to fetch CSRF token from server
+async function fetchCSRFToken(): Promise<string | null> {
+  try {
+    const response = await fetch(`${getApiBaseUrl()}/auth/csrf-token`, {
+      credentials: 'include'
+    });
+    const data = await response.json();
+    return data.csrfToken || null;
+  } catch (error) {
+    console.warn('Failed to fetch CSRF token:', error);
+    return null;
+  }
+}
+
 export default function CommentSection({ ticketId }: CommentSectionProps) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
@@ -211,6 +237,15 @@ export default function CommentSection({ ticketId }: CommentSectionProps) {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
+      // Add CSRF token for POST request
+      let csrfToken = getCSRFToken();
+      if (!csrfToken) {
+        csrfToken = await fetchCSRFToken();
+      }
+      if (csrfToken) {
+        headers['X-CSRF-Token'] = csrfToken;
+      }
+
       // Generate unique request ID to help backend detect duplicates
       const requestId = `${authorId}-${ticketId}-${Date.now()}`;
 
@@ -293,6 +328,15 @@ export default function CommentSection({ ticketId }: CommentSectionProps) {
 
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      // Add CSRF token for DELETE request
+      let csrfToken = getCSRFToken();
+      if (!csrfToken) {
+        csrfToken = await fetchCSRFToken();
+      }
+      if (csrfToken) {
+        headers['X-CSRF-Token'] = csrfToken;
       }
 
       const response = await fetch(`${getApiBaseUrl()}/comments/${commentId}`, {

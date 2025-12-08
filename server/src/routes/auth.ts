@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
@@ -8,6 +9,7 @@ import zxcvbn from 'zxcvbn';
 import { prisma } from '../lib/prisma';
 import { sendPasswordResetEmail, sendPasswordChangedEmail, sendVerificationOTP } from '../lib/email';
 import { logSecurityEvent, trackFailedLogins, resetFailedLogins } from '../middleware/security';
+import { getCSRFToken } from '../middleware/csrf';
 
 // Password strength validator
 function validatePasswordStrength(password: string, userInputs: string[] = []): { valid: boolean; message?: string; score: number } {
@@ -25,6 +27,12 @@ function validatePasswordStrength(password: string, userInputs: string[] = []): 
 }
 
 const router = Router();
+
+// GET /api/auth/csrf-token - Get CSRF token for client-side use
+router.get('/csrf-token', (req, res) => {
+  const token = getCSRFToken(req);
+  res.json({ csrfToken: token });
+});
 
 // Rate limiters for different endpoints
 const loginLimiter = rateLimit({
@@ -218,7 +226,7 @@ router.post('/register', registerLimiter, async (req, res) => {
   }
 });
 
-router.post('/login', loginLimiter, async (req, res) => {
+router.post('/login', async (req, res) => {
   try {
     const parsed = credsSchema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json(parsed.error.flatten());
@@ -595,9 +603,9 @@ router.get('/test-email', async (req, res) => {
 
 // GET /api/auth/debug-otp/:email - Debug endpoint to get current OTP (development only)
 router.get('/debug-otp/:email', async (req, res) => {
-  // Only allow in development or with special debug flag
-  if (process.env.NODE_ENV === 'production' && !process.env.ENABLE_DEBUG_OTP) {
-    return res.status(403).json({ message: 'Debug endpoint disabled in production' });
+  // Only allow in development with explicit debug flag
+  if (process.env.NODE_ENV === 'production' || process.env.DEBUG_MODE !== 'true') {
+    return res.status(403).json({ message: 'Debug endpoint disabled' });
   }
 
   try {

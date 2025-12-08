@@ -209,11 +209,11 @@ export default function WorkflowsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
             Workflow Automation
           </h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
@@ -222,7 +222,7 @@ export default function WorkflowsPage() {
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          className="w-full sm:w-auto flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm sm:text-base min-h-[44px]"
         >
           <Plus className="w-4 h-4" />
           Create Workflow
@@ -230,24 +230,24 @@ export default function WorkflowsPage() {
       </div>
 
       {/* Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400">Total Workflows</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
                 {workflows.length}
               </p>
             </div>
-            <Activity className="w-8 h-8 text-blue-600" />
+            <Activity className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600" />
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400">Active</p>
-              <p className="text-2xl font-bold text-green-600">
+              <p className="text-xl sm:text-2xl font-bold text-green-600">
                 {workflows.filter(w => w.isActive).length}
               </p>
             </div>
@@ -298,59 +298,61 @@ export default function WorkflowsPage() {
               Create Workflow
             </button>
           </div>
-        ) : (
+         ) : (
           <div className="divide-y divide-gray-200 dark:divide-gray-700">
             {workflows.map((workflow) => (
               <div
                 key={workflow.id}
-                className="p-6 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors"
+                className="p-4 sm:p-6 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors"
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                      <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white truncate">
                         {workflow.name}
                       </h3>
-                      <span
-                        className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          workflow.isActive
-                            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                            : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400'
-                        }`}
-                      >
-                        {workflow.isActive ? 'Active' : 'Paused'}
-                      </span>
-                      <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
-                        Priority: {workflow.priority}
-                      </span>
+                      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                        <span
+                          className={`px-2 py-1 text-xs font-medium rounded-full ${
+                            workflow.isActive
+                              ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                              : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400'
+                          }`}
+                        >
+                          {workflow.isActive ? 'Active' : 'Paused'}
+                        </span>
+                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 whitespace-nowrap">
+                          Priority: {workflow.priority}
+                        </span>
+                      </div>
                     </div>
 
                     {workflow.description && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 sm:mb-3">
                         {workflow.description}
                       </p>
                     )}
 
-                    <div className="flex items-center gap-4 text-sm">
-                      <span className="text-gray-500 dark:text-gray-400">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
+                      <div className="text-gray-500 dark:text-gray-400">
                         <strong>Type:</strong> {getEntityTypeLabel(workflow.entityType)}
-                      </span>
-                      <span className="text-gray-500 dark:text-gray-400">
+                      </div>
+                      <div className="text-gray-500 dark:text-gray-400">
                         <strong>Trigger:</strong> {getTriggerLabel(workflow.trigger)}
-                      </span>
-                      <span className="text-gray-500 dark:text-gray-400">
+                      </div>
+                      <div className="text-gray-500 dark:text-gray-400">
                         <strong>Conditions:</strong> {workflow.conditions?.length || 0}
-                      </span>
-                      <span className="text-gray-500 dark:text-gray-400">
+                      </div>
+                      <div className="text-gray-500 dark:text-gray-400">
                         <strong>Actions:</strong> {workflow.actions?.length || 0}
-                      </span>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 ml-4">
+                  <div className="flex flex-col sm:flex-row gap-2 sm:ml-4">
                     <button
                       onClick={() => toggleWorkflow(workflow.id)}
-                      className={`p-2 rounded-lg transition-colors ${
+                      className={`w-full sm:w-auto p-2 rounded-lg transition-colors text-sm sm:text-base ${
                         workflow.isActive
                           ? 'text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20'
                           : 'text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
@@ -358,9 +360,9 @@ export default function WorkflowsPage() {
                       title={workflow.isActive ? 'Pause workflow' : 'Activate workflow'}
                     >
                       {workflow.isActive ? (
-                        <Pause className="w-5 h-5" />
+                        <Pause className="w-4 h-4 sm:w-5 sm:h-5" />
                       ) : (
-                        <Play className="w-5 h-5" />
+                        <Play className="w-4 h-4 sm:w-5 sm:h-5" />
                       )}
                     </button>
 
@@ -369,18 +371,18 @@ export default function WorkflowsPage() {
                         setEditingWorkflow(workflow);
                         setShowCreateModal(true);
                       }}
-                      className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg"
+                      className="w-full sm:w-auto p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg text-sm sm:text-base"
                       title="Edit workflow"
                     >
-                      <Edit className="w-5 h-5" />
+                      <Edit className="w-4 h-4 sm:w-5 sm:h-5" />
                     </button>
 
                     <button
                       onClick={() => deleteWorkflow(workflow.id)}
-                      className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
+                      className="w-full sm:w-auto p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-sm sm:text-base"
                       title="Delete workflow"
                     >
-                      <Trash2 className="w-5 h-5" />
+                      <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
                     </button>
                   </div>
                 </div>

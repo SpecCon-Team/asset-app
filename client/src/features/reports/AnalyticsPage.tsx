@@ -343,56 +343,23 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Analytics & Reports</h1>
-        <p className="text-gray-600 dark:text-gray-400">Generate comprehensive reports with custom date ranges</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+            Analytics & Reports
+          </h1>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            Comprehensive insights into assets and tickets
+          </p>
+        </div>
       </div>
 
-      {/* Date Range Controls */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-8">
-        <div className="flex items-center gap-2 mb-4">
-          <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Date Range</h2>
-        </div>
-
-        {/* Quick Presets */}
-        <div className="flex flex-wrap gap-2 mb-4">
-          <button
-            onClick={() => setDatePreset('week')}
-            className="px-4 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 text-sm font-medium transition-colors"
-          >
-            Last Week
-          </button>
-          <button
-            onClick={() => setDatePreset('month')}
-            className="px-4 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 text-sm font-medium transition-colors"
-          >
-            Last Month
-          </button>
-          <button
-            onClick={() => setDatePreset('quarter')}
-            className="px-4 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 text-sm font-medium transition-colors"
-          >
-            Last Quarter
-          </button>
-          <button
-            onClick={() => setDatePreset('year')}
-            className="px-4 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 text-sm font-medium transition-colors"
-          >
-            Last Year
-          </button>
-          <button
-            onClick={() => setDatePreset('all')}
-            className="px-4 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 text-sm font-medium transition-colors"
-          >
-            All Time
-          </button>
-        </div>
-
-        {/* Custom Date Range */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      {/* Date Range Filter */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6 mb-6 sm:mb-8">
+        <h2 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-gray-900 dark:text-white">Date Range</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Start Date
@@ -401,7 +368,7 @@ export default function AnalyticsPage() {
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+              className="w-full px-3 sm:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white text-sm sm:text-base"
             />
           </div>
           <div>
@@ -412,74 +379,74 @@ export default function AnalyticsPage() {
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+              className="w-full px-3 sm:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white text-sm sm:text-base"
             />
           </div>
         </div>
 
         {/* Export Buttons */}
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4">
           <button
             onClick={exportToExcel}
-            className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all flex items-center gap-2"
+            className="w-full sm:w-auto px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 text-sm sm:text-base min-h-[44px]"
           >
-            <FileSpreadsheet className="w-5 h-5" />
+            <FileSpreadsheet className="w-4 h-4 sm:w-5 sm:h-5" />
             Export to Excel
           </button>
           <button
             onClick={exportToPDF}
-            className="px-6 py-3 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all flex items-center gap-2"
+            className="w-full sm:w-auto px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 text-sm sm:text-base min-h-[44px]"
           >
-            <Download className="w-5 h-5" />
+            <Download className="w-4 h-4 sm:w-5 sm:h-5" />
             Export to PDF
           </button>
         </div>
       </div>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg shadow-lg p-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+        <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg shadow-lg p-4 sm:p-6">
           <div className="flex items-center justify-between mb-2">
-            <Ticket className="w-8 h-8 opacity-80" />
-            <span className="text-3xl font-bold">{stats.totalTickets}</span>
+            <Ticket className="w-6 h-6 sm:w-8 sm:h-8 opacity-80" />
+            <span className="text-2xl sm:text-3xl font-bold">{stats.totalTickets}</span>
           </div>
-          <h3 className="text-lg font-semibold">Total Tickets</h3>
-          <p className="text-sm opacity-90">In selected period</p>
+          <h3 className="text-base sm:text-lg font-semibold">Total Tickets</h3>
+          <p className="text-xs sm:text-sm opacity-90">In selected period</p>
         </div>
 
-        <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-lg shadow-lg p-6">
+        <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-lg shadow-lg p-4 sm:p-6">
           <div className="flex items-center justify-between mb-2">
-            <TrendingUp className="w-8 h-8 opacity-80" />
-            <span className="text-3xl font-bold">{stats.openTickets}</span>
+            <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 opacity-80" />
+            <span className="text-2xl sm:text-3xl font-bold">{stats.openTickets}</span>
           </div>
-          <h3 className="text-lg font-semibold">Open Tickets</h3>
-          <p className="text-sm opacity-90">Awaiting response</p>
+          <h3 className="text-base sm:text-lg font-semibold">Open Tickets</h3>
+          <p className="text-xs sm:text-sm opacity-90">Awaiting response</p>
         </div>
 
-        <div className="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-lg shadow-lg p-6">
+        <div className="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-lg shadow-lg p-4 sm:p-6">
           <div className="flex items-center justify-between mb-2">
-            <Package className="w-8 h-8 opacity-80" />
-            <span className="text-3xl font-bold">{stats.totalAssets}</span>
+            <Package className="w-6 h-6 sm:w-8 sm:h-8 opacity-80" />
+            <span className="text-2xl sm:text-3xl font-bold">{stats.totalAssets}</span>
           </div>
-          <h3 className="text-lg font-semibold">Total Assets</h3>
-          <p className="text-sm opacity-90">In inventory</p>
+          <h3 className="text-base sm:text-lg font-semibold">Total Assets</h3>
+          <p className="text-xs sm:text-sm opacity-90">In inventory</p>
         </div>
 
-        <div className="bg-gradient-to-br from-red-500 to-red-600 text-white rounded-lg shadow-lg p-6">
+        <div className="bg-gradient-to-br from-red-500 to-red-600 text-white rounded-lg shadow-lg p-4 sm:p-6">
           <div className="flex items-center justify-between mb-2">
-            <Users className="w-8 h-8 opacity-80" />
-            <span className="text-3xl font-bold">{stats.highPriorityTickets}</span>
+            <Users className="w-6 h-6 sm:w-8 sm:h-8 opacity-80" />
+            <span className="text-2xl sm:text-3xl font-bold">{stats.highPriorityTickets}</span>
           </div>
-          <h3 className="text-lg font-semibold">High Priority</h3>
-          <p className="text-sm opacity-90">Requires attention</p>
+          <h3 className="text-base sm:text-lg font-semibold">High Priority</h3>
+          <p className="text-xs sm:text-sm opacity-90">Requires attention</p>
         </div>
       </div>
 
       {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 mb-6 sm:mb-8">
         {/* Ticket Status Chart */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-          <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Tickets by Status</h3>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-gray-900 dark:text-white">Tickets by Status</h3>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
@@ -488,7 +455,7 @@ export default function AnalyticsPage() {
                 cy="50%"
                 labelLine={false}
                 label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                outerRadius={100}
+                outerRadius={80}
                 fill="#8884d8"
                 dataKey="value"
               >
@@ -615,5 +582,6 @@ export default function AnalyticsPage() {
         </div>
       </div>
     </div>
+    
   );
 }

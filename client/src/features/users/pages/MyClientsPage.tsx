@@ -353,7 +353,7 @@ export default function MyClientsPage() {
       {/* Users Table */}
       <div className="flex-1">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-          <div>
+          <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
@@ -516,37 +516,44 @@ export default function MyClientsPage() {
 
         {/* Pagination Controls */}
         {filteredUsers.length > 0 && (
-          <div className="mt-6 flex items-center justify-between bg-white dark:bg-gray-800 px-4 py-3 rounded-lg shadow border-t border-gray-200 dark:border-gray-700">
-            <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+          <div className="mt-4 w-full flex flex-col sm:flex-row items-center justify-between gap-4 bg-white dark:bg-gray-800 px-4 sm:px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+            {/* Results count */}
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-700 dark:text-gray-300 text-center sm:text-left">
               <span>
                 Showing <span className="font-semibold">{startIndex + 1}</span> to{' '}
                 <span className="font-semibold">{Math.min(endIndex, filteredUsers.length)}</span> of{' '}
                 <span className="font-semibold">{filteredUsers.length}</span> users
               </span>
             </div>
-            <div className="flex items-center gap-2">
+            
+            {/* Navigation buttons */}
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-center">
               <button
                 onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                 disabled={currentPage === 1}
-                className="px-4 py-2 min-h-[44px] bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:from-gray-400 disabled:to-gray-400 transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+                className="px-3 sm:px-4 py-2 min-h-[44px] bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white text-sm sm:text-base font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:from-gray-400 disabled:to-gray-400 transition-all shadow-md hover:shadow-lg flex items-center gap-1 sm:gap-2 flex-1 sm:flex-initial justify-center"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
-                Previous
+                <span className="hidden sm:inline">Previous</span>
+                <span className="sm:hidden">Prev</span>
               </button>
-              <div className="px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
-                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+              
+              <div className="px-3 sm:px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg whitespace-nowrap">
+                <span className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300">
                   Page {currentPage} of {totalPages}
                 </span>
               </div>
+              
               <button
                 onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                 disabled={currentPage === totalPages}
-                className="px-4 py-2 min-h-[44px] bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:from-gray-400 disabled:to-gray-400 transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+                className="px-3 sm:px-4 py-2 min-h-[44px] bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white text-sm sm:text-base font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:from-gray-400 disabled:to-gray-400 transition-all shadow-md hover:shadow-lg flex items-center gap-1 sm:gap-2 flex-1 sm:flex-initial justify-center"
               >
-                Next
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <span className="sm:hidden">Next</span>
+                <span className="hidden sm:inline">Next</span>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                 </svg>
               </button>

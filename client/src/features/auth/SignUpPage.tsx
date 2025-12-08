@@ -127,22 +127,22 @@ export default function SignUpPage() {
   return (
     <div className="h-screen relative overflow-y-auto">
       <AnimatedBackground />
-      <div className="min-h-full flex items-center justify-center p-4 py-12 relative z-10">
+      <div className="min-h-full flex items-center justify-center p-3 sm:p-4 py-8 sm:py-12 relative z-10">
         <div className="max-w-md w-full">
         {/* Logo/Brand */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-6 sm:mb-8">
           <div
-            className="inline-flex w-16 h-16 rounded-full items-center justify-center mb-4"
+            className="inline-flex w-12 h-12 sm:w-16 sm:h-16 rounded-full items-center justify-center mb-3 sm:mb-4"
             style={{ backgroundColor: 'var(--color-primary)' }}
           >
-            <span className="text-white font-bold text-2xl">AT</span>
+            <span className="text-white font-bold text-lg sm:text-2xl">AT</span>
           </div>
-          <h1 className="text-3xl font-bold text-white drop-shadow-lg">Create Your Account</h1>
-          <p className="text-white/90 mt-2">Join AssetTrack Pro today</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white drop-shadow-lg">Create Your Account</h1>
+          <p className="text-white/90 mt-1 sm:mt-2 text-sm sm:text-base">Join AssetTrack Pro today</p>
         </div>
 
         {/* Sign Up Form */}
-        <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-lg shadow-xl p-8 border border-white/20">
+        <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-lg shadow-xl p-4 sm:p-6 lg:p-8 border border-white/20">
           {error && (
             <div className={`mb-4 p-4 rounded-lg text-sm ${
               emailExists
@@ -170,7 +170,7 @@ export default function SignUpPage() {
             </div>
           )}
 
-          <form onSubmit={handleSignUp} className="space-y-6">
+          <form onSubmit={handleSignUp} className="space-y-4 sm:space-y-6">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Name
@@ -182,12 +182,62 @@ export default function SignUpPage() {
                 onChange={(e) => setName(e.target.value)}
                 onBlur={() => handleBlur('name')}
                 placeholder="John Doe"
-                className={`w-full px-4 py-3 border ${touched.name && !name ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 border ${touched.name && !name ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base`}
               />
               {touched.name && !name && (
                 <p className="mt-1 text-xs text-red-600 dark:text-red-400">This field is required</p>
               )}
             </div>
+
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setEmailExists(false);
+                  setError('');
+                }}
+                onBlur={() => handleBlur('email')}
+                placeholder="you@example.com"
+                className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 border ${touched.email && !email ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base`}
+              />
+              {touched.email && !email && (
+                <p className="mt-1 text-xs text-red-600 dark:text-red-400">This field is required</p>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  onFocus={() => setShowPasswordTooltip(true)}
+                  onBlur={() => {
+                    handleBlur('password');
+                    setShowPasswordTooltip(false);
+                  }}
+                  placeholder="•••••••••••••"
+                  className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 pr-10 sm:pr-12 border ${touched.password && !password ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <Eye className="w-4 h-4 sm:w-5 sm:h-5" /> : <EyeOff className="w-4 h-4 sm:w-5 sm:h-5" />}
+                </button>
+              </div>
 
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -288,16 +338,16 @@ export default function SignUpPage() {
                   }}
                   onCopy={(e) => e.preventDefault()}
                   onCut={(e) => e.preventDefault()}
-                  placeholder="••••••••••••"
-                  className={`w-full px-4 py-3 pr-12 border ${touched.confirmPassword && !confirmPassword ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                  placeholder="••••••••••"
+                  className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 pr-10 sm:pr-12 border ${touched.confirmPassword && !confirmPassword ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none"
+                  className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none"
                   aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                 >
-                  {showConfirmPassword ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+                  {showConfirmPassword ? <Eye className="w-4 h-4 sm:w-5 sm:h-5" /> : <EyeOff className="w-4 h-4 sm:w-5 sm:h-5" />}
                 </button>
               </div>
               {touched.confirmPassword && !confirmPassword && (
@@ -337,14 +387,14 @@ export default function SignUpPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full flex items-center justify-center gap-2 text-white py-3 rounded-lg font-medium disabled:bg-gray-400 transition-opacity hover:opacity-90"
+              className="w-full flex items-center justify-center gap-2 text-white py-2.5 sm:py-3 rounded-lg font-medium disabled:bg-gray-400 transition-opacity hover:opacity-90 text-sm sm:text-base min-h-[44px]"
               style={{ backgroundColor: isLoading ? undefined : 'var(--color-primary)' }}
             >
               {isLoading ? <><ButtonLoader /> Creating account...</> : 'Sign up'}
             </button>
           </form>
 
-          <div className="mt-6 text-center">
+          <div className="mt-4 sm:mt-6 text-center">
             <p className="text-sm text-gray-700 dark:text-gray-300">
               Already have an account?{' '}
               <Link

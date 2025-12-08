@@ -129,7 +129,9 @@ router.get('/:id', authenticate, applyFieldVisibility('ticket'), async (req: Req
 
 router.post('/', authenticate, async (req: Request, res: Response) => {
   const parsed = createSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json(parsed.error.flatten());
+  if (!parsed.success) {
+    return res.status(400).json(parsed.error.flatten());
+  }
 
   try {
     // Generate a unique ticket number with milliseconds and random suffix

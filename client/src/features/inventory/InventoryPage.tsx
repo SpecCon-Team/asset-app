@@ -201,76 +201,81 @@ export default function InventoryPage() {
       )}
 
       {/* Actions and Filters */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-6">
-        <div className="flex flex-col md:flex-row gap-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-3 sm:p-4 mb-4 sm:mb-6">
+        <div className="flex flex-col gap-3 sm:gap-4">
           {/* Search */}
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
             <input
               type="text"
               placeholder="Search items..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2 border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
             />
           </div>
 
-          {/* Category Filter */}
-          <div className="flex items-center gap-2">
-            <Filter className="w-5 h-5 text-gray-400" />
+          {/* Filters and Actions Row */}
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+            {/* Category Filter */}
+            <div className="flex items-center gap-2 flex-1 sm:flex-initial">
+              <Filter className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+              <select
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                className="w-full px-3 sm:px-4 py-2 border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
+              >
+                <option value="all">All Categories</option>
+                {categories.map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Status Filter */}
             <select
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              className="px-4 py-2 border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="w-full sm:w-auto px-3 sm:px-4 py-2 border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
             >
-              <option value="all">All Categories</option>
-              {categories.map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
+              <option value="all">All Status</option>
+              <option value="low">Low Stock</option>
+              <option value="out">Out of Stock</option>
             </select>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+              <button
+                onClick={() => navigate('/inventory/new')}
+                className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 whitespace-nowrap text-sm sm:text-base min-h-[44px]"
+              >
+                <Plus className="w-4 h-4" />
+                Add Item
+              </button>
+
+              <button
+                onClick={() => navigate('/inventory/suppliers')}
+                className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center gap-2 whitespace-nowrap text-sm sm:text-base min-h-[44px]"
+              >
+                <ShoppingCart className="w-4 h-4" />
+                Suppliers
+              </button>
+            </div>
           </div>
-
-          {/* Status Filter */}
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2 border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="all">All Status</option>
-            <option value="low">Low Stock</option>
-            <option value="out">Out of Stock</option>
-          </select>
-
-          {/* Action Buttons */}
-          <button
-            onClick={() => navigate('/inventory/new')}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 whitespace-nowrap"
-          >
-            <Plus className="w-5 h-5" />
-            Add Item
-          </button>
-
-          <button
-            onClick={() => navigate('/inventory/suppliers')}
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2 whitespace-nowrap"
-          >
-            <ShoppingCart className="w-5 h-5" />
-            Suppliers
-          </button>
         </div>
       </div>
 
       {/* Inventory List */}
-      <div className="grid grid-cols-1 gap-4">
+      <div className="grid grid-cols-1 gap-3 sm:gap-4">
         {filteredItems.length === 0 ? (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-12 text-center">
-            <Archive className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600 dark:text-gray-300 mb-4">No inventory items found</p>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 sm:p-12 text-center">
+            <Archive className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-3 sm:mb-4" />
+            <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 mb-3 sm:mb-4">No inventory items found</p>
             <button
               onClick={() => navigate('/inventory/new')}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center gap-2"
+              className="px-4 sm:px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center gap-2 text-sm sm:text-base min-h-[44px]"
             >
-              <Plus className="w-5 h-5" />
+              <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
               Add First Item
             </button>
           </div>
@@ -278,10 +283,10 @@ export default function InventoryPage() {
           filteredItems.map((item) => (
             <div
               key={item.id}
-              className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer"
+              className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6 hover:shadow-lg transition-shadow cursor-pointer"
               onClick={() => navigate(`/inventory/${item.id}`)}
             >
-              <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex flex-col gap-3 sm:gap-4">
                 <div className="flex-1">
                   {/* Header */}
                   <div className="flex items-start justify-between mb-4">
@@ -304,40 +309,53 @@ export default function InventoryPage() {
                   </div>
 
                   {/* Details */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 text-sm">
                     <div>
-                      <p className="text-gray-600 dark:text-gray-400">Current Stock</p>
-                      <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                      <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm">Current Stock</p>
+                      <p className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
                         {item.currentStock} {item.unit}
                       </p>
                     </div>
-
+ 
                     <div>
-                      <p className="text-gray-600 dark:text-gray-400">Min Stock</p>
-                      <p className="text-gray-900 dark:text-white">{item.minimumStock} {item.unit}</p>
+                      <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm">Min Stock</p>
+                      <p className="text-gray-900 dark:text-white text-sm sm:text-base">{item.minimumStock} {item.unit}</p>
                     </div>
-
+ 
                     {item.unitPrice && (
                       <div>
-                        <p className="text-gray-600 dark:text-gray-400">Unit Price</p>
-                        <p className="text-gray-900 dark:text-white">${item.unitPrice}</p>
+                        <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm">Unit Price</p>
+                        <p className="text-gray-900 dark:text-white text-sm sm:text-base">${item.unitPrice}</p>
                       </div>
                     )}
-
+ 
                     {item.location && (
                       <div>
-                        <p className="text-gray-600 dark:text-gray-400">Location</p>
-                        <p className="text-gray-900 dark:text-white">{item.location}</p>
+                        <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm">Location</p>
+                        <p className="text-gray-900 dark:text-white text-sm sm:text-base truncate">{item.location}</p>
                       </div>
                     )}
                   </div>
 
                   {/* Stock Bar */}
-                  <div className="mt-4">
+                  <div className="mt-3 sm:mt-4">
                     <div className="flex justify-between text-xs text-gray-600 dark:text-gray-400 mb-1">
                       <span>Stock Level</span>
                       <span>{Math.round((item.currentStock / (item.reorderPoint * 2)) * 100)}%</span>
                     </div>
+                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                      <div
+                        className={`h-2 rounded-full transition-all ${
+                          item.stockStatus === 'out_of_stock' ? 'bg-red-600' :
+                          item.stockStatus === 'reorder_now' ? 'bg-orange-600' :
+                          'bg-green-600'
+                        }`}
+                        style={{
+                          width: `${Math.min(100, Math.round((item.currentStock / (item.reorderPoint * 2)) * 100))}%`
+                        }}
+                      ></div>
+                    </div>
+                  </div>
                     <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                       <div
                         className={`h-2 rounded-full transition-all ${

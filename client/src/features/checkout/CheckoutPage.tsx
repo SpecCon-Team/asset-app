@@ -217,76 +217,80 @@ export default function CheckoutPage() {
       )}
 
       {/* Actions and Filters */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-6">
-        <div className="flex flex-col md:flex-row gap-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-3 sm:p-4 mb-4 sm:mb-6">
+        <div className="flex flex-col gap-3 sm:gap-4">
           {/* Search */}
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
             <input
               type="text"
               placeholder="Search by asset, code, or user..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2 border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
             />
           </div>
 
-          {/* Status Filter */}
-          <div className="flex items-center gap-2">
-            <Filter className="w-5 h-5 text-gray-400" />
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="all">All Status</option>
-              <option value="checked_out">Checked Out</option>
-              <option value="checked_in">Checked In</option>
-            </select>
+          {/* Filters and Actions Row */}
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+            {/* Status Filter */}
+            <div className="flex items-center gap-2 flex-1 sm:flex-initial">
+              <Filter className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full px-3 sm:px-4 py-2 border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
+              >
+                <option value="all">All Status</option>
+                <option value="checked_out">Checked Out</option>
+                <option value="checked_in">Checked In</option>
+              </select>
+            </div>
+
+            {/* Overdue Filter */}
+            <label className="flex items-center gap-2 cursor-pointer px-3 sm:px-4 py-2 border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-sm sm:text-base">
+              <input
+                type="checkbox"
+                checked={overdueOnly}
+                onChange={(e) => setOverdueOnly(e.target.checked)}
+                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <span className="text-sm text-gray-700 dark:text-gray-300">Overdue Only</span>
+            </label>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+              <button
+                onClick={() => navigate('/checkout/new')}
+                className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base min-h-[44px]"
+              >
+                <Plus className="w-4 h-4" />
+                New Checkout
+              </button>
+
+              <button
+                onClick={() => navigate('/checkout/scan')}
+                className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base min-h-[44px]"
+              >
+                <QrCode className="w-4 h-4" />
+                Scan QR
+              </button>
+            </div>
           </div>
-
-          {/* Overdue Filter */}
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={overdueOnly}
-              onChange={(e) => setOverdueOnly(e.target.checked)}
-              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-            />
-            <span className="text-sm text-gray-700 dark:text-gray-300">Overdue Only</span>
-          </label>
-
-          {/* New Checkout Button */}
-          <button
-            onClick={() => navigate('/checkout/new')}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-          >
-            <Plus className="w-5 h-5" />
-            New Checkout
-          </button>
-
-          {/* QR Scanner Button */}
-          <button
-            onClick={() => navigate('/checkout/scan')}
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
-          >
-            <QrCode className="w-5 h-5" />
-            Scan QR
-          </button>
         </div>
       </div>
 
       {/* Checkouts List */}
-      <div className="grid grid-cols-1 gap-4">
+      <div className="grid grid-cols-1 gap-3 sm:gap-4">
         {filteredCheckouts.length === 0 ? (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-12 text-center">
-            <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600 dark:text-gray-300 mb-4">No checkouts found</p>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 sm:p-12 text-center">
+            <Package className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-3 sm:mb-4" />
+            <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 mb-3 sm:mb-4">No checkouts found</p>
             <button
               onClick={() => navigate('/checkout/new')}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center gap-2"
+              className="px-4 sm:px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center gap-2 text-sm sm:text-base min-h-[44px]"
             >
-              <Plus className="w-5 h-5" />
+              <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
               Create First Checkout
             </button>
           </div>
@@ -294,10 +298,10 @@ export default function CheckoutPage() {
           filteredCheckouts.map((checkout) => (
             <div
               key={checkout.id}
-              className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer"
+              className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6 hover:shadow-lg transition-shadow cursor-pointer"
               onClick={() => navigate(`/checkout/${checkout.id}`)}
             >
-              <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex flex-col gap-3 sm:gap-4">
                 {/* Asset Image */}
                 {checkout.asset.image_url && (
                   <img
