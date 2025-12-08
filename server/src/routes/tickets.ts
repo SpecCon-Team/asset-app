@@ -675,7 +675,7 @@ router.post('/bulk/close', authenticate, requireRole('ADMIN', 'TECHNICIAN'), asy
     const closedTickets: TicketWithAllRelations[] = await prisma.ticket.findMany({
       where: { id: { in: ticketIds } },
       include: {
-        createdBy: { select: { id: true, name: true, email: true } },
+        createdBy: { select: { id: true, name: true, email: true, role: true } },
         assignedTo: { select: { id: true, name: true, email: true } },
         asset: true,
       },
@@ -736,7 +736,7 @@ router.post('/bulk/export', authenticate, async (req: Request, res: Response) =>
     const tickets: TicketWithAllRelations[] = await prisma.ticket.findMany({
       where: whereClause,
       include: {
-        createdBy: { select: { id: true, name: true, email: true } },
+        createdBy: { select: { id: true, name: true, email: true, role: true } },
         assignedTo: { select: { id: true, name: true, email: true } },
         asset: { select: { id: true, name: true, serial_number: true } },
       },

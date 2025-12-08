@@ -491,7 +491,7 @@ router.get('/inventory', authenticate, async (req: Request, res) => {
 
       prisma.inventoryItem.count({
         where: {
-          currentQuantity: { lte: prisma.raw('"reorderPoint"') }
+          currentQuantity: { lte: Prisma.sql`"reorderPoint"` as any }
         }
       }),
 
