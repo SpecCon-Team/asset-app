@@ -20,11 +20,13 @@ export function setCSRFProtection(req: Request, res: Response, next: NextFunctio
   if (!token) {
     token = generateCSRFToken();
     
-    // Set HTTP-only cookie with SameSite=Strict
+    // Set HTTP-only cookie with SameSite=None for cross-origin in production
+    // SameSite=None requires Secure flag
+    const isProduction = process.env.NODE_ENV === 'production';
     res.cookie('csrfToken', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure: isProduction, // Must be true for SameSite=None
+      sameSite: isProduction ? 'none' : 'lax', // 'none' allows cross-origin cookies
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       path: '/'
     });
@@ -85,10 +87,11 @@ export function getCSRFToken(req: Request): string {
 export function refreshCSRFToken(req: Request, res: Response): void {
   const newToken = generateCSRFToken();
   
+  const isProduction = process.env.NODE_ENV === 'production';
   res.cookie('csrfToken', newToken, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax',
     maxAge: 24 * 60 * 60 * 1000,
     path: '/'
   });
