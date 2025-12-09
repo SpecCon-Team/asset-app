@@ -333,7 +333,8 @@ export default function TicketsListPage() {
   };
 
   return (
-    <div className="flex flex-col p-3 sm:p-4 md:p-6 lg:p-8">
+    <div className="flex flex-col w-full max-w-full min-h-screen overflow-x-hidden">
+      <div className="flex flex-col p-3 sm:p-4 md:p-6 lg:p-8 w-full">
       {/* Header Section */}
       <div className="mb-4 sm:mb-6 flex-shrink-0">
         <div className="mb-4">
@@ -691,8 +692,8 @@ export default function TicketsListPage() {
             </div>
 
             {/* Desktop Table View */}
-            <div className="hidden md:block bg-white dark:bg-gray-800 rounded-lg shadow flex-1">
-              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <div className="hidden md:block bg-white dark:bg-gray-800 rounded-lg shadow flex-1 overflow-x-auto w-full">
+              <table className="w-full min-w-[800px] divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 dark:from-gray-700 dark:via-gray-700 dark:to-gray-700">
               <tr>
                 <th className="px-6 py-3 text-left">
@@ -765,36 +766,38 @@ export default function TicketsListPage() {
 
             {/* Pagination Controls */}
             {filteredTickets.length > 0 && (
-              <div className="mt-6 flex items-center justify-between bg-white dark:bg-gray-800 px-4 py-3 rounded-lg shadow border-t border-gray-200 dark:border-gray-700">
-                <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                  <span>
+              <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 bg-white dark:bg-gray-800 px-4 py-3 rounded-lg shadow border-t border-gray-200 dark:border-gray-700 w-full">
+                <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-700 dark:text-gray-300 w-full sm:w-auto justify-center sm:justify-start">
+                  <span className="text-center sm:text-left">
                     Showing <span className="font-semibold">{startIndex + 1}</span> to{' '}
                     <span className="font-semibold">{Math.min(endIndex, filteredTickets.length)}</span> of{' '}
                     <span className="font-semibold">{filteredTickets.length}</span> tickets
                   </span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 w-full sm:w-auto justify-center">
                   <button
                     onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                     disabled={currentPage === 1}
-                    className="px-4 py-2 min-h-[44px] bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:from-gray-400 disabled:to-gray-400 transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+                    className="px-3 sm:px-4 py-2 min-h-[44px] bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:from-gray-400 disabled:to-gray-400 transition-all shadow-md hover:shadow-lg flex items-center gap-1 sm:gap-2 text-sm sm:text-base"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
-                    Previous
+                    <span className="hidden sm:inline">Previous</span>
+                    <span className="sm:hidden">Prev</span>
                   </button>
-                  <div className="px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
-                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  <div className="px-2 sm:px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                    <span className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap">
                       Page {currentPage} of {totalPages}
                     </span>
                   </div>
                   <button
                     onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                     disabled={currentPage === totalPages}
-                    className="px-4 py-2 min-h-[44px] bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:from-gray-400 disabled:to-gray-400 transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+                    className="px-3 sm:px-4 py-2 min-h-[44px] bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:from-gray-400 disabled:to-gray-400 transition-all shadow-md hover:shadow-lg flex items-center gap-1 sm:gap-2 text-sm sm:text-base"
                   >
-                    Next
+                    <span className="hidden sm:inline">Next</span>
+                    <span className="sm:hidden">Next</span>
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                     </svg>
@@ -814,6 +817,7 @@ export default function TicketsListPage() {
         title="Import Tickets from CSV"
         entityType="tickets"
       />
+      </div>
     </div>
   );
 }
