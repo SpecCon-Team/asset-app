@@ -49,16 +49,16 @@ export default function ForgotPasswordPage() {
               <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
             </div>
 
-            <h2 className="text-2xl font-bold text-white drop-shadow-lg mb-4">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
               Check Your Email
             </h2>
 
-            <p className="text-white/90 mb-6">
-              We've sent password reset instructions to <strong className="text-white">{email}</strong>
+            <p className="text-gray-700 dark:text-white/90 mb-6">
+              We've sent password reset instructions to <strong className="text-gray-900 dark:text-white">{email}</strong>
             </p>
 
             <div className="space-y-4">
-              <p className="text-sm text-white/80">
+              <p className="text-sm text-gray-600 dark:text-white/80">
                 Didn't receive the email? Check your spam folder or try again.
               </p>
 

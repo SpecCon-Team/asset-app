@@ -50,6 +50,11 @@ export function validateCSRFToken(req: Request, res: Response, next: NextFunctio
     return next();
   }
   
+  // Skip CSRF for registration and OTP endpoints to allow account creation
+  if (req.path === '/auth/register' || req.path === '/auth/verify-otp' || req.path === '/auth/resend-otp') {
+    return next();
+  }
+  
   // Skip CSRF for tickets endpoint to allow ticket creation
   if (req.path === '/tickets') {
     return next();

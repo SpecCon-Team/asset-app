@@ -59,11 +59,11 @@ export default function ResetPasswordPage() {
               <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
             </div>
 
-            <h2 className="text-2xl font-bold text-white drop-shadow-lg mb-4">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
               Password Reset Successful!
             </h2>
 
-            <p className="text-white/90 mb-6">
+            <p className="text-gray-700 dark:text-white/90 mb-6">
               Your password has been changed successfully. Redirecting to login...
             </p>
 

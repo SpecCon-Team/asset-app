@@ -5,10 +5,10 @@ const prisma = new PrismaClient();
 
 async function createAdminUser() {
   try {
-    console.log('🔍 Checking for admin user: opiwej@specco.co.za');
+    console.log('🔍 Checking for admin user: admin@example.com');
     
     const existingUser = await prisma.user.findUnique({
-      where: { email: 'opiwej@specco.co.za' }
+      where: { email: 'admin@example.com' }
     });
 
     if (existingUser) {
@@ -19,7 +19,7 @@ async function createAdminUser() {
       console.log('Email Verified:', existingUser.emailVerified);
       
       // Reset password to default
-      const newPassword = 'Admin@123456';
+      const newPassword = 'admin123456789';
       const hashedPassword = await bcrypt.hash(newPassword, 10);
       
       await prisma.user.update({
@@ -38,12 +38,12 @@ async function createAdminUser() {
     } else {
       console.log('❌ Admin user not found. Creating new admin...');
       
-      const password = 'Admin@123456';
+      const password = 'admin123456789';
       const hashedPassword = await bcrypt.hash(password, 10);
       
       const newAdmin = await prisma.user.create({
         data: {
-          email: 'opiwej@specco.co.za',
+          email: 'admin@example.com',
           password: hashedPassword,
           name: 'Opiwe Admin',
           role: 'ADMIN',
@@ -59,8 +59,8 @@ async function createAdminUser() {
     }
     
     console.log('\n🎉 You can now login with:');
-    console.log('   Email: opiwej@specco.co.za');
-    console.log('   Password: Admin@123456');
+    console.log('   Email: admin@example.com');
+    console.log('   Password: admin123456789');
     console.log('\n⚠️  Remember to change your password after first login!');
     
   } catch (error) {

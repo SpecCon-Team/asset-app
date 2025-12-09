@@ -104,9 +104,19 @@ router.post('/', authenticate, async (req: Request, res) => {
     });
 
     res.status(201).json(trip);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating trip:', error);
-    res.status(500).json({ error: 'Failed to create trip' });
+    console.error('Error details:', {
+      message: error?.message,
+      code: error?.code,
+      meta: error?.meta,
+      stack: error?.stack,
+    });
+    res.status(500).json({ 
+      error: 'Failed to create trip',
+      details: error?.message || 'Unknown error',
+      code: error?.code
+    });
   }
 });
 
