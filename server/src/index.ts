@@ -339,6 +339,9 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
   app.use('/api/assets', express.urlencoded({ limit: '10mb', extended: true }));
   app.use('/api/assets', assetsRouter);
   
+  // Apply body parser to users route
+  app.use('/api/users', express.json({ limit: '10mb' }));
+  app.use('/api/users', express.urlencoded({ limit: '10mb', extended: true }));
   app.use('/api/users', usersRouter);
   
   // Apply body parser to tickets route
@@ -369,8 +372,14 @@ app.use('/api/2fa', twoFactorRouter);
 app.use('/api/gdpr', gdprRouter);
 app.use('/api/whatsapp', whatsappRouter);
 app.use('/api/ai-chat', aiChatRouter);
+// Apply body parser to peg route
+app.use('/api/peg', express.json({ limit: '10mb' }));
+app.use('/api/peg', express.urlencoded({ limit: '10mb', extended: true }));
 app.use('/api/peg', pegRouter);
 app.use('/api/attachments', attachmentsRouter);
+// Apply body parser to travel route
+app.use('/api/travel', express.json({ limit: '10mb' }));
+app.use('/api/travel', express.urlencoded({ limit: '10mb', extended: true }));
 app.use('/api/travel', travelRouter);
 app.use('/api/workflows', workflowsRouter);
 app.use('/api/sessions', sessionsRouter);
