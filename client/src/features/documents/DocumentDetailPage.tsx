@@ -58,13 +58,8 @@ const DocumentDetailPage: React.FC = () => {
         return;
       }
 
-      // Create a temporary link with authentication
       const downloadUrl = `${getApiBaseUrl()}/documents/${id}/download`;
-      const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.style.display = 'none';
-      document.body.appendChild(link);
-      
+
       // Use fetch with authentication headers
       const response = await fetch(downloadUrl, {
         headers: {
@@ -76,16 +71,26 @@ const DocumentDetailPage: React.FC = () => {
         throw new Error('Download failed');
       }
 
-      // Get the blob and create a download link
+      // Get the blob and create a downloadable URL
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      link.href = url;
-      link.download = document?.originalFileName || 'document';
-      link.click();
-      
+
+      // Try to use DOM for download if available
+      if (typeof document !== 'undefined' && typeof document.createElement === 'function') {
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = document?.originalFileName || 'document';
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else {
+        // Fallback: open in new tab (works for viewing PDFs)
+        window.open(url, '_blank');
+      }
+
       // Cleanup
       window.URL.revokeObjectURL(url);
-      document.body.removeChild(link);
     } catch (error: any) {
       console.error('Error downloading document:', error);
       showError('Failed to download document', error.message || 'Please try again');
