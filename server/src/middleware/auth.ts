@@ -107,7 +107,7 @@ export const authenticate = async (
       return;
     }
 
-    console.error('Authentication error:', error);
+    console.error('Authentication error:', error, 'Token:', token ? 'present' : 'missing');
     res.status(500).json({
       error: 'Server Error',
       message: 'An error occurred during authentication'

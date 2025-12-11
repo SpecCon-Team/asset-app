@@ -550,12 +550,14 @@ router.delete('/:id', authenticate, async (req: Request, res: Response) => {
 router.get('/:id/download', authenticate, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    console.log('Download request for document ID:', id, 'User:', req.user?.id);
 
     const document = await prisma.document.findUnique({
       where: { id }
     });
 
     if (!document) {
+      console.log('Document not found for ID:', id);
       return res.status(404).json({ error: 'Document not found' });
     }
 
@@ -572,7 +574,7 @@ router.get('/:id/download', authenticate, async (req: Request, res: Response) =>
 
     res.download(document.filePath, document.originalFileName);
   } catch (error: any) {
-    console.error('Error downloading document:', error);
+    console.error('Error downloading document:', error, 'ID:', req.params.id, 'User:', req.user?.id);
     res.status(500).json({
       error: 'Failed to download document',
       message: error.message
