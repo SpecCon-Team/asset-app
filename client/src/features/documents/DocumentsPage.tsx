@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { getApiClient } from '../assets/lib/apiClient';
 import { showSuccess, showError } from '@/lib/sweetalert';
 import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
+import { formatDate } from '@/lib/dateFormatter';
 
 interface Document {
   id: string;
@@ -12,6 +13,7 @@ interface Document {
   mimeType: string;
   category: { name: string; color: string } | null;
   uploadedBy: { name: string };
+  uploadedAt?: string;
   createdAt: string;
 }
 
@@ -158,7 +160,7 @@ const DocumentsPage: React.FC = () => {
                       </span>
                     )}
                     <span>by {doc.uploadedBy.name}</span>
-                    <span>{new Date(doc.createdAt).toLocaleDateString()}</span>
+                    <span>{formatDate(doc.uploadedAt || doc.createdAt)}</span>
                   </div>
                 </div>
               </div>

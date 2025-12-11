@@ -302,6 +302,7 @@ router.get('/recent', authenticate, async (req: Request, res: Response) => {
 router.get('/:id', authenticate, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    console.log('Fetching document with ID:', id, 'User:', req.user?.id);
 
     const document = await prisma.document.findUnique({
       where: { id },
@@ -358,6 +359,15 @@ router.get('/:id', authenticate, async (req: Request, res: Response) => {
     });
 
     if (!document) {
+      console.log('Document not found for ID:', id);
+      // Check if document exists at all (maybe it's a different version)
+      const anyVersion = await prisma.document.findFirst({
+        where: { id },
+        select: { id: true, title: true, isLatestVersion: true }
+      });
+      if (anyVersion) {
+        console.log('Document exists but query returned null. Document:', anyVersion);
+      }
       return res.status(404).json({ error: 'Document not found' });
     }
 
@@ -376,6 +386,12 @@ router.get('/:id', authenticate, async (req: Request, res: Response) => {
     res.json(convertBigIntsToNumbers(document));
   } catch (error: any) {
     console.error('Error fetching document:', error);
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      meta: error.meta,
+      stack: error.stack
+    });
     res.status(500).json({
       error: 'Failed to fetch document',
       message: error.message
@@ -410,7 +426,8 @@ router.post('/upload', authenticate, upload.single('file'), async (req: Request<
         mimeType: req.file.mimetype,
         tags: tags ? JSON.parse(tags) : [],
         metadata: metadata ? JSON.parse(metadata) : {},
-        uploadedById: req.user.id
+        uploadedById: req.user.id,
+        uploadedAt: new Date()
       },
       include: {
         category: true,

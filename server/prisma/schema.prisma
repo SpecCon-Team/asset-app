@@ -1020,6 +1020,7 @@ model Document {
   tags             String[]
   metadata         Json?
   uploadedById     String
+  uploadedAt       DateTime              @default(now())
   createdAt        DateTime              @default(now())
   updatedAt        DateTime              @updatedAt
   category         DocumentCategory?     @relation(fields: [categoryId], references: [id])
@@ -1037,6 +1038,7 @@ model Document {
   @@index([status])
   @@index([isLatestVersion])
   @@index([createdAt])
+  @@index([uploadedAt])
 }
 
 model DocumentAssociation {

@@ -1,15 +1,23 @@
 /**
  * Formats a date according to user preferences stored in localStorage
- * @param date - Date string or Date object
+ * @param date - Date string, Date object, number (timestamp), or undefined/null
  * @returns Formatted date string
  */
-export function formatDate(date: string | Date | undefined | null): string {
+export function formatDate(date: string | Date | number | undefined | null): string {
   if (!date) return 'N/A';
 
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  // Ensure we always have a Date object
+  let dateObj: Date;
+  if (date instanceof Date) {
+    dateObj = date;
+  } else if (typeof date === 'string' || typeof date === 'number') {
+    dateObj = new Date(date);
+  } else {
+    return 'N/A';
+  }
 
   // Check if date is valid
-  if (isNaN(dateObj.getTime())) return 'Invalid Date';
+  if (isNaN(dateObj.getTime())) return 'N/A';
 
   // Get user's date format preference from user-specific settings
   let dateFormat = 'MM/DD/YYYY'; // default format
@@ -46,16 +54,24 @@ export function formatDate(date: string | Date | undefined | null): string {
 
 /**
  * Formats a date with time according to user preferences
- * @param date - Date string or Date object
+ * @param date - Date string, Date object, number (timestamp), or undefined/null
  * @returns Formatted date and time string
  */
-export function formatDateTime(date: string | Date | undefined | null): string {
+export function formatDateTime(date: string | Date | number | undefined | null): string {
   if (!date) return 'N/A';
 
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  // Ensure we always have a Date object
+  let dateObj: Date;
+  if (date instanceof Date) {
+    dateObj = date;
+  } else if (typeof date === 'string' || typeof date === 'number') {
+    dateObj = new Date(date);
+  } else {
+    return 'N/A';
+  }
 
   // Check if date is valid
-  if (isNaN(dateObj.getTime())) return 'Invalid Date';
+  if (isNaN(dateObj.getTime())) return 'N/A';
 
   const formattedDate = formatDate(dateObj);
   const hours = dateObj.getHours().toString().padStart(2, '0');

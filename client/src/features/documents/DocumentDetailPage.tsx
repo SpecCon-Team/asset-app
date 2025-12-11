@@ -4,6 +4,7 @@ import { getApiClient } from '../assets/lib/apiClient';
 import { showSuccess, showError, showConfirmDialog } from '@/lib/sweetalert';
 import { LoadingOverlay, useMinLoadingTime } from '@/components/LoadingSpinner';
 import { getApiBaseUrl } from '@/lib/apiConfig';
+import { formatDateTime } from '@/lib/dateFormatter';
 
 interface Document {
   id: string;
@@ -16,6 +17,7 @@ interface Document {
   tags: string[];
   category: { name: string; color: string } | null;
   uploadedBy: { name: string; email: string };
+  uploadedAt: string;
   createdAt: string;
   comments: Array<{
     id: string;
@@ -218,7 +220,7 @@ const DocumentDetailPage: React.FC = () => {
           <div>
             <p className="text-sm text-gray-600">Upload Date</p>
             <p className="text-base font-medium text-gray-900 mt-1">
-              {new Date(document.createdAt).toLocaleString()}
+              {formatDateTime(document.uploadedAt || document.createdAt)}
             </p>
           </div>
           {document.category && (
@@ -283,7 +285,7 @@ const DocumentDetailPage: React.FC = () => {
                 <div className="flex items-center justify-between mb-2">
                   <span className="font-medium text-gray-900">{comment.user.name}</span>
                   <span className="text-sm text-gray-500">
-                    {new Date(comment.createdAt).toLocaleString()}
+                    {formatDateTime(comment.createdAt)}
                   </span>
                 </div>
                 <p className="text-gray-700">{comment.comment}</p>
