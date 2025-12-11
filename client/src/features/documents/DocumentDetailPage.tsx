@@ -68,7 +68,8 @@ const DocumentDetailPage: React.FC = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Download failed');
+        const errorText = await response.text().catch(() => 'Unknown error');
+        throw new Error(`Download failed: ${response.status} ${response.statusText} - ${errorText}`);
       }
 
       // Get the blob and create a downloadable URL
