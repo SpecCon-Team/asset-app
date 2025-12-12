@@ -179,4 +179,5 @@ async function generateAIResponse(
   return `I'm here to help! I can assist with:\n\n• Asset management\n• Ticket creation and tracking\n• Account settings and security\n• Navigation and features\n• Troubleshooting\n• Reports and exports\n\nCould you please provide more details about what you'd like to know? Or try asking:\n• "How do I create a ticket?"\n• "How do I view my assets?"\n• "How do I enable 2FA?"\n• "What can you do?"`;
 }
 
+export { generateAIResponse };
 export default router;
