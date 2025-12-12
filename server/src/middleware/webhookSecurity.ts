@@ -33,7 +33,13 @@ export function verifyWebhookSignature(
 export function verifyWhatsAppWebhook(req: Request, res: Response, next: NextFunction): void {
   const signature = req.get('X-Hub-Signature-256');
   const verifyToken = process.env.WHATSAPP_VERIFY_TOKEN;
-  
+
+  // Allow bypassing signature verification in development for testing
+  if (process.env.NODE_ENV === 'development' && !signature) {
+    console.log('⚠️  Development mode: Bypassing WhatsApp webhook signature verification');
+    return next();
+  }
+
   if (!signature) {
     console.warn('🚨 WhatsApp webhook missing signature');
     return res.status(401).json({
