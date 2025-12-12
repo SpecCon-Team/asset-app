@@ -6,6 +6,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs/promises';
 import { v4 as uuidv4 } from 'uuid';
+import { generateSecureFilename } from '../lib/fileUploadSecurity';
 
 interface DocumentUploadBody {
   title: string;
@@ -571,7 +572,7 @@ router.post('/upload', authenticate, upload.single('file'), async (req: Request<
         title,
         description,
         categoryId: categoryId || null,
-        fileName: req.file.filename,
+        fileName: generateSecureFilename(req.file.originalname),
         originalFileName: req.file.originalname,
         filePath: null, // No longer storing on disk
         fileContent: req.file.buffer, // Store file content in database
@@ -743,7 +744,7 @@ router.post('/:id/version', authenticate, upload.single('file'), async (req: Req
         title: parentDoc.title,
         description: parentDoc.description,
         categoryId: parentDoc.categoryId,
-        fileName: req.file.filename,
+        fileName: generateSecureFilename(req.file.originalname),
         originalFileName: req.file.originalname,
         filePath: null, // No longer storing on disk
         fileContent: req.file.buffer, // Store file content in database
