@@ -286,6 +286,74 @@ router.get('/recent', authenticate, async (req: Request, res: Response) => {
   }
 });
 
+// GET /api/documents/:id/diagnose - Diagnose document content issues
+router.get('/:id/diagnose', authenticate, requireRole('ADMIN'), async (req: Request, res: Response) => {
+  const { id } = req.params;
+  console.log(`🩺 Diagnosing document with ID: ${id}`);
+
+  try {
+    const document = await prisma.document.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        title: true,
+        fileSize: true,
+        mimeType: true,
+        createdAt: true,
+        uploadedAt: true,
+        fileContent: true, // Specifically select fileContent to check its existence
+      },
+    });
+
+    if (!document) {
+      return res.status(404).json({
+        status: 'NOT_FOUND',
+        message: `Document with ID "${id}" not found in the database.`,
+      });
+    }
+
+    const hasFileContent = document.fileContent !== null && document.fileContent !== undefined;
+    const contentLength = hasFileContent ? document.fileContent.length : 0;
+    const sizeMatch = hasFileContent ? contentLength === Number(document.fileSize) : false;
+
+    const diagnosticInfo = {
+      status: hasFileContent ? 'FOUND' : 'MISSING_CONTENT',
+      message: hasFileContent
+        ? 'Document record is present and file content exists.'
+        : 'Document record found, but the "fileContent" field is NULL. This is the cause of download errors.',
+      document: {
+        id: document.id,
+        title: document.title,
+        createdAt: document.createdAt,
+        uploadedAt: document.uploadedAt,
+        mimeType: document.mimeType,
+        recordedFileSize: Number(document.fileSize),
+      },
+      contentCheck: {
+        hasFileContent,
+        bufferLength: contentLength,
+        sizeMatch,
+        sizeMatchDetails: sizeMatch
+          ? 'Buffer length matches the recorded file size.'
+          : `Warning: Buffer length (${contentLength}) does not match recorded file size (${Number(document.fileSize)}).`,
+      },
+    };
+
+    res.json(diagnosticInfo);
+
+  } catch (error: any) {
+    console.error(`❌ Error diagnosing document ${id}:`, error);
+    res.status(500).json({
+      status: 'ERROR',
+      message: 'An unexpected server error occurred during diagnosis.',
+      error: {
+        name: error.name,
+        message: error.message,
+      },
+    });
+  }
+});
+
 // IMPORTANT: More specific routes must come BEFORE the generic /:id route
 // GET /api/documents/:id/download - Download document
 router.get('/:id/download', authenticate, async (req: Request, res: Response) => {
