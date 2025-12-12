@@ -302,7 +302,8 @@ router.get('/recent', authenticate, async (req: Request, res: Response) => {
 router.get('/:id', authenticate, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    console.log('Fetching document with ID:', id, 'User:', req.user?.id);
+    console.log('📄 Fetching document with ID:', id);
+    console.log('👤 User:', req.user?.id || 'unknown', req.user?.email || 'unknown');
 
     const document = await prisma.document.findUnique({
       where: { id },
@@ -371,16 +372,21 @@ router.get('/:id', authenticate, async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Document not found' });
     }
 
-    // Log access
-    await prisma.documentAccessLog.create({
-      data: {
-        documentId: id,
-        userId: req.user.id,
-        action: 'view',
-        ipAddress: req.ip,
-        userAgent: req.headers['user-agent']
-      }
-    });
+    // Log access (non-blocking - don't fail if logging fails)
+    try {
+      await prisma.documentAccessLog.create({
+        data: {
+          documentId: id,
+          userId: req.user?.id || 'unknown',
+          action: 'view',
+          ipAddress: req.ip,
+          userAgent: req.headers['user-agent']
+        }
+      });
+    } catch (logError) {
+      // Log error but don't fail the request
+      console.warn('Failed to log document access:', logError);
+    }
 
     // Convert BigInt values to numbers for JSON serialization
     res.json(convertBigIntsToNumbers(document));
