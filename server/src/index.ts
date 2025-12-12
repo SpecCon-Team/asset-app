@@ -388,6 +388,9 @@ app.use('/api/maintenance', maintenanceRouter);
 app.use('/api/checkout', checkoutRouter);
 app.use('/api/inventory', inventoryRouter);
 app.use('/api/depreciation', depreciationRouter);
+// Apply body parser to documents route
+app.use('/api/documents', express.json({ limit: '10mb' }));
+app.use('/api/documents', express.urlencoded({ limit: '10mb', extended: true }));
 app.use('/api/documents', documentsRouter);
 app.use('/api/analytics', analyticsRouter);
 app.use('/api/peg-admin', pegAdminDashboardRouter);
