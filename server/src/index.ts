@@ -7,7 +7,7 @@ import mongoSanitize from 'express-mongo-sanitize';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import { prisma } from './lib/prisma';
-import { ensureUploadedAtColumn } from './lib/ensureUploadedAtColumn';
+import { runStartupMigrations } from './lib/runStartupMigrations';
 import './middleware/auth';
 import authRouter from './routes/auth';
 import usersRouter from './routes/users';
@@ -446,12 +446,12 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
 
 const port = process.env.PORT ? Number(process.env.PORT) : 4000;
 
-// Ensure database schema is up to date before starting server
+// Run startup migrations (idempotent, safe to run multiple times)
 (async () => {
   try {
-    await ensureUploadedAtColumn();
+    await runStartupMigrations();
   } catch (error) {
-    console.error('Warning: Could not verify database schema:', error);
+    console.error('Warning: Startup migrations failed (non-fatal):', error);
   }
 })();
 
