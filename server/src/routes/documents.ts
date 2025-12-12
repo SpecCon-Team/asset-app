@@ -574,7 +574,7 @@ router.post('/upload', authenticate, upload.single('file'), async (req: Request<
         categoryId: categoryId || null,
         fileName: generateSecureFilename(req.file.originalname),
         originalFileName: req.file.originalname,
-        filePath: null, // No longer storing on disk
+        filePath: "", // No longer storing on disk
         fileContent: req.file.buffer, // Store file content in database
         fileSize: req.file.size,
         mimeType: req.file.mimetype,
@@ -746,7 +746,7 @@ router.post('/:id/version', authenticate, upload.single('file'), async (req: Req
         categoryId: parentDoc.categoryId,
         fileName: generateSecureFilename(req.file.originalname),
         originalFileName: req.file.originalname,
-        filePath: null, // No longer storing on disk
+        filePath: "", // No longer storing on disk
         fileContent: req.file.buffer, // Store file content in database
         fileSize: req.file.size,
         mimeType: req.file.mimetype,
