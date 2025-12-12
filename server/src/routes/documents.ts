@@ -298,7 +298,95 @@ router.get('/recent', authenticate, async (req: Request, res: Response) => {
   }
 });
 
-// GET /api/documents/:id - Get single document
+// IMPORTANT: More specific routes must come BEFORE the generic /:id route
+// GET /api/documents/:id/download - Download document
+router.get('/:id/download', authenticate, async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    console.log('📥 Download request for document ID:', id, 'User:', req.user?.id);
+
+    const document = await prisma.document.findUnique({
+      where: { id }
+    });
+
+    if (!document) {
+      console.log('❌ Document not found for ID:', id);
+      return res.status(404).json({ error: 'Document not found' });
+    }
+
+    // Check if file exists
+    try {
+      await fs.access(document.filePath);
+    } catch (fileError) {
+      console.error('❌ File not found at path:', document.filePath);
+      return res.status(404).json({ 
+        error: 'File not found',
+        message: 'The document file is missing from the server'
+      });
+    }
+
+    // Log download (non-blocking)
+    try {
+      await prisma.documentAccessLog.create({
+        data: {
+          documentId: id,
+          userId: req.user?.id || 'unknown',
+          action: 'download',
+          ipAddress: req.ip,
+          userAgent: req.headers['user-agent']
+        }
+      });
+    } catch (logError) {
+      console.warn('⚠️  Failed to log document download:', logError);
+    }
+
+    res.download(document.filePath, document.originalFileName);
+  } catch (error: any) {
+    console.error('❌ Error downloading document:', error, 'ID:', req.params.id, 'User:', req.user?.id);
+    res.status(500).json({
+      error: 'Server Error',
+      message: error.message || 'An unexpected error occurred'
+    });
+  }
+});
+
+// GET /api/documents/:id/versions - Get version history
+router.get('/:id/versions', authenticate, async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const versions = await prisma.document.findMany({
+      where: {
+        OR: [
+          { id },
+          { parentDocumentId: id }
+        ]
+      },
+      include: {
+        uploadedBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
+      },
+      orderBy: {
+        version: 'desc'
+      }
+    });
+
+    res.json({ versions });
+  } catch (error: any) {
+    console.error('Error fetching versions:', error);
+    res.status(500).json({
+      error: 'Failed to fetch versions',
+      message: error.message
+    });
+  }
+});
+
+// GET /api/documents/:id - Get single document (must be last)
 router.get('/:id', authenticate, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -569,42 +657,6 @@ router.delete('/:id', authenticate, async (req: Request, res: Response) => {
   }
 });
 
-// GET /api/documents/:id/download - Download document
-router.get('/:id/download', authenticate, async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    console.log('Download request for document ID:', id, 'User:', req.user?.id);
-
-    const document = await prisma.document.findUnique({
-      where: { id }
-    });
-
-    if (!document) {
-      console.log('Document not found for ID:', id);
-      return res.status(404).json({ error: 'Document not found' });
-    }
-
-    // Log download
-    await prisma.documentAccessLog.create({
-      data: {
-        documentId: id,
-        userId: req.user.id,
-        action: 'download',
-        ipAddress: req.ip,
-        userAgent: req.headers['user-agent']
-      }
-    });
-
-    res.download(document.filePath, document.originalFileName);
-  } catch (error: any) {
-    console.error('Error downloading document:', error, 'ID:', req.params.id, 'User:', req.user?.id);
-    res.status(500).json({
-      error: 'Failed to download document',
-      message: error.message
-    });
-  }
-});
-
 // POST /api/documents/:id/version - Upload new version
 router.post('/:id/version', authenticate, upload.single('file'), async (req: Request<{ id: string }, {}, DocumentVersionBody>, res: Response) => {
   try {
@@ -687,42 +739,6 @@ router.post('/:id/version', authenticate, upload.single('file'), async (req: Req
 
     res.status(500).json({
       error: 'Failed to upload new version',
-      message: error.message
-    });
-  }
-});
-
-// GET /api/documents/:id/versions - Get version history
-router.get('/:id/versions', authenticate, async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-
-    const versions = await prisma.document.findMany({
-      where: {
-        OR: [
-          { id },
-          { parentDocumentId: id }
-        ]
-      },
-      include: {
-        uploadedBy: {
-          select: {
-            id: true,
-            name: true,
-            email: true
-          }
-        }
-      },
-      orderBy: {
-        version: 'desc'
-      }
-    });
-
-    res.json({ versions });
-  } catch (error: any) {
-    console.error('Error fetching versions:', error);
-    res.status(500).json({
-      error: 'Failed to fetch versions',
       message: error.message
     });
   }
