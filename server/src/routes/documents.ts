@@ -75,21 +75,9 @@ function convertBigIntsToNumbers(obj: any): any {
 
 const router = Router();
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: async (req, file, cb) => {
-    const uploadDir = path.join(process.cwd(), 'uploads', 'documents');
-    await fs.mkdir(uploadDir, { recursive: true });
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueName = `${uuidv4()}${path.extname(file.originalname)}`;
-    cb(null, uniqueName);
-  }
-});
-
+// Configure multer for file uploads (store in memory for database storage)
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: {
     fileSize: 50 * 1024 * 1024 // 50MB limit
   },
@@ -314,12 +302,10 @@ router.get('/:id/download', authenticate, async (req: Request, res: Response) =>
       return res.status(404).json({ error: 'Document not found' });
     }
 
-    // Check if file exists
-    try {
-      await fs.access(document.filePath);
-    } catch (fileError) {
-      console.error('❌ File not found at path:', document.filePath);
-      return res.status(404).json({ 
+    // Check if file content exists
+    if (!document.fileContent) {
+      console.error('❌ File content not found for document ID:', id);
+      return res.status(404).json({
         error: 'File not found',
         message: 'The document file is missing from the server'
       });
@@ -340,7 +326,13 @@ router.get('/:id/download', authenticate, async (req: Request, res: Response) =>
       console.warn('⚠️  Failed to log document download:', logError);
     }
 
-    res.download(document.filePath, document.originalFileName);
+    // Set appropriate headers
+    res.setHeader('Content-Type', document.mimeType);
+    res.setHeader('Content-Disposition', `attachment; filename="${document.originalFileName}"`);
+    res.setHeader('Content-Length', document.fileContent.length);
+
+    // Send the file content
+    res.send(document.fileContent);
   } catch (error: any) {
     console.error('❌ Error downloading document:', error, 'ID:', req.params.id, 'User:', req.user?.id);
     res.status(500).json({
@@ -503,8 +495,6 @@ router.post('/upload', authenticate, upload.single('file'), async (req: Request<
     const { title, description, categoryId, tags, metadata } = req.body;
 
     if (!title) {
-      // Clean up uploaded file
-      await fs.unlink(req.file.path);
       return res.status(400).json({ error: 'Title is required' });
     }
 
@@ -515,7 +505,8 @@ router.post('/upload', authenticate, upload.single('file'), async (req: Request<
         categoryId: categoryId || null,
         fileName: req.file.filename,
         originalFileName: req.file.originalname,
-        filePath: req.file.path,
+        filePath: null, // No longer storing on disk
+        fileContent: req.file.buffer, // Store file content in database
         fileSize: req.file.size,
         mimeType: req.file.mimetype,
         tags: tags ? JSON.parse(tags) : [],
@@ -547,15 +538,6 @@ router.post('/upload', authenticate, upload.single('file'), async (req: Request<
     }));
   } catch (error: any) {
     console.error('Error uploading document:', error);
-
-    // Clean up file on error
-    if (req.file) {
-      try {
-        await fs.unlink(req.file.path);
-      } catch (unlinkError) {
-        console.error('Error deleting file:', unlinkError);
-      }
-    }
 
     res.status(500).json({
       error: 'Failed to upload document',
@@ -672,7 +654,6 @@ router.post('/:id/version', authenticate, upload.single('file'), async (req: Req
     });
 
     if (!parentDoc) {
-      await fs.unlink(req.file.path);
       return res.status(404).json({ error: 'Parent document not found' });
     }
 
@@ -696,7 +677,8 @@ router.post('/:id/version', authenticate, upload.single('file'), async (req: Req
         categoryId: parentDoc.categoryId,
         fileName: req.file.filename,
         originalFileName: req.file.originalname,
-        filePath: req.file.path,
+        filePath: null, // No longer storing on disk
+        fileContent: req.file.buffer, // Store file content in database
         fileSize: req.file.size,
         mimeType: req.file.mimetype,
         version: parentDoc.version + 1,
@@ -728,14 +710,6 @@ router.post('/:id/version', authenticate, upload.single('file'), async (req: Req
     });
   } catch (error: any) {
     console.error('Error uploading version:', error);
-
-    if (req.file) {
-      try {
-        await fs.unlink(req.file.path);
-      } catch (unlinkError) {
-        console.error('Error deleting file:', unlinkError);
-      }
-    }
 
     res.status(500).json({
       error: 'Failed to upload new version',

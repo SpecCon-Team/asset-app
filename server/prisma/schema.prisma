@@ -1009,7 +1009,8 @@ model Document {
   categoryId       String?
   fileName         String
   originalFileName String
-  filePath         String
+  filePath         String?
+  fileContent      Bytes?
   fileSize         BigInt
   mimeType         String
   version          Int                   @default(1)
