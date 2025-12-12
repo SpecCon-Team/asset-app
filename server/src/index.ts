@@ -7,6 +7,7 @@ import mongoSanitize from 'express-mongo-sanitize';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import { prisma } from './lib/prisma';
+import { ensureUploadedAtColumn } from './lib/ensureUploadedAtColumn';
 import './middleware/auth';
 import authRouter from './routes/auth';
 import usersRouter from './routes/users';
@@ -444,6 +445,16 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
 });
 
 const port = process.env.PORT ? Number(process.env.PORT) : 4000;
+
+// Ensure database schema is up to date before starting server
+(async () => {
+  try {
+    await ensureUploadedAtColumn();
+  } catch (error) {
+    console.error('Warning: Could not verify database schema:', error);
+  }
+})();
+
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
