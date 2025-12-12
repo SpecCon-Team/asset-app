@@ -24,6 +24,7 @@ export const authenticate = async (
   res: Response,
   next: NextFunction
 ): Promise<void> => {
+  let token: string | undefined;
   try {
     // Get token from Authorization header
     const authHeader = req.headers.authorization;
@@ -36,7 +37,7 @@ export const authenticate = async (
       return;
     }
 
-    const token = authHeader.split(' ')[1];
+    token = authHeader.split(' ')[1];
 
     // Verify token
     const jwtSecret = process.env.JWT_SECRET;

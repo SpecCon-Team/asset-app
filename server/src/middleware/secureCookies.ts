@@ -229,11 +229,12 @@ export function cookieTamperingDetection(req: Request, res: Response, next: Next
   
   // Check for suspicious cookie modifications
   for (const [name, value] of Object.entries(cookies)) {
+    const cookieValue = String(value);
     // Check for unusual characters
-    if (/[<>\"'\\]/.test(value)) {
+    if (/[<>\"'\\]/.test(cookieValue)) {
       console.warn('🚨 Suspicious cookie content detected:', {
         name,
-        value: value.substring(0, 50) + '...',
+        value: cookieValue.substring(0, 50) + '...',
         ip: req.ip
       });
       
@@ -242,10 +243,10 @@ export function cookieTamperingDetection(req: Request, res: Response, next: Next
     }
     
     // Check for oversized cookies
-    if (value.length > 4096) { // 4KB limit
+    if (cookieValue.length > 4096) { // 4KB limit
       console.warn('🚨 Oversized cookie detected:', {
         name,
-        size: value.length,
+        size: cookieValue.length,
         ip: req.ip
       });
       

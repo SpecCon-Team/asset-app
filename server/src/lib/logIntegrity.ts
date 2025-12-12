@@ -30,8 +30,9 @@ export function encryptLogEntry(entry: any): string {
   }
   
   try {
-    const cipher = crypto.createCipher('aes-256-gcm', LOG_CONFIG.encryptionKey);
     const iv = crypto.randomBytes(16);
+    const key = crypto.scryptSync(LOG_CONFIG.encryptionKey, 'salt', 32);
+    const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
     
     let encrypted = cipher.update(JSON.stringify(entry), 'utf8', 'hex');
     encrypted += cipher.final('hex');
@@ -59,9 +60,9 @@ export function decryptLogEntry(encryptedData: string): any {
     const authTag = Buffer.from(encryptedData.substring(32, 64), 'hex');
     const encrypted = encryptedData.substring(64);
     
-    const decipher = crypto.createDecipher('aes-256-gcm', LOG_CONFIG.encryptionKey);
+    const key = crypto.scryptSync(LOG_CONFIG.encryptionKey, 'salt', 32);
+    const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
     decipher.setAuthTag(authTag);
-    decipher.setIV(iv);
     
     let decrypted = decipher.update(encrypted, 'hex', 'utf8');
     decrypted += decipher.final('utf8');
@@ -167,12 +168,15 @@ export async function createSecureAuditLog(params: {
         changes: params.changes ? JSON.stringify(params.changes) : null,
         metadata: params.metadata ? JSON.stringify({
           ...params.metadata,
-          encrypted: true,
+          encrypted: LOG_CONFIG.enableEncryption,
+          encryptedData: LOG_CONFIG.enableEncryption ? encryptedEntry : undefined,
           integrity: logEntry.integrity
-        }) : null,
-        status: params.status || 'success',
-        // Store encrypted data in a custom field or separate table
-        encryptedData: LOG_CONFIG.enableEncryption ? encryptedEntry : null
+        }) : (LOG_CONFIG.enableEncryption ? JSON.stringify({
+          encrypted: true,
+          encryptedData: encryptedEntry,
+          integrity: logEntry.integrity
+        }) : null),
+        status: params.status || 'success'
       }
     });
     
