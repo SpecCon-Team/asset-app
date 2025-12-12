@@ -505,8 +505,9 @@ How can I help you today?
 3️⃣ General Enquiry
 4️⃣ Report an Issue
 5️⃣ Contact Support Team
+6️⃣ Chat with AI Assistant
 
-Type the number of your choice (1-5)`;
+Type the number of your choice (1-6)`;
 
   await whatsappService.sendTextMessage({
     to: phoneNumber,
@@ -617,10 +618,34 @@ Type *MENU* to return to main menu.`
         conversationState.delete(phoneNumber);
         break;
 
+      case '6':
+        // AI Chat
+        conversationState.set(phoneNumber, {
+          step: 'ai_chat',
+          data: { history: [] },
+          lastActivity: new Date()
+        });
+        await whatsappService.sendTextMessage({
+          to: phoneNumber,
+          message: `🤖 *AI Assistant*
+
+Hello! I'm your AI assistant. I can help you with:
+
+• Asset management questions
+• Ticket creation and tracking
+• Account settings and security
+• Navigation and features
+• Troubleshooting
+• Reports and exports
+
+What would you like to know? Type your question below, or type *MENU* to go back.`
+        });
+        break;
+
       default:
         await whatsappService.sendTextMessage({
           to: phoneNumber,
-          message: `❌ Invalid choice. Please reply with a number from 1 to 5.
+          message: `❌ Invalid choice. Please reply with a number from 1 to 6.
 
 Type *MENU* to see options again.`
         });
@@ -651,6 +676,47 @@ Type *MENU* to see options again.`
     } catch (error: any) {
       console.error('❌ Error in report_issue step:', error);
       throw error;
+    }
+  } else if (state.step === 'ai_chat') {
+    // Handle AI chat conversation
+    try {
+      // Import the AI response function
+      const { generateAIResponse } = await import('../routes/aiChat');
+
+      // Get conversation history
+      const history = state.data.history || [];
+
+      // Generate AI response
+      const aiResponse = await generateAIResponse(message, history, user);
+
+      // Add to conversation history
+      history.push({ role: 'user', content: message });
+      history.push({ role: 'assistant', content: aiResponse });
+
+      // Keep only last 10 messages to avoid memory issues
+      if (history.length > 20) {
+        history.splice(0, history.length - 20);
+      }
+
+      // Update state
+      state.data.history = history;
+      state.lastActivity = new Date();
+      conversationState.set(phoneNumber, state);
+
+      // Send AI response
+      await whatsappService.sendTextMessage({
+        to: phoneNumber,
+        message: `🤖 ${aiResponse}
+
+---
+*Type your next question or type MENU to return to main menu*`
+      });
+    } catch (error: any) {
+      console.error('❌ Error in AI chat step:', error);
+      await whatsappService.sendTextMessage({
+        to: phoneNumber,
+        message: `❌ Sorry, I'm having trouble processing your request right now. Please try again later or type *MENU* to return to the main menu.`
+      });
     }
   }
 }
