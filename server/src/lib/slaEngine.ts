@@ -144,9 +144,6 @@ class SLAEngine {
         where: {
           resolvedAt: null,
         },
-        include: {
-          policy: await prisma.sLAPolicy.findMany(),
-        },
       });
 
       console.log(`🔍 Checking ${slas.length} active SLAs`);

@@ -183,7 +183,6 @@ router.post('/', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: R
       nextDueDate,
       priority,
       estimatedDuration,
-      cost,
       assignedToId,
     } = req.body;
 
@@ -198,9 +197,7 @@ router.post('/', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req: R
         description,
         frequency,
         nextDueDate: new Date(nextDueDate),
-        cost,
         assignedToId,
-        createdById: req.user.id,
       },
       include: {
         asset: true,
@@ -226,7 +223,6 @@ router.put('/:id', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req:
       nextDueDate,
       priority,
       estimatedDuration,
-      cost,
       assignedToId,
       isActive,
     } = req.body;
@@ -246,9 +242,7 @@ router.put('/:id', authenticate, requireRole('ADMIN', 'TECHNICIAN'), async (req:
         description,
         frequency,
         nextDueDate: nextDueDate ? new Date(nextDueDate) : undefined,
-        cost,
         assignedToId,
-        isActive,
       },
       include: {
         asset: true,

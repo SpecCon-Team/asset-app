@@ -3,6 +3,8 @@ import path from 'path';
 import { Request, Response, NextFunction } from 'express';
 import multer from 'multer';
 
+type MulterFile = Express.Multer.File;
+
 /**
  * Enhanced File Upload Security
  * Implements comprehensive file upload protection with virus scanning
@@ -65,7 +67,7 @@ export function generateSecureFilename(originalname: string): string {
 }
 
 // Validate file type and content
-export function validateFile(file: Express.Multer.File): { valid: boolean; error?: string } {
+export function validateFile(file: MulterFile): { valid: boolean; error?: string } {
   // Check file extension
   const ext = path.extname(file.originalname).toLowerCase();
   if (DANGEROUS_EXTENSIONS.includes(ext)) {
@@ -179,7 +181,7 @@ export function secureFileUpload(req: Request, res: Response, next: NextFunction
 
 // Process uploaded file with security checks
 export async function processUploadedFile(
-  file: Express.Multer.File,
+  file: MulterFile,
   destination: string
 ): Promise<{ success: boolean; filename?: string; error?: string }> {
   try {

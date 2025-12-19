@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { Prisma } from '@prisma/client';
 import { authenticate, requireRole } from '../middleware/auth';
@@ -30,7 +30,7 @@ function convertBigIntsToNumbers(obj: any): any {
 const router = Router();
 
 // GET /api/analytics/overview - System-wide overview
-router.get('/overview', authenticate, cacheMiddleware(60000), async (req: Request, res) => {
+router.get('/overview', authenticate, cacheMiddleware(60000), async (req: Request, res: Response) => {
   try {
     const { startDate, endDate } = req.query;
 
@@ -229,7 +229,7 @@ router.get('/assets', authenticate, cacheMiddleware(60000), async (req: Request,
 });
 
 // GET /api/analytics/tickets - Ticket analytics
-router.get('/tickets', authenticate, cacheMiddleware(60000), async (req: Request, res) => {
+router.get('/tickets', authenticate, cacheMiddleware(60000), async (req: Request, res: Response) => {
   try {
     const { startDate, endDate } = req.query;
 
@@ -442,9 +442,9 @@ router.get('/maintenance', authenticate, async (req: Request, res) => {
       `,
 
       prisma.maintenanceSchedule.groupBy({
-        by: ['maintenanceType'] as const,
+        by: ['status'] as const,
         _count: true
-      }),
+      }) as any,
 
       prisma.$queryRaw`
         SELECT
@@ -491,7 +491,7 @@ router.get('/inventory', authenticate, async (req: Request, res) => {
 
       prisma.inventoryItem.count({
         where: {
-          currentQuantity: { lte: Prisma.sql`"reorderPoint"` as any }
+          currentStock: { lte: Prisma.sql`"reorderPoint"` as any }
         }
       }),
 
@@ -499,11 +499,11 @@ router.get('/inventory', authenticate, async (req: Request, res) => {
         SELECT
           i.id,
           i.name,
-          i."currentQuantity",
+          i."currentStock",
           COUNT(st.id) as transaction_count
         FROM "InventoryItem" i
         LEFT JOIN "StockTransaction" st ON st."itemId" = i.id
-        GROUP BY i.id, i.name, i."currentQuantity"
+        GROUP BY i.id, i.name, i."currentStock"
         ORDER BY transaction_count DESC
         LIMIT 10
       `,
@@ -512,9 +512,9 @@ router.get('/inventory', authenticate, async (req: Request, res) => {
         by: ['category'],
         _count: true,
         _sum: {
-          currentQuantity: true
+          currentStock: true
         }
-      })
+      }) as any
     ]);
 
     // Convert BigInt values to numbers for JSON serialization
@@ -537,7 +537,7 @@ router.get('/inventory', authenticate, async (req: Request, res) => {
 });
 
 // GET /api/analytics/export - Export analytics data
-router.get('/export', authenticate, requireRole('ADMIN'), async (req: Request, res) => {
+router.get('/export', authenticate, requireRole('ADMIN'), async (req: Request, res: Response) => {
   try {
     const { type, format = 'json', startDate, endDate } = req.query;
 

@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { authenticate } from '../middleware/auth';
 
@@ -8,7 +8,7 @@ const router = Router();
  * POST /ai-chat
  * AI Chat endpoint that provides intelligent responses
  */
-router.post('/', authenticate, async (req: Request, res) => {
+router.post('/', authenticate, async (req: Request, res: Response) => {
   const schema = z.object({
     message: z.string().min(1).max(2000),
     history: z.array(z.object({
