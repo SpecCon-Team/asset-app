@@ -72,16 +72,42 @@ class WhatsAppService {
             'Authorization': `Bearer ${this.config.accessToken}`,
             'Content-Type': 'application/json',
           },
+          timeout: 30000, // 30 second timeout
         }
       );
 
       console.log('WhatsApp message sent successfully:', response.data);
       return { success: true, data: response.data };
     } catch (error: any) {
-      console.error('Failed to send WhatsApp message:', error.response?.data || error.message);
+      const errorMessage = error.response?.data?.error?.message || error.message;
+      const errorCode = error.response?.data?.error?.code || error.code;
+      
+      console.error('Failed to send WhatsApp message:', {
+        message: errorMessage,
+        code: errorCode,
+        status: error.response?.status,
+        fullError: error.response?.data || error.message
+      });
+      
+      // Provide more helpful error messages
+      let userFriendlyError = errorMessage;
+      if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+        userFriendlyError = 'Request timeout: WhatsApp API did not respond in time';
+      } else if (error.response?.status === 401) {
+        userFriendlyError = 'Authentication failed: Invalid access token';
+      } else if (error.response?.status === 403) {
+        userFriendlyError = 'Permission denied: Check API permissions';
+      } else if (error.response?.status === 404) {
+        userFriendlyError = 'Phone number ID not found: Verify WHATSAPP_PHONE_NUMBER_ID';
+      } else if (error.response?.status === 429) {
+        userFriendlyError = 'Rate limit exceeded: Too many requests';
+      }
+      
       return {
         success: false,
-        error: error.response?.data?.error?.message || error.message
+        error: userFriendlyError,
+        errorCode: errorCode,
+        status: error.response?.status
       };
     }
   }
@@ -133,16 +159,42 @@ class WhatsAppService {
             'Authorization': `Bearer ${this.config.accessToken}`,
             'Content-Type': 'application/json',
           },
+          timeout: 30000, // 30 second timeout
         }
       );
 
       console.log('WhatsApp template message sent successfully:', response.data);
       return { success: true, data: response.data };
     } catch (error: any) {
-      console.error('Failed to send WhatsApp template message:', error.response?.data || error.message);
+      const errorMessage = error.response?.data?.error?.message || error.message;
+      const errorCode = error.response?.data?.error?.code || error.code;
+      
+      console.error('Failed to send WhatsApp template message:', {
+        message: errorMessage,
+        code: errorCode,
+        status: error.response?.status,
+        fullError: error.response?.data || error.message
+      });
+      
+      // Provide more helpful error messages
+      let userFriendlyError = errorMessage;
+      if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+        userFriendlyError = 'Request timeout: WhatsApp API did not respond in time';
+      } else if (error.response?.status === 401) {
+        userFriendlyError = 'Authentication failed: Invalid access token';
+      } else if (error.response?.status === 403) {
+        userFriendlyError = 'Permission denied: Check API permissions';
+      } else if (error.response?.status === 404) {
+        userFriendlyError = 'Phone number ID not found: Verify WHATSAPP_PHONE_NUMBER_ID';
+      } else if (error.response?.status === 429) {
+        userFriendlyError = 'Rate limit exceeded: Too many requests';
+      }
+      
       return {
         success: false,
-        error: error.response?.data?.error?.message || error.message
+        error: userFriendlyError,
+        errorCode: errorCode,
+        status: error.response?.status
       };
     }
   }
