@@ -1,5 +1,6 @@
 import { User } from '@prisma/client';
 import { Query, ParamsDictionary } from 'express-serve-static-core';
+import 'multer'; // Import multer types
 
 declare module 'express' {
   export interface Request {
