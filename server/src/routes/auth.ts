@@ -610,13 +610,13 @@ router.get('/debug-otp/:email', async (req, res) => {
 
   try {
     const { email } = req.params;
-    const user = await prisma.user.findUnique({ 
+    const user = await prisma.user.findUnique({
       where: { email },
-      select: { 
-        email: true, 
-        emailVerified: true, 
-        verificationOTP: true, 
-        verificationExpiry: true 
+      select: {
+        email: true,
+        emailVerified: true,
+        verificationOTP: true,
+        verificationExpiry: true
       }
     });
 
@@ -633,7 +633,7 @@ router.get('/debug-otp/:email', async (req, res) => {
     }
 
     const isExpired = user.verificationExpiry && user.verificationExpiry < new Date();
-    
+
     res.json({
       email: user.email,
       otp: user.verificationOTP,
@@ -643,6 +643,44 @@ router.get('/debug-otp/:email', async (req, res) => {
     });
   } catch (error) {
     console.error('Debug OTP error:', error);
+    res.status(500).json({ message: 'An error occurred' });
+  }
+});
+
+// POST /api/auth/debug-login - Debug login without incrementing attempts (development only)
+router.post('/debug-login', async (req, res) => {
+  // Only allow in development with explicit debug flag
+  if (process.env.NODE_ENV === 'production' || process.env.DEBUG_MODE !== 'true') {
+    return res.status(403).json({ message: 'Debug endpoint disabled' });
+  }
+
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password required' });
+    }
+
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (!user.emailVerified) {
+      return res.status(403).json({ message: 'Email not verified' });
+    }
+
+    const ok = await bcrypt.compare(password, user.password);
+    res.json({
+      email,
+      passwordValid: ok,
+      userFound: true,
+      emailVerified: user.emailVerified,
+      role: user.role,
+      loginAttempts: user.loginAttempts
+    });
+  } catch (error) {
+    console.error('Debug login error:', error);
     res.status(500).json({ message: 'An error occurred' });
   }
 });

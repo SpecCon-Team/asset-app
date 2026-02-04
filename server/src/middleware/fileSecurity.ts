@@ -2,8 +2,7 @@ import crypto from 'crypto';
 import path from 'path';
 import { Request, Response, NextFunction } from 'express';
 import multer from 'multer';
-
-type MulterFile = Express.Multer.File;
+import type { File as MulterFile } from 'multer';
 
 /**
  * Enhanced File Upload Security
