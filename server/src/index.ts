@@ -449,14 +449,18 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
 
 const port = process.env.PORT ? Number(process.env.PORT) : 4000;
 
-// Run startup migrations (idempotent, safe to run multiple times)
-(async () => {
-  try {
-    await runStartupMigrations();
-  } catch (error) {
-    console.error('Warning: Startup migrations failed (non-fatal):', error);
-  }
-})();
+// Run startup migrations only if enabled (for Supabase free tier compatibility)
+if (process.env.RUN_STARTUP_MIGRATIONS !== 'false') {
+  (async () => {
+    try {
+      await runStartupMigrations();
+    } catch (error) {
+      console.warn('⚠️  Startup migrations skipped (Supabase may be paused):', error.message);
+    }
+  })();
+} else {
+  console.log('⏭️  Startup migrations disabled (RUN_STARTUP_MIGRATIONS=false)');
+}
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
