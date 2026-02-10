@@ -247,7 +247,7 @@ export default function QRCodeGenerator({
             <li>Download PNG for digital use or printing</li>
             <li>Download SVG for scalable vector graphics</li>
             <li>Print directly to attach to physical asset</li>
-            <li>Scan with any QR code scanner app</li>
+            <li>Scan with any QR code scanner the app</li>
             <li>Link opens asset details page automatically</li>
           </ul>
         </div>
