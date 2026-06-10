@@ -9,7 +9,7 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 const ENABLE_DUAL_WRITE = process.env.ENABLE_DUAL_WRITE === 'true';
-const neonUrl = process.env.NEON_DATABASE_URL;
+const supabaseUrl = process.env.SUPABASE_DATABASE_URL;
 const localUrl = process.env.LOCAL_DATABASE_URL;
 
 let backupClient: PrismaClient | null = null;
@@ -26,10 +26,10 @@ function addConnectionPoolParams(url: string): string {
   return `${url}${separator}connection_limit=10&pool_timeout=20&connect_timeout=10`;
 }
 
-// Use local Docker first in development, Neon for production
+// Use local Docker for development, Supabase for production
 const primaryUrl = process.env.NODE_ENV === 'production'
-  ? (neonUrl || localUrl || process.env.DATABASE_URL || '')
-  : (localUrl || neonUrl || process.env.DATABASE_URL || '');
+  ? (supabaseUrl || process.env.DATABASE_URL || '')
+  : (localUrl || supabaseUrl || process.env.DATABASE_URL || '');
 
 export const prisma = globalForPrisma.prisma ?? new PrismaClient({
   log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
@@ -134,11 +134,11 @@ if (ENABLE_DUAL_WRITE && backupClient) {
     await prisma.$connect();
 
     // Detect which database is actually being used
-    const isPrimaryNeon = primaryUrl.includes('neon.tech');
+    const isPrimarySupabase = primaryUrl.includes('supabase.co');
     const isPrimaryLocal = primaryUrl.includes('localhost') || primaryUrl.includes('127.0.0.1');
 
-    if (isPrimaryNeon) {
-      console.log('✅ Primary Database: 🌐 Neon Cloud (Always Online)');
+    if (isPrimarySupabase) {
+      console.log('✅ Primary Database: ☁️ Supabase Cloud');
     } else if (isPrimaryLocal) {
       console.log('✅ Primary Database: 🐳 Local Docker');
     }
@@ -146,11 +146,11 @@ if (ENABLE_DUAL_WRITE && backupClient) {
     if (ENABLE_DUAL_WRITE && backupClient) {
       try {
         await backupClient.$connect();
-        const isBackupNeon = !isPrimaryNeon && neonUrl;
+        const isBackupSupabase = !isPrimarySupabase && supabaseUrl;
         const isBackupLocal = !isPrimaryLocal && localUrl;
 
-        if (isBackupNeon) {
-          console.log('✅ Backup Database: 🌐 Neon Cloud (Sync Active)');
+        if (isBackupSupabase) {
+          console.log('✅ Backup Database: ☁️ Supabase Cloud (Sync Active)');
         } else if (isBackupLocal) {
           console.log('✅ Backup Database: 🐳 Local Docker (Sync Active)');
         }
