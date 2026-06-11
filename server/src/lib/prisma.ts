@@ -46,11 +46,16 @@ if (process.env.NODE_ENV !== 'production') {
   globalForPrisma.prisma = prisma;
 }
 
+// Determine backup URL (the one not used as primary)
+const backupUrl = (process.env.NODE_ENV === 'production')
+  ? localUrl
+  : (supabaseUrl || process.env.DATABASE_URL || '');
+
 // Initialize backup client for dual write
-if (ENABLE_DUAL_WRITE && neonUrl && localUrl) {
+if (ENABLE_DUAL_WRITE && backupUrl && backupUrl !== primaryUrl) {
   try {
     backupClient = new PrismaClient({
-      datasources: { db: { url: addConnectionPoolParams(localUrl) } },
+      datasources: { db: { url: addConnectionPoolParams(backupUrl) } },
       log: []
     });
 
@@ -109,8 +114,19 @@ function createDualWriteOperation(operation: string, model: string, originalMeth
 
 // Wrap write operations for dual write
 const writeOperations = ['create', 'update', 'delete', 'upsert', 'createMany', 'updateMany', 'deleteMany'];
-// Exclude 'notification' from dual write to prevent duplicates (notifications use auto-generated IDs)
-const models = ['user', 'asset', 'ticket', 'comment'];
+// Exclude 'notification' to prevent duplicates (auto-generated IDs create conflicts with dual-write sequence)
+// Exclude logging/audit models (high volume, don't need sync)
+const models = [
+  'user', 'asset', 'ticket', 'comment',
+  'auditLog', 'pEGClient', 'assetCheckout', 'attachment', 'assetHistory',
+  'maintenanceSchedule', 'trip', 'tripRouteStop',
+  'document', 'documentAssociation', 'documentShare', 'documentComment',
+  'inventoryItem', 'supplier', 'purchaseOrder', 'purchaseOrderItem',
+  'stockTransaction', 'stockAlert',
+  'assetDepreciation', 'depreciationSchedule', 'assetValuation', 'assetDisposal',
+  'assetQRCode', 'assetLocationHistory', 'checkoutReminder',
+  'ticketTemplate', 'replyTemplate', 'assetReservation',
+];
 
 if (ENABLE_DUAL_WRITE && backupClient) {
   models.forEach(model => {
