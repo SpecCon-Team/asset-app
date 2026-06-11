@@ -18,13 +18,17 @@ let backupClient: PrismaClient | null = null;
 // Add connection pool settings to improve performance and prevent timeouts
 function addConnectionPoolParams(url: string): string {
   if (!url) return url;
-  if (url.includes('pgbouncer=true')) {
+  // Supabase pooler (port 6543 / pooler.supabase.com) uses PgBouncer,
+  // which has prepared-statement conflicts with Prisma. Switch to direct
+  // connection (port 5432) and remove pgbouncer=true to bypass PgBouncer.
+  if (url.includes('pooler.supabase.com') || url.includes(':6543/') || url.includes('pgbouncer=true')) {
     url = url
       .replace(':6543/', ':5432/')
-      .replace('pgbouncer=true', '')
+      .replace(/[?&]pgbouncer=true/, '')
       .replace(/&&+/g, '&')
       .replace(/\?&/, '?')
-      .replace(/&$/, '');
+      .replace(/[&?]$/, '');
+    if (!url.includes('sslmode=')) url += url.includes('?') ? '&sslmode=require' : '?sslmode=require';
   }
   const separator = url.includes('?') ? '&' : '?';
   return `${url}${separator}connection_limit=3&pool_timeout=10&connect_timeout=10`;
