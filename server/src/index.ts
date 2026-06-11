@@ -372,6 +372,8 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 app.use('/api/2fa', twoFactorRouter);
 app.use('/api/gdpr', gdprRouter);
 app.use('/api/whatsapp', whatsappRouter);
+app.use('/api/ai-chat', express.json({ limit: '10mb' }));
+app.use('/api/ai-chat', express.urlencoded({ limit: '10mb', extended: true }));
 app.use('/api/ai-chat', aiChatRouter);
 // Apply body parser to peg route
 app.use('/api/peg', express.json({ limit: '10mb' }));
