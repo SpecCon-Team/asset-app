@@ -19,7 +19,7 @@ let backupClient: PrismaClient | null = null;
 function addConnectionPoolParams(url: string): string {
   if (!url) return url;
   const separator = url.includes('?') ? '&' : '?';
-  return `${url}${separator}connection_limit=3&pool_timeout=5&connect_timeout=5`;
+  return `${url}${separator}connection_limit=3&pool_timeout=10&connect_timeout=10`;
 }
 
 // Use local Docker for development, Supabase for production
