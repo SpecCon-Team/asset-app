@@ -19,11 +19,7 @@ let backupClient: PrismaClient | null = null;
 function addConnectionPoolParams(url: string): string {
   if (!url) return url;
   const separator = url.includes('?') ? '&' : '?';
-  // Optimized connection pooling for better performance
-  // connection_limit: max connections per pool
-  // pool_timeout: seconds to wait for connection
-  // connect_timeout: seconds to wait for initial connection
-  return `${url}${separator}connection_limit=10&pool_timeout=20&connect_timeout=10`;
+  return `${url}${separator}connection_limit=3&pool_timeout=5&connect_timeout=5`;
 }
 
 // Use local Docker for development, Supabase for production
@@ -47,9 +43,10 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 // Determine backup URL (the one not used as primary)
+// Use DATABASE_URL (which includes sslmode=require&pgbouncer=true) for Supabase connections
 const backupUrl = (process.env.NODE_ENV === 'production')
   ? localUrl
-  : (supabaseUrl || process.env.DATABASE_URL || '');
+  : (process.env.DATABASE_URL || supabaseUrl || '');
 
 // Initialize backup client for dual write
 if (ENABLE_DUAL_WRITE && backupUrl && backupUrl !== primaryUrl) {

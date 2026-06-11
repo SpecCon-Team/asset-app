@@ -108,10 +108,11 @@ export const authenticate = async (
       return;
     }
 
-    console.error('Authentication error:', error, 'Token:', token ? 'present' : 'missing');
+    const errMsg = error instanceof Error ? error.message : String(error);
+    console.error('Authentication error:', errMsg, 'Token:', token ? 'present' : 'missing');
     res.status(500).json({
       error: 'Server Error',
-      message: 'An error occurred during authentication'
+      message: process.env.NODE_ENV === 'development' ? errMsg : 'An error occurred during authentication'
     });
   }
 };
