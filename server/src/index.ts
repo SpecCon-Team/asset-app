@@ -219,12 +219,28 @@ const allowedOrigins = [
   'https://speccon-team.github.io/asset-app' // GitHub Pages with path
 ];
 
+// Helper to detect local network IPs (allows phone testing in development)
+function isLocalNetworkIP(origin: string): boolean {
+  try {
+    const url = new URL(origin);
+    const hostname = url.hostname;
+    if (hostname === 'localhost' || hostname === '127.0.0.1') return true;
+    return /^\d+\.\d+\.\d+\.\d+$/.test(hostname) && (
+      hostname.startsWith('192.168.') ||
+      hostname.startsWith('10.') ||
+      (hostname.startsWith('172.') && parseInt(hostname.split('.')[1]) >= 16 && parseInt(hostname.split('.')[1]) <= 31)
+    );
+  } catch {
+    return false;
+  }
+}
+
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
 
-    if (allowedOrigins.indexOf(origin) !== -1) {
+    if (allowedOrigins.indexOf(origin) !== -1 || isLocalNetworkIP(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));

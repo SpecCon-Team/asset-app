@@ -915,9 +915,14 @@ router.post('/qr/generate', authenticate, requireRole('ADMIN', 'TECHNICIAN'), as
     // Remove trailing slash if present
     clientUrl = clientUrl.replace(/\/$/, '');
     
-    // Only add /asset-app if it's GitHub Pages and not already in the URL
-    const isGitHubPages = clientUrl.includes('github.io') || clientUrl.includes('localhost');
-    const needsBasePath = isGitHubPages && !clientUrl.endsWith('/asset-app');
+    // Only add /asset-app if it's not already in the URL
+    // Needed for GitHub Pages (/asset-app/) and local dev (Vite base: '/asset-app/')
+    const needsBasePath = !clientUrl.endsWith('/asset-app') && (
+      clientUrl.includes('github.io') ||
+      clientUrl.includes('localhost') ||
+      clientUrl.includes('127.0.0.1') ||
+      /^https?:\/\/\d+\.\d+\.\d+\.\d+/.test(clientUrl)
+    );
     const basePath = needsBasePath ? '/asset-app' : '';
     
     const qrData = `ASSET:${asset.asset_code}:${assetId}`;

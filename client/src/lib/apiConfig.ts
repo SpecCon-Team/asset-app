@@ -6,7 +6,16 @@ export const getApiBaseUrl = (): string => {
   // For development, Vite exposes `import.meta.env.DEV`.
   // Default to localhost, but allow override via .env file for flexibility.
   if (import.meta.env.DEV) {
-    return import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api';
+    const baseUrl = import.meta.env.VITE_API_BASE_URL;
+    if (baseUrl) return baseUrl;
+
+    // When accessed from a phone via local network IP, use that IP for API too
+    const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+    if (hostname !== 'localhost' && hostname !== '127.0.0.1' && /^\d+\.\d+\.\d+\.\d+$/.test(hostname)) {
+      return `http://${hostname}:4000/api`;
+    }
+
+    return 'http://localhost:4000/api';
   }
 
   // For production builds, use the environment variable.
