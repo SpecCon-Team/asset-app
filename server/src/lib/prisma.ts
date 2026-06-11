@@ -18,6 +18,14 @@ let backupClient: PrismaClient | null = null;
 // Add connection pool settings to improve performance and prevent timeouts
 function addConnectionPoolParams(url: string): string {
   if (!url) return url;
+  if (url.includes('supabase.co') && url.includes('pgbouncer=true')) {
+    url = url
+      .replace(':6543/', ':5432/')
+      .replace('pgbouncer=true', '')
+      .replace(/&&+/g, '&')
+      .replace(/\?&/, '?')
+      .replace(/&$/, '');
+  }
   const separator = url.includes('?') ? '&' : '?';
   return `${url}${separator}connection_limit=3&pool_timeout=10&connect_timeout=10`;
 }
